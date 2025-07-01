@@ -37,3 +37,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+!src/main/java/org/example/tryonx/auth/oauth/.gitkeep
+!src/main/java/org/example/tryonx/auth/email/.gitkeep
+!src/main/java/org/example/tryonx/auth/sms/.gitkeep
