@@ -7,7 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.tryonx.kakao.dto.ResponseDto;
 import org.example.tryonx.kakao.service.AuthService;
 import org.example.tryonx.member.domain.Member;
+import org.example.tryonx.member.domain.Role;
 import org.example.tryonx.member.repository.MemberRepository;
+import org.example.tryonx.auth.local.token.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -17,9 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.example.tryonx.member.domain.Role;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -28,6 +30,7 @@ import java.util.Map;
 public class AuthServiceImpl implements AuthService {
 
     private final MemberRepository memberRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Value("${kakao.client.id}")
     private String clientKey;
@@ -71,6 +74,7 @@ public class AuthServiceImpl implements AuthService {
             ResponseDto dto = getInfo(accessToken);
             Long kakaoId = dto.getKakaoId();
 
+            // 3. 회원 조회 또는 생성
             Member member = memberRepository.findByEmail(dto.getEmail())
                     .orElseGet(() -> {
                         Member newMember = Member.builder()
@@ -90,7 +94,15 @@ public class AuthServiceImpl implements AuthService {
                         return memberRepository.save(newMember);
                     });
 
-            return ResponseEntity.ok(member);
+            String token = jwtTokenProvider.createtoken(member.getEmail(), member.getRole().toString());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("email", member.getEmail());
+            response.put("nickname", member.getNickname());
+            response.put("role", member.getRole());
+            response.put("token", token);
+
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -149,4 +161,3 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 }
-
