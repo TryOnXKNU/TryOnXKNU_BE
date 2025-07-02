@@ -1,6 +1,7 @@
 package org.example.tryonx.auth.local.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.example.tryonx.auth.email.service.EmailService;
 import org.example.tryonx.auth.local.dto.LoginRequestDto;
 import org.example.tryonx.auth.local.dto.SignupRequestDto;
 import org.example.tryonx.auth.local.token.JwtTokenProvider;
@@ -18,16 +19,21 @@ public class LocalAuthService {
     private final MemberRepository memberRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-    public LocalAuthService(MemberRepository memberRepository, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder) {
+    public LocalAuthService(MemberRepository memberRepository, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.memberRepository = memberRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     public Member create(SignupRequestDto dto) {
         if(memberRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new IllegalStateException("이미 존재하는 이메일입니다.");
+        }
+        if (!emailService.isVerified(dto.getEmail())) {
+            throw new IllegalStateException("이메일 인증이 완료되지 않았습니다.");
         }
         Member member = Member.builder()
                 .email(dto.getEmail())
