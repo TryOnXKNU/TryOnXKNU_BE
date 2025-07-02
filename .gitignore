@@ -1,4 +1,5 @@
 application.properties
+dump.rdb
 
 HELP.md
 .gradle
