@@ -98,6 +98,12 @@ public class AuthServiceImpl implements AuthService {
 
             Map<String, Object> response = new HashMap<>();
             response.put("email", member.getEmail());
+            response.put("name", member.getName());
+            response.put("profileUrl", member.getProfileUrl());
+            response.put("phoneNumber", member.getPhoneNumber());
+            response.put("gender", member.getGender());
+            response.put("birthDate", member.getBirthDate());
+            response.put("address", member.getAddress());
             response.put("nickname", member.getNickname());
             response.put("role", member.getRole());
             response.put("token", token);
