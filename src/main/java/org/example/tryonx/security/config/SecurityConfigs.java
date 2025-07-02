@@ -31,11 +31,14 @@ public class SecurityConfigs {
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(a->a.requestMatchers(
+                        "/login",
                         "/api/v1/auth/signup",
                         "/api/v1/auth/login",
+                        "/kakao/**",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",                 // swagger JSON endpoint
-                        "/swagger-resources/**"          // swagger resource
+                        "/swagger-resources/**",          // swagger resource
+                        "/kakao_login_large_wide.png"
                 ).permitAll().anyRequest().authenticated())
                 .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
