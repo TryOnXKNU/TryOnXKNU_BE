@@ -32,6 +32,7 @@ public class Member {
 
     private String password;
 
+    @Column(nullable = false, unique = true, length = 100)
     private String phoneNumber;
 
     private Integer gender;
