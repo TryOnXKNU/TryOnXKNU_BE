@@ -4,7 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.example.tryonx.auth.email.service.EmailService;
 import org.example.tryonx.auth.local.dto.LoginRequestDto;
 import org.example.tryonx.auth.local.dto.SignupRequestDto;
-import org.example.tryonx.auth.local.token.JwtTokenProvider;
+import org.example.tryonx.auth.sms.service.SmsService;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.dto.MemberListResponseDto;
 import org.example.tryonx.member.repository.MemberRepository;
@@ -17,15 +17,15 @@ import java.util.List;
 @Service
 public class LocalAuthService {
     private final MemberRepository memberRepository;
-    private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final SmsService smsService;
 
-    public LocalAuthService(MemberRepository memberRepository, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder, EmailService emailService) {
+    public LocalAuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, EmailService emailService, SmsService smsService) {
         this.memberRepository = memberRepository;
-        this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.smsService = smsService;
     }
 
     public Member create(SignupRequestDto dto) {
@@ -34,6 +34,12 @@ public class LocalAuthService {
         }
         if (!emailService.isVerified(dto.getEmail())) {
             throw new IllegalStateException("이메일 인증이 완료되지 않았습니다.");
+        }
+        if(memberRepository.findByPhoneNumber(dto.getPhoneNumber()).isPresent()) {
+            throw new IllegalStateException("이미 존재하는 휴대폰 번호입니다.");
+        }
+        if(!smsService.isVerified(dto.getPhoneNumber())){
+            throw new IllegalStateException("휴대폰 인증이 완료되지 않았습니다.");
         }
         Member member = Member.builder()
                 .email(dto.getEmail())
