@@ -41,6 +41,9 @@ public class LocalAuthService {
         if(!smsService.isVerified(dto.getPhoneNumber())){
             throw new IllegalStateException("휴대폰 인증이 완료되지 않았습니다.");
         }
+        if(!isValidPassword(dto.getPassword())) {
+            throw new IllegalStateException("비밀번호 형식이 옳바르지 않습니다.");
+        }
         Member member = Member.builder()
                 .email(dto.getEmail())
                 .name(dto.getName())
@@ -77,4 +80,34 @@ public class LocalAuthService {
         return memberListResponseDtos;
     }
 
+    public boolean isNicknameExist(String nickname) {
+        return !memberRepository.existsByNickname(nickname);
+    }
+    public String findIdByPhoneNumber(String phoneNumber) {
+        Member member = memberRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(()->new EntityNotFoundException("해당 휴대폰 번호 사용자가 없습니다."));
+        if(!smsService.isVerified(phoneNumber)){
+            throw new IllegalStateException("휴대폰 인증이 완료되지 않았습니다.");
+        }
+        return member.getEmail();
+    }
+
+    public void resetPassword(String email, String newPassword) {
+        if(!emailService.isVerified(email)){
+            throw new IllegalStateException("Invalid email");
+        }
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+        if(!isValidPassword(newPassword)){
+            throw new IllegalStateException("비밀번호 형식이 옳바르지 않습니다.");
+        }
+        member.updatePassword(passwordEncoder.encode(newPassword));
+        memberRepository.save(member);
+    }
+
+    private boolean isValidPassword(String password) {
+        // 영문, 숫자, 특수문자 각 1개 이상 포함, 최소 8자
+        String regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).{8,}$";
+        return password.matches(regex);
+    }
 }
