@@ -60,4 +60,11 @@ public class Member {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public void updatePassword(String encodedPassword) {
+        if (encodedPassword == null || encodedPassword.length() < 10) {
+            throw new IllegalArgumentException("비밀번호 형식이 잘못되었습니다.");
+        }
+        this.password = encodedPassword;
+    }
 }

@@ -1,5 +1,6 @@
 package org.example.tryonx.member.service;
 
+import org.example.tryonx.auth.email.service.EmailService;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.dto.MemberListResponseDto;
 import org.example.tryonx.member.repository.MemberRepository;
