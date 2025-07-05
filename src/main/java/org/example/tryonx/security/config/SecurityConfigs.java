@@ -46,7 +46,8 @@ public class SecurityConfigs {
                         "/kakao/**",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",                 // swagger JSON endpoint
-                        "/swagger-resources/**"           // swagger resource
+                        "/swagger-resources/**",           // swagger resource
+                                "/api/v1/auth/kakao"
                 ).permitAll().anyRequest().authenticated())
                 .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

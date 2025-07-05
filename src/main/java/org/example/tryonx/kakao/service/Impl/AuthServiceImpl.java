@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.tryonx.kakao.dto.KakaoProfile;
 import org.example.tryonx.kakao.dto.ResponseDto;
 import org.example.tryonx.kakao.service.AuthService;
 import org.example.tryonx.member.domain.Member;
@@ -157,4 +158,72 @@ public class AuthServiceImpl implements AuthService {
             return null;
         }
     }
+
+    @Override
+    public ResponseEntity<?> kakaoLoginWithSDK(String accessToken, KakaoProfile profile) {
+        try {
+            // 1. 카카오 액세스 토큰 유효성 검사
+            if (!isValidKakaoToken(accessToken)) {
+                return ResponseEntity.status(401).body("유효하지 않은 카카오 액세스토큰입니다.");
+            }
+
+            // 2. 사용자 조회 또는 생성
+            Member member = memberRepository.findByEmail(profile.getEmail())
+                    .orElseGet(() -> {
+                        Member newMember = Member.builder()
+                                .email(profile.getEmail())
+                                .name(profile.getNickname() != null ? profile.getNickname() : "카카오사용자")
+                                .nickname(profile.getNickname())
+                                .profileUrl(profile.getProfile_image())
+                                .phoneNumber(profile.getPhone_number())
+                                .gender(convertGender(profile.getGender()))
+                                .birthDate(parseBirth(profile.getBirthyear(), profile.getBirthday()))
+                                .address(profile.getShipping_address())
+                                .socialType("KAKAO")
+                                .socialId(profile.getId())
+                                .password(null)
+                                .role(Role.USER)
+                                .build();
+                        return memberRepository.save(newMember);
+                    });
+
+            // 3. JWT 토큰 발급
+            String token = jwtTokenProvider.createtoken(member.getEmail(), member.getRole().toString());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("nickname", member.getNickname());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("카카오 SDK 로그인 처리 중 오류 발생");
+        }
+    }
+
+    private boolean isValidKakaoToken(String accessToken) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+
+            HttpEntity<?> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    "https://kapi.kakao.com/v1/user/access_token_info",
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            log.warn("카카오 토큰 유효성 검사 실패", e);
+            return false;
+        }
+    }
+
+
 }

@@ -2,13 +2,11 @@ package org.example.tryonx.kakao.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.tryonx.kakao.dto.KakaoLoginRequest;
 import org.example.tryonx.kakao.service.AuthService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,5 +39,11 @@ public class AuthController {
     public ResponseEntity<?> getKaKaoAuthorizeCode(@RequestParam("code") String authorizeCode) {
         log.info("[kakao-login] authorizaCode : {}", authorizeCode);
         return authService.getKakaoUserInfo(authorizeCode);
+    }
+
+    @PostMapping("/api/v1/auth/kakao")
+    public ResponseEntity<?> kakaoLogin(@RequestBody KakaoLoginRequest request) {
+        log.info("[Kakao SDK Login] AccessToken: {}", request.getAccessToken());
+        return authService.kakaoLoginWithSDK(request.getAccessToken(), request.getKakaoProfile());
     }
 }
