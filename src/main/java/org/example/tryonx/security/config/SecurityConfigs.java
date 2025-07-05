@@ -30,7 +30,9 @@ public class SecurityConfigs {
                 .cors(cors->cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(a->a.requestMatchers(
+                .authorizeHttpRequests(a->a
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers(
                         "/login",
                         "/api/v1/auth/signup",
                         "/api/v1/auth/login",
@@ -44,8 +46,7 @@ public class SecurityConfigs {
                         "/kakao/**",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",                 // swagger JSON endpoint
-                        "/swagger-resources/**",          // swagger resource
-                        "/kakao_login_large_wide.png"
+                        "/swagger-resources/**"           // swagger resource
                 ).permitAll().anyRequest().authenticated())
                 .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
