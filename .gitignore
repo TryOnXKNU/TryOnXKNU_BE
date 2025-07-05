@@ -38,6 +38,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-src/main/java/org/example/tryonx/auth/sms/service/SmsService.java
-!src/main/java/org/example/tryonx/auth/sms/service/.gitkeep
