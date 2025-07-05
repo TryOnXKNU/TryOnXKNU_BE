@@ -97,16 +97,7 @@ public class AuthServiceImpl implements AuthService {
             String token = jwtTokenProvider.createtoken(member.getEmail(), member.getRole().toString());
 
             Map<String, Object> response = new HashMap<>();
-            response.put("email", member.getEmail());
-            response.put("name", member.getName());
-            response.put("profileUrl", member.getProfileUrl());
-            response.put("phoneNumber", member.getPhoneNumber());
-            response.put("gender", member.getGender());
-            response.put("birthDate", member.getBirthDate());
-            response.put("address", member.getAddress());
-            response.put("nickname", member.getNickname());
-            response.put("role", member.getRole());
-            response.put("token", token);
+            response.put("token", token); // 클라이언트에서 저장할 수 있도록 포함시켜야 함
 
             return ResponseEntity.ok(response);
 
