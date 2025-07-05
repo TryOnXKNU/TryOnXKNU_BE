@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.tryonx.kakao.dto.KakaoProfile;
 import org.example.tryonx.kakao.dto.ResponseDto;
 import org.example.tryonx.kakao.service.AuthService;
 import org.example.tryonx.member.domain.Member;
@@ -159,38 +160,34 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ResponseEntity<?> kakaoLoginWithSDK(String accessToken) {
+    public ResponseEntity<?> kakaoLoginWithSDK(String accessToken, KakaoProfile profile) {
         try {
+            // 1. 카카오 액세스 토큰 유효성 검사
             if (!isValidKakaoToken(accessToken)) {
                 return ResponseEntity.status(401).body("유효하지 않은 카카오 액세스토큰입니다.");
             }
 
-            ResponseDto dto = getInfo(accessToken);
-
-            if (dto == null || dto.getPhone_number() == null) {
-                log.error("카카오 응답에 phone_number가 없습니다.");
-                return ResponseEntity.badRequest().body("전화번호가 제공되지 않았습니다.");
-            }
-
-            Member member = memberRepository.findByEmail(dto.getEmail())
+            // 2. 사용자 조회 또는 생성
+            Member member = memberRepository.findByEmail(profile.getEmail())
                     .orElseGet(() -> {
                         Member newMember = Member.builder()
-                                .email(dto.getEmail())
-                                .name(dto.getName() != null ? dto.getName() : dto.getProfile_nickname())
-                                .nickname(dto.getProfile_nickname() != null ? dto.getProfile_nickname() : "카카오사용자")
-                                .profileUrl(dto.getProfile_image() != null ? dto.getProfile_image() : "")
-                                .phoneNumber(dto.getPhone_number())
-                                .gender(convertGender(dto.getGender()))
-                                .birthDate(parseBirth(dto.getBirthyear(), dto.getBirthday()))
-                                .address(dto.getShipping_address())
+                                .email(profile.getEmail())
+                                .name(profile.getNickname() != null ? profile.getNickname() : "카카오사용자")
+                                .nickname(profile.getNickname())
+                                .profileUrl(profile.getProfile_image())
+                                .phoneNumber(profile.getPhone_number())
+                                .gender(convertGender(profile.getGender()))
+                                .birthDate(parseBirth(profile.getBirthyear(), profile.getBirthday()))
+                                .address(profile.getShipping_address())
                                 .socialType("KAKAO")
-                                .socialId(dto.getKakaoId())
+                                .socialId(profile.getId())
                                 .password(null)
                                 .role(Role.USER)
                                 .build();
                         return memberRepository.save(newMember);
                     });
 
+            // 3. JWT 토큰 발급
             String token = jwtTokenProvider.createtoken(member.getEmail(), member.getRole().toString());
 
             Map<String, Object> response = new HashMap<>();
@@ -204,7 +201,6 @@ public class AuthServiceImpl implements AuthService {
             return ResponseEntity.status(500).body("카카오 SDK 로그인 처리 중 오류 발생");
         }
     }
-
 
     private boolean isValidKakaoToken(String accessToken) {
         try {

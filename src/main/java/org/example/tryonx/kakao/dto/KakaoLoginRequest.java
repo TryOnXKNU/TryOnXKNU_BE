@@ -7,4 +7,5 @@ import lombok.Setter;
 @Setter
 public class KakaoLoginRequest {
     private String accessToken;
+    private KakaoProfile kakaoProfile;
 }
