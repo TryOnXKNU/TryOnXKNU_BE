@@ -1,39 +1,36 @@
-package org.example.tryonx.member.service;
+package org.example.tryonx.admin.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.example.tryonx.admin.dto.MemberInfoDto;
-import org.example.tryonx.auth.email.service.EmailService;
+import org.example.tryonx.admin.dto.MemberListDto;
 import org.example.tryonx.member.domain.Member;
-import org.example.tryonx.member.dto.MemberListResponseDto;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-public class MemberService {
+@RequiredArgsConstructor
+public class MemberListService {
     private final MemberRepository memberRepository;
-    public MemberService(MemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
+
+    /* 멤버 전체 */
+    public List<MemberListDto> getUserList(){
+        return memberRepository.findAll().stream()
+                .map(member -> new MemberListDto(
+                        member.getProfileUrl(),
+                        member.getMemberId(),
+                        member.getName()
+                ))
+                .collect(Collectors.toList());
     }
 
-    public List<MemberListResponseDto>  findAll() {
-        List<Member> members = memberRepository.findAll();
-        List<MemberListResponseDto> memberListResDtos = new ArrayList<>();
-        for(Member member : members){
-            MemberListResponseDto memberListResDto = new MemberListResponseDto();
-            memberListResDto.setName(member.getName());
-            memberListResDto.setEmail(member.getEmail());
-            memberListResDto.setPhone(member.getPhoneNumber());
-            memberListResDtos.add(memberListResDto);
-        }
-        return memberListResDtos;
-    }
-
+    /* 멤버 상세정보 */
     public MemberInfoDto findById(Long memberId) {
         Member member = memberRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 회원이 존재하지 않습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("해당 회원을 찾을 수 없습니다."));
 
         return MemberInfoDto.builder()
                 .profileUrl(member.getProfileUrl())
@@ -49,4 +46,6 @@ public class MemberService {
                 .gender(member.getGender())
                 .build();
     }
+
+
 }
