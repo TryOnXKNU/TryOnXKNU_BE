@@ -8,6 +8,7 @@ import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,6 +46,18 @@ public class MemberListService {
                 .weight(member.getWeight())
                 .gender(member.getGender())
                 .build();
+    }
+
+    /* 신규 회원 조회 */
+    public List<MemberListDto> getRecentUsers() {
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+        return memberRepository.findByCreatedAtAfter(oneWeekAgo).stream()
+                .map(member -> new MemberListDto(
+                        member.getProfileUrl(),
+                        member.getMemberId(),
+                        member.getName()
+                ))
+                .collect(Collectors.toList());
     }
 
 
