@@ -60,5 +60,11 @@ public class MemberListService {
                 .collect(Collectors.toList());
     }
 
+    /* 멤버 삭제 */
+    public void deleteMember(Long memberId) {
+        Member member = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 회원을 찾을 수 없습니다."));
+        memberRepository.delete(member);
+    }
 
 }
