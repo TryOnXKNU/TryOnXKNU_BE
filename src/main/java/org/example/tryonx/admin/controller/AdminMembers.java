@@ -34,5 +34,13 @@ public class AdminMembers {
         return ResponseEntity.ok(dto);
     }
 
+    //신규 회원 목록 조회
+    @GetMapping("/members/recent")
+    public ResponseEntity<List<MemberListDto>> getRecentUsers() {
+        List<MemberListDto> recentUsers = memberListService.getRecentUsers();
+        return ResponseEntity.ok(recentUsers);
+    }
+
+
 
 }
