@@ -41,6 +41,12 @@ public class AdminMembers {
         return ResponseEntity.ok(recentUsers);
     }
 
+    //멤버 삭제
+    @DeleteMapping("/member/{memberId}")
+    public ResponseEntity<Void> deleteMember(@PathVariable Long memberId) {
+        memberListService.deleteMember(memberId);
+        return ResponseEntity.noContent().build();
+    }
 
 
 }
