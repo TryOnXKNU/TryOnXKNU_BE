@@ -5,17 +5,29 @@ import org.example.tryonx.admin.dto.MemberInfoDto;
 import org.example.tryonx.auth.email.service.EmailService;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.dto.MemberListResponseDto;
+import org.example.tryonx.member.dto.MyInfoResponseDto;
+import org.example.tryonx.member.dto.UpdateMemberRequestDto;
 import org.example.tryonx.member.repository.MemberRepository;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class MemberService {
     private final MemberRepository memberRepository;
-    public MemberService(MemberRepository memberRepository) {
+    private final PasswordEncoder passwordEncoder;
+    private final StringRedisTemplate redisTemplate;
+    private static final long EXPIRE_TIME = 3 * 60;
+
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, StringRedisTemplate redisTemplate) {
         this.memberRepository = memberRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.redisTemplate = redisTemplate;
     }
 
     public List<MemberListResponseDto>  findAll() {
@@ -48,5 +60,50 @@ public class MemberService {
                 .weight(member.getWeight())
                 .gender(member.getGender())
                 .build();
+    }
+
+    public MyInfoResponseDto getMyInfo(String email){
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+        MyInfoResponseDto myInfoResponseDto = new MyInfoResponseDto(
+                member.getNickname(),
+                member.getPhoneNumber(),
+                member.getBirthDate(),
+                member.getAddress(),
+                member.getEmail(),
+                member.getGender(),
+                member.getBodyType(),
+                member.getHeight(),
+                member.getWeight()
+        );
+        return myInfoResponseDto;
+    }
+
+    public boolean isNicknameExist(String nickname) {
+        return !memberRepository.existsByNickname(nickname);
+    }
+
+    public boolean checkPassword(String email, String password) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+        if(passwordEncoder.matches(password, member.getPassword())) {
+            redisTemplate.opsForValue().set(email, "OK", EXPIRE_TIME, TimeUnit.SECONDS);
+            return true;
+        }
+        return false;
+    }
+
+    public void updateMember(String email, UpdateMemberRequestDto updateMemberRequestDto) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+        if(updateMemberRequestDto.getNewPassword() != null){
+            if("OK".equals(redisTemplate.opsForValue().get(email))){
+                updateMemberRequestDto.setNewPassword(passwordEncoder.encode(updateMemberRequestDto.getNewPassword()));
+            }else{
+                throw new IllegalStateException("비밀번호 인증을 하십시오.");
+            }
+        }
+        member.update(updateMemberRequestDto);
+        memberRepository.save(member);
     }
 }
