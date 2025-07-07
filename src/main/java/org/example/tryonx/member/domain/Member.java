@@ -2,6 +2,7 @@ package org.example.tryonx.member.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.tryonx.member.dto.UpdateMemberRequestDto;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -60,6 +61,30 @@ public class Member {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public void update(UpdateMemberRequestDto request){
+        if(request.getNickname() != null){
+            this.nickname = request.getNickname();
+        }
+        if(request.getAddress() != null){
+            this.address = request.getAddress();
+        }
+        if(request.getNewPassword() != null){
+            this.updatePassword(request.getNewPassword());
+        }
+        if(request.getGender() != null){
+            this.gender = request.getGender();
+        }
+        if(request.getHeight() != null){
+            this.height = request.getHeight();
+        }
+        if(request.getWeight() != null){
+            this.weight = request.getWeight();
+        }
+        if(request.getBodyType() != null){
+            this.bodyType = request.getBodyType();
+        }
+    }
 
     public void updatePassword(String encodedPassword) {
         if (encodedPassword == null || encodedPassword.length() < 10) {
