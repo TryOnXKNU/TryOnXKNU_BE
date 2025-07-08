@@ -23,6 +23,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -74,31 +75,39 @@ public class AuthServiceImpl implements AuthService {
             ResponseDto dto = getInfo(accessToken);
             Long kakaoId = dto.getKakaoId();
 
-            // 3. 회원 조회 또는 생성
-            Member member = memberRepository.findByEmail(dto.getEmail())
-                    .orElseGet(() -> {
-                        Member newMember = Member.builder()
-                                .email(dto.getEmail())
-                                .name(dto.getName() != null ? dto.getName() : dto.getProfile_nickname())
-                                .nickname(dto.getProfile_nickname() != null ? dto.getProfile_nickname() : "카카오사용자")
-                                .profileUrl(dto.getProfile_image() != null ? dto.getProfile_image() : "")
-                                .phoneNumber(dto.getPhone_number())
-                                .gender(convertGender(dto.getGender()))
-                                .birthDate(parseBirth(dto.getBirthyear(), dto.getBirthday()))
-                                .address(dto.getShipping_address())
-                                .socialType("KAKAO")
-                                .socialId(kakaoId)
-                                .password(null)
-                                .role(Role.USER)
-                                .build();
-                        return memberRepository.save(newMember);
-                    });
+            // 3. 이메일로 기존 회원 조회 및 일반 로그인 여부 확인
+            Optional<Member> existingMemberOpt = memberRepository.findByEmail(dto.getEmail());
+            Member member;
+
+            if (existingMemberOpt.isPresent()) {
+                Member existingMember = existingMemberOpt.get();
+                if (!"KAKAO".equalsIgnoreCase(existingMember.getSocialType())) {
+                    throw new IllegalStateException("이미 일반 로그인으로 가입된 이메일입니다.");
+                }
+                member = existingMember;
+            } else {
+                // 신규 회원 생성
+                member = Member.builder()
+                        .email(dto.getEmail())
+                        .name(dto.getName() != null ? dto.getName() : dto.getProfile_nickname())
+                        .nickname(dto.getProfile_nickname() != null ? dto.getProfile_nickname() : "카카오사용자")
+                        .profileUrl(dto.getProfile_image() != null ? dto.getProfile_image() : "")
+                        .phoneNumber(dto.getPhone_number())
+                        .gender(convertGender(dto.getGender()))
+                        .birthDate(parseBirth(dto.getBirthyear(), dto.getBirthday()))
+                        .address(dto.getShipping_address())
+                        .socialType("KAKAO")
+                        .socialId(kakaoId)
+                        .password(null)
+                        .role(Role.USER)
+                        .build();
+                member = memberRepository.save(member);
+            }
 
             String token = jwtTokenProvider.createtoken(member.getEmail(), member.getRole().toString());
 
             Map<String, Object> response = new HashMap<>();
-            response.put("token", token); // 클라이언트에서 저장할 수 있도록 포함시켜야 함
-
+            response.put("token", token);
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
@@ -172,24 +181,32 @@ public class AuthServiceImpl implements AuthService {
                 return ResponseEntity.badRequest().body("전화번호가 제공되지 않았습니다.");
             }
 
-            Member member = memberRepository.findByEmail(dto.getEmail())
-                    .orElseGet(() -> {
-                        Member newMember = Member.builder()
-                                .email(dto.getEmail())
-                                .name(dto.getName() != null ? dto.getName() : dto.getProfile_nickname())
-                                .nickname(dto.getProfile_nickname() != null ? dto.getProfile_nickname() : "카카오사용자")
-                                .profileUrl(dto.getProfile_image() != null ? dto.getProfile_image() : "")
-                                .phoneNumber(dto.getPhone_number())
-                                .gender(convertGender(dto.getGender()))
-                                .birthDate(parseBirth(dto.getBirthyear(), dto.getBirthday()))
-                                .address(dto.getShipping_address())
-                                .socialType("KAKAO")
-                                .socialId(dto.getKakaoId())
-                                .password(null)
-                                .role(Role.USER)
-                                .build();
-                        return memberRepository.save(newMember);
-                    });
+            Optional<Member> existingMemberOpt = memberRepository.findByEmail(dto.getEmail());
+            Member member;
+
+            if (existingMemberOpt.isPresent()) {
+                Member existingMember = existingMemberOpt.get();
+                if (!"KAKAO".equalsIgnoreCase(existingMember.getSocialType())) {
+                    throw new IllegalStateException("이미 일반 로그인으로 가입된 이메일입니다.");
+                }
+                member = existingMember;
+            } else {
+                member = Member.builder()
+                        .email(dto.getEmail())
+                        .name(dto.getName() != null ? dto.getName() : dto.getProfile_nickname())
+                        .nickname(dto.getProfile_nickname() != null ? dto.getProfile_nickname() : "카카오사용자")
+                        .profileUrl(dto.getProfile_image() != null ? dto.getProfile_image() : "")
+                        .phoneNumber(dto.getPhone_number())
+                        .gender(convertGender(dto.getGender()))
+                        .birthDate(parseBirth(dto.getBirthyear(), dto.getBirthday()))
+                        .address(dto.getShipping_address())
+                        .socialType("KAKAO")
+                        .socialId(dto.getKakaoId())
+                        .password(null)
+                        .role(Role.USER)
+                        .build();
+                member = memberRepository.save(member);
+            }
 
             String token = jwtTokenProvider.createtoken(member.getEmail(), member.getRole().toString());
 
