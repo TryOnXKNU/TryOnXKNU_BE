@@ -40,9 +40,11 @@ public class SecurityConfigs {
                         "/api/v1/auth/email/verify",
                         "/api/v1/auth/sms/send",
                         "/api/v1/auth/sms/verify",
-                        "api/v1/auth/find-id",
+                        "/api/v1/auth/find-id",
                         "/api/v1/auth/duplicate-nickname",
                         "/api/v1/auth/reset-password",
+                        "/api/v1/products",
+                        "/api/v1/products/*",
                         "/kakao/**",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",                 // swagger JSON endpoint
