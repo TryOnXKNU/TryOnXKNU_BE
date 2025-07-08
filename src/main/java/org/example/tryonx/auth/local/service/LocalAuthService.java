@@ -50,7 +50,6 @@ public class LocalAuthService {
                 .nickname(dto.getNickname())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .phoneNumber(dto.getPhoneNumber())
-                .gender(dto.getGender())
                 .height(dto.getHeight())
                 .weight(dto.getWeight())
                 .bodyType(dto.getBodyType())

@@ -36,8 +36,6 @@ public class Member {
     @Column(nullable = false, unique = true, length = 100)
     private String phoneNumber;
 
-    private Integer gender;
-
     private Integer height;
 
     private Integer weight;
@@ -71,9 +69,6 @@ public class Member {
         }
         if(request.getNewPassword() != null){
             this.updatePassword(request.getNewPassword());
-        }
-        if(request.getGender() != null){
-            this.gender = request.getGender();
         }
         if(request.getHeight() != null){
             this.height = request.getHeight();

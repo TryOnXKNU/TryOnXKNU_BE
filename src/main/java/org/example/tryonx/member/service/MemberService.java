@@ -58,7 +58,6 @@ public class MemberService {
                 .bodyType(member.getBodyType())
                 .height(member.getHeight())
                 .weight(member.getWeight())
-                .gender(member.getGender())
                 .build();
     }
 
@@ -71,7 +70,6 @@ public class MemberService {
                 member.getBirthDate(),
                 member.getAddress(),
                 member.getEmail(),
-                member.getGender(),
                 member.getBodyType(),
                 member.getHeight(),
                 member.getWeight()

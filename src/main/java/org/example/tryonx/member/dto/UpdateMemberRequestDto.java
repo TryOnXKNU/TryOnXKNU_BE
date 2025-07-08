@@ -10,8 +10,6 @@ public class UpdateMemberRequestDto {
 
     private String newPassword;
 
-    private Integer gender;
-
     private Integer height;
 
     private Integer weight;
