@@ -44,7 +44,6 @@ public class MemberListService {
                 .bodyType(member.getBodyType())
                 .height(member.getHeight())
                 .weight(member.getWeight())
-                .gender(member.getGender())
                 .build();
     }
 

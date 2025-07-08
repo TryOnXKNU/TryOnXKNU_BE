@@ -20,8 +20,6 @@ public class MyInfoResponseDto {
 
     private String email;
 
-    private Integer gender;
-
     private Integer bodyType;
 
     private Integer height;

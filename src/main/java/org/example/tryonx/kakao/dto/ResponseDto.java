@@ -14,7 +14,6 @@ public class ResponseDto {
     private String email;
     private String profile_image;
     private String profile_nickname;
-    private String gender;
     private String birthday;
     private String birthyear;
     private String phone_number;
