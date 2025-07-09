@@ -103,7 +103,8 @@ public class ProductService {
     public ProductResponseDto getProduct(Integer productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalStateException("해당 상품이 없습니다."));
-
+        List<ProductItem> byProduct = productItemRepository.findByProduct(product);
+        List<String> size = byProduct.stream().map(p -> p.getSize().toString()).toList();
         List<String> productImageUrls = productImageRepository.findByProduct(product)
                 .stream().map(ProductImage::getImageUrl).toList();
 
@@ -114,7 +115,8 @@ public class ProductService {
                 0,
                 product.getCategory().getCategoryId(),
                 product.getDescription(),
-                productImageUrls
+                productImageUrls,
+                size
         );
         return productResponseDto;
     }

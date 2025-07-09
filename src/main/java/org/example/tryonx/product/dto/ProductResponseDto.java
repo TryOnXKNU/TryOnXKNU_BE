@@ -17,4 +17,5 @@ public class ProductResponseDto {
     private Integer categoryId;
     private String description;
     private List<String> productImages;
+    private List<String> size;
 }
