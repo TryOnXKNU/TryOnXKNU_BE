@@ -43,7 +43,7 @@ public class SmsService {
 
     private void sendSms(String to, String code) {
         Message message = new Message();
-        message.setFrom("----");
+        message.setFrom("01036110873");
         message.setTo(to);
         message.setText("[TryOnX] 인증번호는 " + code + "입니다.");
 
