@@ -1,6 +1,7 @@
 package org.example.tryonx.orders.order.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.orders.order.dto.OrderListItem;
 import org.example.tryonx.orders.order.dto.OrderPreviewRequestDto;
 import org.example.tryonx.orders.order.dto.OrderPreviewResponseDto;
 import org.example.tryonx.orders.order.dto.OrderRequestDto;
@@ -9,10 +10,9 @@ import org.example.tryonx.orders.order.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/order")
@@ -40,6 +40,13 @@ public class OrderController {
         String email = userDetails.getUsername();
         Integer orderId = orderService.createOrder(email, requestDto);
         return ResponseEntity.ok(orderId);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<OrderListItem>> getMyOrders(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        List<OrderListItem> orders = orderService.getMyOrders(email);
+        return ResponseEntity.ok(orders);
     }
 
 }
