@@ -3,10 +3,13 @@ package org.example.tryonx.orders.order.service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
+import org.example.tryonx.orders.order.domain.OrderStatus;
+import org.example.tryonx.orders.order.dto.OrderListItem;
 import org.example.tryonx.orders.order.dto.OrderRequestDto;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.example.tryonx.product.domain.Product;
@@ -16,7 +19,9 @@ import org.example.tryonx.product.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +30,7 @@ public class OrderService {
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
     private final ProductItemRepository productItemRepository;
+    private final ProductImageRepository productImageRepository;
 
     @Transactional
     public Integer createOrder(String email, OrderRequestDto requestDto) {
@@ -64,26 +70,57 @@ public class OrderService {
         BigDecimal finalAmount = totalAmount.subtract(discountAmount);
         int usedPoints = requestDto.getPoint();
 
-        // 포인트 차감
         if (usedPoints > member.getPoint()) {
             throw new IllegalArgumentException("사용 가능한 포인트를 초과했습니다.");
         }
 
         finalAmount = finalAmount.subtract(BigDecimal.valueOf(usedPoints));
-        member.usePoint(usedPoints); // Member 엔티티에 포인트 차감 메소드 필요
+        member.usePoint(usedPoints);
 
         Order order = Order.builder()
                 .member(member)
                 .totalAmount(totalAmount)
                 .finalAmount(finalAmount)
                 .usedPoints(usedPoints)
+                .orderedAt(LocalDateTime.now())
+                .status(OrderStatus.PENDING)
                 .build();
 
-        // 연관관계 설정
         orderItems.forEach(item -> item.setOrder(order));
         order.setOrderItems(orderItems);
         memberRepository.save(member);
         Order savedOrder = orderRepository.save(order);
         return savedOrder.getOrderId();
     }
+
+    public List<OrderListItem> getMyOrders(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("해당 이메일의 회원이 없습니다."));
+        List<Order> orders = orderRepository.findByMember(member);
+
+        return orders.stream()
+                .flatMap(order -> {
+                    List<OrderItem> orderItems = order.getOrderItems();
+                    int orderItemCount = orderItems.size();
+                    return orderItems.stream()
+                            .findFirst()
+                            .map(firstItem -> {
+                                ProductItem productItem = firstItem.getProductItem();
+                                Product product = productItem.getProduct();
+
+
+                                return Stream.of(new OrderListItem(
+                                        String.valueOf(order.getOrderId()),
+                                        product.getProductName(),
+                                        productItem.getSize(),
+                                        firstItem.getQuantity(),
+                                        firstItem.getPrice(),
+                                        productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl(),
+                                        orderItemCount
+                                ));
+                            }).orElseGet(Stream::empty);
+                })
+                .toList();
+    }
+
 }
