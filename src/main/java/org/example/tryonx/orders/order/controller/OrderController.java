@@ -3,7 +3,9 @@ package org.example.tryonx.orders.order.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.orders.order.dto.OrderPreviewRequestDto;
 import org.example.tryonx.orders.order.dto.OrderPreviewResponseDto;
+import org.example.tryonx.orders.order.dto.OrderRequestDto;
 import org.example.tryonx.orders.order.service.OrderPreviewService;
+import org.example.tryonx.orders.order.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,14 +20,26 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderPreviewService orderPreviewService;
+    private final OrderService orderService;
 
-    @PostMapping
+    @PostMapping("/preview")
     public ResponseEntity<OrderPreviewResponseDto> previewOrder(
             @RequestBody OrderPreviewRequestDto requestDto,
             @AuthenticationPrincipal UserDetails userDetails
-            ) {
-        String email = userDetails.getUsername(); // 또는 getEmail()
+    ){
+        String email = userDetails.getUsername();
         OrderPreviewResponseDto response = orderPreviewService.calculatePreview(email, requestDto);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping
+    public ResponseEntity<Integer> createOrder(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody OrderRequestDto requestDto
+    ) {
+        String email = userDetails.getUsername();
+        Integer orderId = orderService.createOrder(email, requestDto);
+        return ResponseEntity.ok(orderId);
+    }
+
 }

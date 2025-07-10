@@ -90,4 +90,11 @@ public class Member {
         }
         this.password = encodedPassword;
     }
+
+    public void usePoint(int point) {
+        if (this.point < point) {
+            throw new IllegalArgumentException("보유 포인트 부족");
+        }
+        this.point -= point;
+    }
 }
