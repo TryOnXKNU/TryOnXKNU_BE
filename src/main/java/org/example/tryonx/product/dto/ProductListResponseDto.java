@@ -14,7 +14,7 @@ public class ProductListResponseDto {
     private Integer productId;
     private String productName;
     private BigDecimal productPrice;
-    private Integer likeCount;
+    private Long likeCount;
     private Integer categoryId;
     private String thumbnailUrl;
 }
