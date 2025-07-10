@@ -1,10 +1,7 @@
 package org.example.tryonx.orders.order.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.tryonx.member.domain.Member;
 
 import java.math.BigDecimal;
@@ -44,5 +41,6 @@ public class Order {
     private LocalDateTime orderedAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @Setter
     private List<OrderItem> orderItems;
 }
