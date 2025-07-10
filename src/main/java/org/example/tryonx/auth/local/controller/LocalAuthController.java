@@ -42,6 +42,7 @@ public class LocalAuthController {
         Map<String, Object> loginInfo = new HashMap<>();
         loginInfo.put("email", member.getEmail());
         loginInfo.put("role", member.getRole());
+        loginInfo.put("name", member.getName());
         loginInfo.put("nickname", member.getNickname());
         loginInfo.put("height", member.getHeight());
         loginInfo.put("weight", member.getWeight());

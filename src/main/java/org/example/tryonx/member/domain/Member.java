@@ -50,6 +50,9 @@ public class Member {
 
     private Long socialId;
 
+    @Column(name = "points")
+    private Integer point;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Role role = Role.USER;

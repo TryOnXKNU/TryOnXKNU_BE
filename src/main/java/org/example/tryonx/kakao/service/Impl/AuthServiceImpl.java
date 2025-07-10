@@ -99,6 +99,7 @@ public class AuthServiceImpl implements AuthService {
                         .socialId(kakaoId)
                         .password(null)
                         .role(Role.USER)
+                        .point(0)
                         .build();
                 member = memberRepository.save(member);
             }
@@ -200,6 +201,7 @@ public class AuthServiceImpl implements AuthService {
                         .socialType("KAKAO")
                         .socialId(dto.getKakaoId())
                         .password(null)
+                        .point(0)
                         .role(Role.USER)
                         .build();
                 member = memberRepository.save(member);
