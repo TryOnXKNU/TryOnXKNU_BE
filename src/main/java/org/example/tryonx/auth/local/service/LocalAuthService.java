@@ -38,9 +38,9 @@ public class LocalAuthService {
         if(memberRepository.findByPhoneNumber(dto.getPhoneNumber()).isPresent()) {
             throw new IllegalStateException("이미 존재하는 휴대폰 번호입니다.");
         }
-//        if(!smsService.isVerified(dto.getPhoneNumber())){
-//            throw new IllegalStateException("휴대폰 인증이 완료되지 않았습니다.");
-//        }
+        if(!smsService.isVerified(dto.getPhoneNumber())){
+            throw new IllegalStateException("휴대폰 인증이 완료되지 않았습니다.");
+        }
         if(!isValidPassword(dto.getPassword())) {
             throw new IllegalStateException("비밀번호 형식이 옳바르지 않습니다.");
         }

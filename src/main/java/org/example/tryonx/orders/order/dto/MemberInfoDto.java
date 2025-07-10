@@ -11,4 +11,5 @@ public class MemberInfoDto {
     private String name;
     private String phone;
     private String address;
+    private Integer availablePoint;
 }

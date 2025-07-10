@@ -10,10 +10,11 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 public class OrderPreviewResponseDto {
+    private MemberInfoDto memberInfo;
     private BigDecimal totalAmount;
     private BigDecimal discountAmount;
     private BigDecimal finalAmount;
-    private Integer availablePoints;
+    private Integer expectedPoint;
     private List<Item> items;
 
     @Getter
@@ -23,5 +24,6 @@ public class OrderPreviewResponseDto {
         private BigDecimal price;
         private Integer quantity;
         private Size size;
+        private String discountRate;
     }
 }

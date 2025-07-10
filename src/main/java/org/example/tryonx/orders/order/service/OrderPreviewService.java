@@ -3,6 +3,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
+import org.example.tryonx.orders.order.dto.MemberInfoDto;
 import org.example.tryonx.orders.order.dto.OrderPreviewRequestDto;
 import org.example.tryonx.orders.order.dto.OrderPreviewResponseDto;
 import org.example.tryonx.product.domain.Product;
@@ -36,7 +37,8 @@ public class OrderPreviewService {
                             productItem.getProduct().getProductName(),
                             product.getPrice(),
                             reqItem.getQuantity(),
-                            productItem.getSize()
+                            productItem.getSize(),
+                            product.getDiscountRate().toString() + "%"
                     );
                 })
                 .toList();
@@ -63,11 +65,16 @@ public class OrderPreviewService {
 
         BigDecimal finalAmount = totalAmount.subtract(discountAmount);
 
+        Integer expectedPoint = finalAmount.multiply(BigDecimal.valueOf(0.01))
+                .setScale(0, BigDecimal.ROUND_DOWN)
+                .intValue();
+
         return new OrderPreviewResponseDto(
+                new MemberInfoDto(member.getName(),member.getPhoneNumber(),member.getAddress(), member.getPoint()),
                 totalAmount,
                 discountAmount,
                 finalAmount,
-                member.getPoint(),
+                expectedPoint,
                 itemList
         );
     }
