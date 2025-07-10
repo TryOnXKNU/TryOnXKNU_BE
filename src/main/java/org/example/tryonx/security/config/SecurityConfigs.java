@@ -45,6 +45,7 @@ public class SecurityConfigs {
                         "/api/v1/auth/reset-password",
                         "/api/v1/products",
                         "/api/v1/products/*",
+                                "/upload/**",
                         "/kakao/**",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",                 // swagger JSON endpoint
