@@ -67,7 +67,7 @@ public class OrderPreviewService {
                 totalAmount,
                 discountAmount,
                 finalAmount,
-                100, // member.getCount 추가 예정..
+                member.getPoint(),
                 itemList
         );
     }
