@@ -6,6 +6,8 @@ import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
+import org.example.tryonx.like.domain.Like;
+import org.example.tryonx.like.repository.LikeRepository;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.domain.ProductItem;
 import org.example.tryonx.product.dto.ProductCreateRequestDto;
@@ -31,12 +33,14 @@ public class ProductService {
     private final ProductItemRepository productItemRepository;
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
+    private final LikeRepository likeRepository;
 
-    public ProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository) {
+    public ProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository, LikeRepository likeRepository) {
         this.productRepository = productRepository;
         this.productItemRepository = productItemRepository;
         this.productImageRepository = productImageRepository;
         this.categoryRepository = categoryRepository;
+        this.likeRepository = likeRepository;
     }
     public Product createProduct(ProductCreateRequestDto dto, List<MultipartFile> images) {
         if (productRepository.findByProductCode(dto.getCode()).isPresent()) {
@@ -112,7 +116,7 @@ public class ProductService {
                 product.getProductId(),
                 product.getProductName(),
                 product.getPrice(),
-                0,
+                likeRepository.countByProduct(product),
                 product.getCategory().getCategoryId(),
                 product.getDescription(),
                 productImageUrls,
@@ -143,7 +147,7 @@ public class ProductService {
                             product.getProductId(),
                             product.getProductName(),
                             product.getPrice(),
-                            0,
+                            likeRepository.countByProduct(product),
                             product.getCategory().getCategoryId(),
                             image.getImageUrl()
                     );
