@@ -1,10 +1,7 @@
 package org.example.tryonx.orders.order.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.tryonx.orders.order.dto.OrderListItem;
-import org.example.tryonx.orders.order.dto.OrderPreviewRequestDto;
-import org.example.tryonx.orders.order.dto.OrderPreviewResponseDto;
-import org.example.tryonx.orders.order.dto.OrderRequestDto;
+import org.example.tryonx.orders.order.dto.*;
 import org.example.tryonx.orders.order.service.OrderPreviewService;
 import org.example.tryonx.orders.order.service.OrderService;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +44,12 @@ public class OrderController {
         String email = userDetails.getUsername();
         List<OrderListItem> orders = orderService.getMyOrders(email);
         return ResponseEntity.ok(orders);
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderDetailResponseDto> getOrder(@PathVariable Integer orderId) {
+        OrderDetailResponseDto orderDetail = orderService.getOrderDetail(orderId);
+        return ResponseEntity.ok(orderDetail);
     }
 
 }
