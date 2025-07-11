@@ -110,4 +110,10 @@ public class LocalAuthService {
         String regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).{8,}$";
         return password.matches(regex);
     }
+    public boolean IsExistedEmail(String email) {
+        if(memberRepository.findByEmail(email).isPresent()) {
+            return true;
+        }else
+            return false;
+    }
 }

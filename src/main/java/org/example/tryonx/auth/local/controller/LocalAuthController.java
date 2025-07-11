@@ -66,4 +66,13 @@ public class LocalAuthController {
         localAuthService.resetPassword(request.getEmail(), request.getNewPassword());
         return ResponseEntity.ok("비밀번호 재설정이 완료되었습니다.");
     }
+
+    @PostMapping("/check-email")
+    public ResponseEntity<String> checkEmail(@RequestBody CheckEmailRequest checkEmailRequest) {
+        boolean b = localAuthService.IsExistedEmail(checkEmailRequest.email());
+        if(b)
+            return ResponseEntity.ok("중복된 이메일이 존재합니다.");
+        return ResponseEntity.ok("중복된 이메일이 존재하지 않습니다.");
+    }
+
 }
