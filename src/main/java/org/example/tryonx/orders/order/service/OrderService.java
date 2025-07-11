@@ -2,15 +2,21 @@ package org.example.tryonx.orders.order.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.enums.Size;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.domain.OrderStatus;
+import org.example.tryonx.orders.order.dto.MemberInfoDto;
+import org.example.tryonx.orders.order.dto.OrderDetailResponseDto;
 import org.example.tryonx.orders.order.dto.OrderListItem;
 import org.example.tryonx.orders.order.dto.OrderRequestDto;
+import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.domain.ProductItem;
@@ -21,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Service
@@ -31,6 +38,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final ProductItemRepository productItemRepository;
     private final ProductImageRepository productImageRepository;
+    private final OrderItemRepository orderItemRepository;
 
     @Transactional
     public Integer createOrder(String email, OrderRequestDto requestDto) {
@@ -110,17 +118,59 @@ public class OrderService {
 
 
                                 return Stream.of(new OrderListItem(
-                                        String.valueOf(order.getOrderId()),
+                                        order.getOrderId(),
                                         product.getProductName(),
                                         productItem.getSize(),
                                         firstItem.getQuantity(),
                                         firstItem.getPrice(),
                                         productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl(),
-                                        orderItemCount
+                                        orderItemCount,
+                                        order.getOrderedAt()
                                 ));
                             }).orElseGet(Stream::empty);
                 })
                 .toList();
     }
+    public OrderDetailResponseDto getOrderDetail(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 주문 정보가 존재하지 않습니다."));
+
+        Member member = order.getMember();
+        BigDecimal totalAmount = order.getTotalAmount();
+        BigDecimal finalAmount = order.getFinalAmount();
+        List<OrderItem> orderedItems = orderItemRepository.findByOrder(order);
+
+        List<OrderDetailResponseDto.Item> items = orderedItems.stream().map(orderItem -> {
+            ProductItem productItem = orderItem.getProductItem();
+            Product product = productItem.getProduct();
+
+            return new OrderDetailResponseDto.Item(
+                    product.getProductName(),
+                    orderItem.getPrice(),
+                    orderItem.getQuantity(),
+                    productItem.getSize(),
+                    orderItem.getDiscountRate().toPlainString()
+            );
+        }).toList();
+
+        return new OrderDetailResponseDto(
+                order.getOrderId(),
+                new MemberInfoDto(
+                        member.getName(),
+                        member.getPhoneNumber(),
+                        member.getAddress(),
+                        member.getPoint()
+                ),
+                totalAmount,
+                totalAmount.subtract(finalAmount),
+                finalAmount,
+                order.getStatus(),
+                order.getUsedPoints(),
+                items,
+                items.size(),
+                order.getOrderedAt()
+        );
+    }
+
 
 }
