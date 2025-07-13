@@ -41,3 +41,6 @@ out/
 
 upload/product/*
 !/upload/product/.gitkeep
+
+upload/ask/*
+!upload/ask/.gitkeep
