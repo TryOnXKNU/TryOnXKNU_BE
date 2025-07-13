@@ -45,6 +45,7 @@ public class AskService {
         List<Ask> asks = askRepository.findByMemberEmail(email);
         return asks.stream()
                 .map(ask -> new AskHistoryItem(
+                        ask.getAskId(),
                         ask.getTitle(),
                         ask.getAnswerStatus(),
                         ask.getCreatedAt()
@@ -145,6 +146,7 @@ public class AskService {
                 .collect(Collectors.toList());
 
         return new AskResponseDto(
+                ask.getAskId(),
                 ask.getTitle(),
                 productName,
                 size,

@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AskHistoryItem {
+    private Long askId;
     private String title;
     private AnswerStatus answerStatus;
     private LocalDateTime createdAt;

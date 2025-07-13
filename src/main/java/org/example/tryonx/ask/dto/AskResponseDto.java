@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AskResponseDto {
+    private Long askId;
     private String title;
     private String productName;
     private String size;
