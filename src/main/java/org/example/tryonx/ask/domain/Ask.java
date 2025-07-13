@@ -51,6 +51,7 @@ public class Ask {
         if (answerStatus == null) answerStatus = AnswerStatus.WAITING;
     }
 
+    @Builder.Default
     @OneToMany(mappedBy = "ask", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AskImage> images = new ArrayList<>();
 
