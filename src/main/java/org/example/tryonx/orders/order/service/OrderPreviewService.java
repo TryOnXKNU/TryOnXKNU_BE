@@ -1,6 +1,7 @@
 package org.example.tryonx.orders.order.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.orders.order.dto.MemberInfoDto;
@@ -21,6 +22,7 @@ public class OrderPreviewService {
     private final ProductRepository productRepository;
     private final ProductItemRepository productItemRepository;
     private final MemberRepository memberRepository;
+    private final ProductImageRepository productImageRepository;
 
     public OrderPreviewResponseDto calculatePreview(String email, OrderPreviewRequestDto dto) {
         Member member = memberRepository.findByEmail(email)
@@ -38,7 +40,8 @@ public class OrderPreviewService {
                             product.getPrice(),
                             reqItem.getQuantity(),
                             productItem.getSize(),
-                            product.getDiscountRate().toString() + "%"
+                            product.getDiscountRate().toString() + "%",
+                            productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl()
                     );
                 })
                 .toList();

@@ -25,5 +25,6 @@ public class OrderPreviewResponseDto {
         private Integer quantity;
         private Size size;
         private String discountRate;
+        private String imageUrl;
     }
 }
