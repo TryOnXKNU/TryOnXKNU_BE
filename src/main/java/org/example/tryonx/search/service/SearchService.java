@@ -22,6 +22,7 @@ public class SearchService {
 
         return products.stream()
                 .map(product -> new ProductResponse(
+                        product.getProductId(),
                         product.getProductName(),
                         product.getPrice(),
                         product.getDiscountRate(),

@@ -14,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class ProductResponse {
+    private Integer ProductId;
     private String productName;
     private BigDecimal price;
     private BigDecimal discountRate;
