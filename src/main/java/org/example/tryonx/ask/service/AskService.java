@@ -128,8 +128,6 @@ public class AskService {
         askRepository.save(ask);
     }
 
-
-
     public AskResponseDto getAskDetail(String email, Long askId) {
         Ask ask = askRepository.findById(askId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 문의글입니다."));
@@ -171,6 +169,5 @@ public class AskService {
 
         askRepository.delete(ask);
     }
-
 
 }

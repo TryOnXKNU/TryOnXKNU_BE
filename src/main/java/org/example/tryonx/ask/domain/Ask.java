@@ -26,7 +26,7 @@ public class Ask {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @Column(nullable = false)
+    @Column(name = "ask_title", nullable = false)
     private String title;
 
     @Column(columnDefinition = "TEXT", nullable = false)
@@ -58,6 +58,18 @@ public class Ask {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_item_id", nullable = false)
     private OrderItem orderItem;
+
+    public void setAnswer(String answer) {
+        this.answer = answer;
+    }
+
+    public void setAnsweredAt(LocalDateTime answeredAt) {
+        this.answeredAt = answeredAt;
+    }
+
+    public void setAnswerStatus(AnswerStatus answerStatus) {
+        this.answerStatus = answerStatus;
+    }
 
 
 }
