@@ -149,7 +149,8 @@ public class OrderService {
                     orderItem.getPrice(),
                     orderItem.getQuantity(),
                     productItem.getSize(),
-                    orderItem.getDiscountRate().toPlainString()
+                    orderItem.getDiscountRate().toPlainString(),
+                    productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl()
             );
         }).toList();
 

@@ -34,5 +34,6 @@ public class OrderDetailResponseDto {
         private Integer quantity;
         private Size size;
         private String discountRate;
+        private String imgUrl;
     }
 }
