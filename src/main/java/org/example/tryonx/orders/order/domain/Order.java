@@ -40,6 +40,10 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime orderedAt = LocalDateTime.now();
 
+    @Setter
+    @Column(name = "order_num", unique = true, length = 20)
+    private String orderNum;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     @Setter
     private List<OrderItem> orderItems;

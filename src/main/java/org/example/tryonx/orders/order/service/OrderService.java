@@ -6,16 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.Size;
+import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.domain.OrderStatus;
-import org.example.tryonx.orders.order.dto.MemberInfoDto;
-import org.example.tryonx.orders.order.dto.OrderDetailResponseDto;
-import org.example.tryonx.orders.order.dto.OrderListItem;
-import org.example.tryonx.orders.order.dto.OrderRequestDto;
+import org.example.tryonx.orders.order.dto.*;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.example.tryonx.product.domain.Product;
@@ -26,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -96,9 +95,25 @@ public class OrderService {
 
         orderItems.forEach(item -> item.setOrder(order));
         order.setOrderItems(orderItems);
+
         memberRepository.save(member);
         Order savedOrder = orderRepository.save(order);
+
+        //여기서 orderNum 생성
+        String orderNum = generateOrderNum(savedOrder);
+        savedOrder.setOrderNum(orderNum);
+        orderRepository.save(savedOrder);
+
         return savedOrder.getOrderId();
+    }
+
+
+    //orderNum 자동 생성
+    private String generateOrderNum(Order order) {
+        LocalDateTime orderedAt = order.getOrderedAt();
+        String datePart = orderedAt.format(DateTimeFormatter.ofPattern("yyMMdd"));
+        String idPart = String.format("%04d", order.getOrderId());
+        return datePart + "00" + idPart;
     }
 
     public List<OrderListItem> getMyOrders(String email) {
@@ -107,27 +122,42 @@ public class OrderService {
         List<Order> orders = orderRepository.findByMember(member);
 
         return orders.stream()
-                .flatMap(order -> {
+                .map(order -> {
                     List<OrderItem> orderItems = order.getOrderItems();
                     int orderItemCount = orderItems.size();
-                    return orderItems.stream()
-                            .findFirst()
-                            .map(firstItem -> {
-                                ProductItem productItem = firstItem.getProductItem();
+
+                    List<OrderItemDto> orderItemDtos = orderItems.stream()
+                            .map(item -> {
+                                ProductItem productItem = item.getProductItem();
                                 Product product = productItem.getProduct();
-
-
-                                return Stream.of(new OrderListItem(
-                                        order.getOrderId(),
+                                return new OrderItemDto(
+                                        item.getOrderItemId(),
                                         product.getProductName(),
                                         productItem.getSize(),
-                                        firstItem.getQuantity(),
-                                        firstItem.getPrice(),
-                                        productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl(),
-                                        orderItemCount,
-                                        order.getOrderedAt()
-                                ));
-                            }).orElseGet(Stream::empty);
+                                        product.getPrice().multiply(product.getDiscountRate().divide(BigDecimal.valueOf(100))),
+                                        item.getQuantity()
+                                );
+                            }).toList();
+
+                    // 첫 상품 기준 썸네일 이미지 가져오기 (대표 이미지)
+                    String imageUrl = orderItems.stream()
+                            .findFirst()
+                            .map(OrderItem::getProductItem)
+                            .map(ProductItem::getProduct)
+                            .flatMap(product -> productImageRepository
+                                    .findByProductAndIsThumbnailTrue(product)
+                                    .map(ProductImage::getImageUrl))
+                            .orElse(null);
+
+                    return new OrderListItem(
+                            order.getOrderId(),
+                            order.getOrderNum(),
+                            orderItemDtos,
+                            order.getFinalAmount(),
+                            imageUrl,
+                            orderItemCount,
+                            order.getOrderedAt()
+                    );
                 })
                 .toList();
     }
@@ -156,6 +186,7 @@ public class OrderService {
 
         return new OrderDetailResponseDto(
                 order.getOrderId(),
+                order.getOrderNum(),
                 new MemberInfoDto(
                         member.getName(),
                         member.getPhoneNumber(),

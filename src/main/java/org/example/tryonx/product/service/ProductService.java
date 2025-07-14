@@ -8,11 +8,14 @@ import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.like.domain.Like;
 import org.example.tryonx.like.repository.LikeRepository;
+import org.example.tryonx.product.domain.Measurement;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.domain.ProductItem;
 import org.example.tryonx.product.dto.ProductCreateRequestDto;
+import org.example.tryonx.product.dto.ProductItemInfoDto;
 import org.example.tryonx.product.dto.ProductListResponseDto;
 import org.example.tryonx.product.dto.ProductResponseDto;
+import org.example.tryonx.product.repository.MeasurementRepository;
 import org.example.tryonx.product.repository.ProductItemRepository;
 import org.example.tryonx.product.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -34,13 +37,15 @@ public class ProductService {
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
     private final LikeRepository likeRepository;
+    private final MeasurementRepository measurementRepository;
 
-    public ProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository, LikeRepository likeRepository) {
+    public ProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository, LikeRepository likeRepository, MeasurementRepository measurementRepository) {
         this.productRepository = productRepository;
         this.productItemRepository = productItemRepository;
         this.productImageRepository = productImageRepository;
         this.categoryRepository = categoryRepository;
         this.likeRepository = likeRepository;
+        this.measurementRepository = measurementRepository;
     }
     public Product createProduct(ProductCreateRequestDto dto, List<MultipartFile> images) {
         if (productRepository.findByProductCode(dto.getCode()).isPresent()) {
@@ -57,13 +62,9 @@ public class ProductService {
                 .bodyShape(dto.getBodyShape())
                 .build();
         productRepository.save(product);
-
-        createProductItem(product, Size.XS, dto.getSizeXsStock());
-        createProductItem(product, Size.S, dto.getSizeSStock());
-        createProductItem(product, Size.M, dto.getSizeMStock());
-        createProductItem(product, Size.L, dto.getSizeLStock());
-        createProductItem(product, Size.XL, dto.getSizeXLStock());
-        createProductItem(product, Size.FREE, dto.getSizeFreeStock());
+        dto.getProductItemInfoDtos().forEach(itemDto -> {
+            createProductItem(product, itemDto);
+        });
 
         if (images != null && !images.isEmpty()) {
             boolean isFirst = true;
@@ -107,35 +108,75 @@ public class ProductService {
     public ProductResponseDto getProduct(Integer productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalStateException("해당 상품이 없습니다."));
-        List<ProductItem> byProduct = productItemRepository.findByProduct(product);
-        List<String> size = byProduct.stream().map(p -> p.getSize().toString()).toList();
-        List<String> productImageUrls = productImageRepository.findByProduct(product)
+
+        List<ProductItem> productItems = productItemRepository.findByProduct(product);
+
+        List<ProductItemInfoDto> itemDtos = productItems.stream().map(item -> {
+            Measurement m = measurementRepository.findByProductItem(item)
+                    .orElseThrow(() -> new IllegalStateException("해당 실측 내역이 없습니다."));
+            return new ProductItemInfoDto(
+                    item.getSize(),
+                    item.getStock(),
+                    m != null ? m.getLength() : null,
+                    m != null ? m.getShoulder() : null,
+                    m != null ? m.getChest() : null,
+                    m != null ? m.getSleeveLength() : null,
+                    m != null ? m.getWaist() : null,
+                    m != null ? m.getThigh() : null,
+                    m != null ? m.getRise() : null,
+                    m != null ? m.getHem() : null,
+                    m != null ? m.getHip() : null
+            );
+        }).toList();
+
+        List<String> imageUrls = productImageRepository.findByProduct(product)
                 .stream().map(ProductImage::getImageUrl).toList();
 
-        ProductResponseDto productResponseDto = new ProductResponseDto(
+        return new ProductResponseDto(
                 product.getProductId(),
                 product.getProductName(),
                 product.getPrice(),
                 likeRepository.countByProduct(product),
                 product.getCategory().getCategoryId(),
                 product.getDescription(),
-                productImageUrls,
-                size
+                imageUrls,
+                itemDtos  // 사이즈 + 실측 포함된 목록
         );
-        return productResponseDto;
     }
 
-    private void createProductItem(Product product, Size size, Integer stock) {
-        if (stock == null || stock <= 0) return;
+    private void createProductItem(Product product, ProductItemInfoDto dto) {
+        if (dto.getStock() == null || dto.getStock() <= 0) return;
 
         ProductItem item = ProductItem.builder()
                 .product(product)
-                .size(size)
-                .stock(stock)
-                .status(ProductStatus.AVAILABLE) // 재고 있으면 AVAILABLE
+                .size(dto.getSize())
+                .stock(dto.getStock())
+                .status(ProductStatus.AVAILABLE)
                 .build();
 
         productItemRepository.save(item);
+
+        Measurement measurement = Measurement.builder()
+                .productItem(item)
+                .length(dto.getLength())
+                .shoulder(dto.getShoulder())
+                .chest(dto.getChest())
+                .sleeveLength(dto.getSleeve_length())
+                .waist(dto.getWaist())
+                .thigh(dto.getThigh())
+                .rise(dto.getRise())
+                .hem(dto.getHem())
+                .hip((dto.getHip()))
+                .build();
+
+        measurementRepository.save(measurement);
+    }
+    private Double parseDouble(String value) {
+        try {
+            return value != null ? Double.parseDouble(value) : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private List<ProductListResponseDto> getProductListResponseDto(List<Product> products) {

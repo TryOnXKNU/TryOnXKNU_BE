@@ -8,6 +8,7 @@ import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.enums.ProductStatus;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -17,12 +18,7 @@ public class ProductCreateRequestDto {
     private String name;
     private String description;
     private BigDecimal price;
-    private Integer sizeXsStock;
-    private Integer sizeSStock;
-    private Integer sizeMStock;
-    private Integer sizeLStock;
-    private Integer sizeXLStock;
-    private Integer sizeFreeStock;
+    private List<ProductItemInfoDto> productItemInfoDtos;
     private BigDecimal discountRate;
     private Integer categoryId;
     private ProductStatus status;
