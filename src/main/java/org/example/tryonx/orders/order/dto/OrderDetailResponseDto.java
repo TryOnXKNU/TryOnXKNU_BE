@@ -16,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderDetailResponseDto {
     private Integer orderId;
+    private String orderNum;
     private MemberInfoDto memberInfo;
     private BigDecimal totalAmount;
     private BigDecimal discountAmount;

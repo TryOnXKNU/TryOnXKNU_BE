@@ -7,16 +7,16 @@ import org.example.tryonx.enums.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderListItem {
     private Integer orderId;
-    private String productName;
-    private Size size;
-    private Integer quantity;
-    private BigDecimal price;
+    private String orderNum;
+    private List<OrderItemDto> orderItem;
+    private BigDecimal totalPrice;
     private String imgUrl;
     private Integer orderItemsCount;
     private LocalDateTime orderedAt;

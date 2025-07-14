@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,5 +18,5 @@ public class ProductResponseDto {
     private Integer categoryId;
     private String description;
     private List<String> productImages;
-    private List<String> size;
+    private List<ProductItemInfoDto> productItems;
 }

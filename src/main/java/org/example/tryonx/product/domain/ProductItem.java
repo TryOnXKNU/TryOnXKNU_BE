@@ -30,5 +30,5 @@ public class ProductItem {
     private Integer stock;
 
     @Enumerated(EnumType.STRING)
-    private ProductStatus status = ProductStatus.OUT_OF_STOCK;
+    private ProductStatus status = ProductStatus.SOLDOUT;
 }
