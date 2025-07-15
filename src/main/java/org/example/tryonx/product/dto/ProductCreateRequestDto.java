@@ -14,7 +14,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductCreateRequestDto {
-    private String code;
     private String name;
     private String description;
     private BigDecimal price;
