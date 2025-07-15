@@ -1,4 +1,4 @@
-package org.example.tryonx.admin.membermanage.dto;
+package org.example.tryonx.admin.memberManage.dto;
 
 import lombok.*;
 
