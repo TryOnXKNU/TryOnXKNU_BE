@@ -4,8 +4,11 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.admin.dto.MemberInfoDto;
 import org.example.tryonx.admin.dto.MemberListDto;
+import org.example.tryonx.admin.dto.MemberSearchRequest;
+import org.example.tryonx.admin.specification.MemberSpecification;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -64,6 +67,11 @@ public class MemberListService {
         Member member = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 회원을 찾을 수 없습니다."));
         memberRepository.delete(member);
+    }
+
+    public List<Member> searchMembers(MemberSearchRequest request) {
+        Specification<Member> spec = MemberSpecification.search(request.getSearchKey(), request.getSearchValue());
+        return memberRepository.findAll(spec);
     }
 
 }
