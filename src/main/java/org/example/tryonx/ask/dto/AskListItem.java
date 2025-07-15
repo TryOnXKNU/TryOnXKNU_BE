@@ -9,7 +9,7 @@ import org.example.tryonx.enums.Size;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AskListItem {
-    private Integer orderItemId;
+    private Integer orderId;
     private String productName;
     private Size size;
     private String imgUrl;
