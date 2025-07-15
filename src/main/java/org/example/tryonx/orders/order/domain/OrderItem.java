@@ -2,6 +2,7 @@ package org.example.tryonx.orders.order.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.product.domain.ProductItem;
 
 import java.math.BigDecimal;
@@ -27,6 +28,10 @@ public class OrderItem {
     @JoinColumn(name = "product_item_id")
     private ProductItem productItem;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
     @Column(nullable = false)
     private Integer quantity;
 
@@ -39,4 +44,3 @@ public class OrderItem {
     @Column
     private Integer usedPoints = 0;
 }
-
