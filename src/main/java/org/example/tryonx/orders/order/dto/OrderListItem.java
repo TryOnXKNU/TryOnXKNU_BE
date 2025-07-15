@@ -14,10 +14,10 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderListItem {
     private Integer orderId;
+    private Long memberId;
     private String orderNum;
     private List<OrderItemDto> orderItem;
     private BigDecimal totalPrice;
-    private String imgUrl;
     private Integer orderItemsCount;
     private LocalDateTime orderedAt;
 }

@@ -57,6 +57,7 @@ public class OrderService {
                     BigDecimal discountRate = product.getDiscountRate();
 
                     return OrderItem.builder()
+                            .member(member)
                             .productItem(productItem)
                             .quantity(item.getQuantity())
                             .price(itemPrice)
@@ -131,12 +132,15 @@ public class OrderService {
                             .map(item -> {
                                 ProductItem productItem = item.getProductItem();
                                 Product product = productItem.getProduct();
+                                ProductImage productImage = productImageRepository.findByProductAndIsThumbnailTrue(product)
+                                        .orElseThrow(() -> new EntityNotFoundException("상품 이미지가 없습니다."));
                                 return new OrderItemDto(
                                         item.getOrderItemId(),
                                         product.getProductName(),
                                         productItem.getSize(),
                                         product.getPrice().multiply(product.getDiscountRate().divide(BigDecimal.valueOf(100))),
-                                        item.getQuantity()
+                                        item.getQuantity(),
+                                        productImage.getImageUrl()
                                 );
                             }).toList();
 
@@ -152,10 +156,10 @@ public class OrderService {
 
                     return new OrderListItem(
                             order.getOrderId(),
+                            order.getMember().getMemberId(),
                             order.getOrderNum(),
                             orderItemDtos,
                             order.getFinalAmount(),
-                            imageUrl,
                             orderItemCount,
                             order.getOrderedAt()
                     );
