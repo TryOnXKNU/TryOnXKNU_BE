@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -62,7 +63,7 @@ public class OrderService {
                             .discountRate(discountRate)
                             .build();
                 })
-                .toList();
+                .collect(Collectors.toList());
 
         BigDecimal totalAmount = orderItems.stream()
                 .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))

@@ -76,9 +76,10 @@ public class ProductService {
         productRepository.save(product); // 여기서 productId 생성됨
 
         // 생성된 productId로 productCode 생성 후 다시 저장
-        String productCode = "ax" + middleCode + product.getProductId();
+        String paddedId = String.format("%05d", product.getProductId());
+        String productCode = "ax" + middleCode + paddedId;
         product.setProductCode(productCode);
-        productRepository.save(product); // 다시 저장
+        productRepository.save(product);
 
         // 아이템 저장
         dto.getProductItemInfoDtos().forEach(itemDto -> {
