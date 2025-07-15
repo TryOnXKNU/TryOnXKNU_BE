@@ -1,17 +1,16 @@
-package org.example.tryonx.admin.ask.dto;
+package org.example.tryonx.admin.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.tryonx.enums.Size;
 
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AskListDto {
+public class AskAnswerRequestDto {
     private Long askId;
-    private String title;
-    private String productName;
-    private Size size;
-    private String imgUrl;
+    private String answer;
 }

@@ -1,10 +1,10 @@
-package org.example.tryonx.admin.ask.controller;
+package org.example.tryonx.admin.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.tryonx.admin.ask.dto.AskAnswerRequestDto;
-import org.example.tryonx.admin.ask.dto.AskListDto;
-import org.example.tryonx.admin.ask.dto.CompletedAskDetailsDto;
-import org.example.tryonx.admin.ask.service.AdminAskService;
+import org.example.tryonx.admin.dto.AskAnswerRequestDto;
+import org.example.tryonx.admin.dto.AskListDto;
+import org.example.tryonx.admin.dto.CompletedAskDetailsDto;
+import org.example.tryonx.admin.service.AdminAskService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
