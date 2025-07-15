@@ -3,6 +3,7 @@ package org.example.tryonx.admin.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.admin.dto.MemberInfoDto;
 import org.example.tryonx.admin.dto.MemberListDto;
+import org.example.tryonx.admin.dto.MemberOrderHistory;
 import org.example.tryonx.admin.dto.MemberSearchRequest;
 import org.example.tryonx.admin.service.MemberListService;
 import org.example.tryonx.member.domain.Member;
@@ -57,6 +58,13 @@ public class AdminMembers {
         List<Member> result = memberListService.searchMembers(
                 new MemberSearchRequest(searchKey, searchValue));
         return ResponseEntity.ok(result);
+    }
+
+    //멤버별 주문 내역 조회
+    @GetMapping("/members/{memberId}/orders")
+    public ResponseEntity<List<MemberOrderHistory>> getOrderHistoryByMember(@PathVariable Long memberId) {
+        List<MemberOrderHistory> history = memberListService.getOrderHistoryByMember(memberId);
+        return ResponseEntity.ok(history);
     }
 
 }
