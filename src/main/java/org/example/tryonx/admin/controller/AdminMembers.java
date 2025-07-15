@@ -3,7 +3,9 @@ package org.example.tryonx.admin.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.admin.dto.MemberInfoDto;
 import org.example.tryonx.admin.dto.MemberListDto;
+import org.example.tryonx.admin.dto.MemberSearchRequest;
 import org.example.tryonx.admin.service.MemberListService;
+import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.service.MemberService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,5 +50,12 @@ public class AdminMembers {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/members/search")
+    public ResponseEntity<List<Member>> searchMembers(@RequestParam String searchKey,
+                                                      @RequestParam String searchValue) {
+        List<Member> result = memberListService.searchMembers(
+                new MemberSearchRequest(searchKey, searchValue));
+        return ResponseEntity.ok(result);
+    }
 
 }
