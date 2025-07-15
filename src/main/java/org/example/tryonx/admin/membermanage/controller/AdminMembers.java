@@ -1,10 +1,10 @@
-package org.example.tryonx.admin.memberManage.controller;
+package org.example.tryonx.admin.membermanage.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.tryonx.admin.memberManage.dto.MemberInfoDto;
-import org.example.tryonx.admin.memberManage.dto.MemberListDto;
-import org.example.tryonx.admin.memberManage.dto.MemberSearchRequest;
-import org.example.tryonx.admin.memberManage.service.MemberListService;
+import org.example.tryonx.admin.membermanage.dto.MemberInfoDto;
+import org.example.tryonx.admin.membermanage.dto.MemberListDto;
+import org.example.tryonx.admin.membermanage.dto.MemberSearchRequest;
+import org.example.tryonx.admin.membermanage.service.MemberListService;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.service.MemberService;
 import org.springframework.http.ResponseEntity;

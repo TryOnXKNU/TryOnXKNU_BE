@@ -1,11 +1,11 @@
-package org.example.tryonx.admin.memberManage.service;
+package org.example.tryonx.admin.membermanage.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.example.tryonx.admin.memberManage.dto.MemberInfoDto;
-import org.example.tryonx.admin.memberManage.dto.MemberListDto;
-import org.example.tryonx.admin.memberManage.dto.MemberSearchRequest;
-import org.example.tryonx.admin.memberManage.specification.MemberSpecification;
+import org.example.tryonx.admin.membermanage.dto.MemberInfoDto;
+import org.example.tryonx.admin.membermanage.dto.MemberListDto;
+import org.example.tryonx.admin.membermanage.dto.MemberSearchRequest;
+import org.example.tryonx.admin.membermanage.specification.MemberSpecification;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.springframework.data.jpa.domain.Specification;
