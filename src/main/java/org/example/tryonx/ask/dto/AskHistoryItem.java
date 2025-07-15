@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.example.tryonx.enums.AnswerStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 public class AskHistoryItem {
     private Long askId;
     private String title;
+    private List<String> imageUrls;
     private AnswerStatus answerStatus;
     private LocalDateTime createdAt;
 }

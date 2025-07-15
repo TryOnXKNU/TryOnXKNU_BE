@@ -47,6 +47,9 @@ public class AskService {
                 .map(ask -> new AskHistoryItem(
                         ask.getAskId(),
                         ask.getTitle(),
+                        ask.getImages().stream()
+                                .map(AskImage::getImageUrl)
+                                .collect(Collectors.toList()),
                         ask.getAnswerStatus(),
                         ask.getCreatedAt()
                 ))
