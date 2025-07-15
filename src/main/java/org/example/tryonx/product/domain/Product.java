@@ -23,7 +23,8 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer productId;
 
-    @Column(nullable = false, length = 50)
+    @Setter
+    @Column(unique = true, length = 50)
     private String productCode;
 
     @Column(nullable = false, length = 100)

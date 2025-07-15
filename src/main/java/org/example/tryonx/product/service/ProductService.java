@@ -8,6 +8,7 @@ import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.like.domain.Like;
 import org.example.tryonx.like.repository.LikeRepository;
+import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.product.domain.Measurement;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.domain.ProductItem;
@@ -26,6 +27,8 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -48,12 +51,20 @@ public class ProductService {
         this.measurementRepository = measurementRepository;
     }
     public Product createProduct(ProductCreateRequestDto dto, List<MultipartFile> images) {
-        if (productRepository.findByProductCode(dto.getCode()).isPresent()) {
-            throw new IllegalStateException("해당 코드의 상품 이미 존재");
-        }
+        String middleCode;
+        if(dto.getCategoryId() == 1)
+            middleCode = "top";
+        else if(dto.getCategoryId() == 2)
+            middleCode = "bot";
+        else if(dto.getCategoryId() == 3)
+            middleCode = "dre";
+        else if(dto.getCategoryId() == 4)
+            middleCode = "out";
+        else
+            middleCode = "acc";
 
+        // productCode 없이 먼저 저장
         Product product = Product.builder()
-                .productCode(dto.getCode())
                 .productName(dto.getName())
                 .description(dto.getDescription())
                 .category(categoryRepository.findById(dto.getCategoryId()).orElse(null))
@@ -61,11 +72,20 @@ public class ProductService {
                 .price(dto.getPrice())
                 .bodyShape(dto.getBodyShape())
                 .build();
-        productRepository.save(product);
+
+        productRepository.save(product); // 여기서 productId 생성됨
+
+        // 생성된 productId로 productCode 생성 후 다시 저장
+        String productCode = "ax" + middleCode + product.getProductId();
+        product.setProductCode(productCode);
+        productRepository.save(product); // 다시 저장
+
+        // 아이템 저장
         dto.getProductItemInfoDtos().forEach(itemDto -> {
             createProductItem(product, itemDto);
         });
 
+        // 이미지 저장
         if (images != null && !images.isEmpty()) {
             boolean isFirst = true;
             for (MultipartFile image : images) {
@@ -79,7 +99,7 @@ public class ProductService {
                     ProductImage productImage = ProductImage.builder()
                             .product(product)
                             .imageUrl("/upload/product/" + filename)
-                            .isThumbnail(isFirst)  // 첫 번째 이미지 썸네일로
+                            .isThumbnail(isFirst)
                             .build();
 
                     productImageRepository.save(productImage);
@@ -92,6 +112,7 @@ public class ProductService {
 
         return product;
     }
+
 
     public List<ProductListResponseDto> getAllProducts() {
         List<Product> productList = productRepository.findAll();
