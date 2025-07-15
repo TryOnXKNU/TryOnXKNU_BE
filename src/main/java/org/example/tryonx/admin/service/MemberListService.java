@@ -69,6 +69,7 @@ public class MemberListService {
         memberRepository.delete(member);
     }
 
+    /* 멤버 필터 검색 */
     public List<Member> searchMembers(MemberSearchRequest request) {
         Specification<Member> spec = MemberSpecification.search(request.getSearchKey(), request.getSearchValue());
         return memberRepository.findAll(spec);

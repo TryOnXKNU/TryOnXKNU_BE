@@ -50,6 +50,7 @@ public class AdminMembers {
         return ResponseEntity.noContent().build();
     }
 
+    //멤버 필터 검색
     @GetMapping("/members/search")
     public ResponseEntity<List<Member>> searchMembers(@RequestParam String searchKey,
                                                       @RequestParam String searchValue) {
