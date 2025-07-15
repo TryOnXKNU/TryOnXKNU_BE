@@ -1,10 +1,10 @@
-package org.example.tryonx.admin.service;
+package org.example.tryonx.admin.ask.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.example.tryonx.admin.dto.AskAnswerRequestDto;
-import org.example.tryonx.admin.dto.AskListDto;
-import org.example.tryonx.admin.dto.CompletedAskDetailsDto;
+import org.example.tryonx.admin.ask.dto.AskAnswerRequestDto;
+import org.example.tryonx.admin.ask.dto.AskListDto;
+import org.example.tryonx.admin.ask.dto.CompletedAskDetailsDto;
 import org.example.tryonx.ask.domain.Ask;
 import org.example.tryonx.ask.repository.AskRepository;
 import org.example.tryonx.enums.AnswerStatus;

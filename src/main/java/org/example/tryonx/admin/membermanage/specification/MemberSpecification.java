@@ -1,4 +1,4 @@
-package org.example.tryonx.admin.specification;
+package org.example.tryonx.admin.membermanage.specification;
 
 import org.example.tryonx.member.domain.Member;
 import org.springframework.data.jpa.domain.Specification;

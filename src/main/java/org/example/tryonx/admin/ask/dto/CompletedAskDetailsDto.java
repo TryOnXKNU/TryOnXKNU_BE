@@ -1,4 +1,4 @@
-package org.example.tryonx.admin.dto;
+package org.example.tryonx.admin.ask.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
