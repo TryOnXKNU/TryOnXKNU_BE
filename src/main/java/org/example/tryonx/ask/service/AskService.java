@@ -72,6 +72,7 @@ public class AskService {
                             .orElse(null);
 
                     return new AskListItem(
+                            productItem.getProduct().getProductId(),
                             product.getProductName(),
                             productItem.getSize(),
                             imgUrl
