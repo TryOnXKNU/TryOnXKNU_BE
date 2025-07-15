@@ -1,14 +1,12 @@
 package org.example.tryonx.member.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.example.tryonx.admin.dto.MemberInfoDto;
-import org.example.tryonx.auth.email.service.EmailService;
+import org.example.tryonx.admin.membermanage.dto.MemberInfoDto;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.dto.MemberListResponseDto;
 import org.example.tryonx.member.dto.MyInfoResponseDto;
 import org.example.tryonx.member.dto.UpdateMemberRequestDto;
 import org.example.tryonx.member.repository.MemberRepository;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
