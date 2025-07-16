@@ -44,3 +44,6 @@ upload/product/*
 
 upload/ask/*
 !upload/ask/.gitkeep
+
+upload/review/*
+!upload/review/.gitkeep
