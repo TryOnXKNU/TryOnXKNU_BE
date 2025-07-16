@@ -3,6 +3,7 @@ package org.example.tryonx.review.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.tryonx.enums.Size;
 import org.example.tryonx.image.domain.ReviewImage;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.product.domain.Product;
@@ -29,6 +30,10 @@ public class Review {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Size size;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
@@ -50,5 +55,5 @@ public class Review {
         this.createdAt = LocalDateTime.now();
     }
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReviewImage> images = new ArrayList<>();
+    private List<ReviewImage> images;
 }
