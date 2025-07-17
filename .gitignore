@@ -47,3 +47,6 @@ upload/ask/*
 
 upload/review/*
 !upload/review/.gitkeep
+
+upload/profile/*
+!upload/profile/.gitkeep
