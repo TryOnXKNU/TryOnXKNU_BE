@@ -27,7 +27,7 @@ public class ReviewController {
     public ResponseEntity<String> createReview(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestPart(name = "dto")ReviewCreateRequestDto reviewCreateRequestDto,
-            @RequestPart(name = "images")List<MultipartFile> images){
+            @RequestPart(name = "images", required = false)List<MultipartFile> images){
         String email = userDetails.getUsername();
         if(reviewService.validateReviewPermission(email,reviewCreateRequestDto.getOrderItemId())) {
             boolean b = reviewService.create(reviewCreateRequestDto, images);

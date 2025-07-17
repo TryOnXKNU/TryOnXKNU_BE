@@ -15,9 +15,11 @@ import java.util.List;
 @Builder
 public class ReviewResponseDto {
     private Long reviewId;
+    private Integer productId;
     private String productName;
     private Size size;
     private String description;
+    private Integer rating;
     private LocalDateTime createdAt;
     private String productImage;
     private List<String> reviewImages;
