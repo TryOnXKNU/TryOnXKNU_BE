@@ -19,6 +19,8 @@ import org.example.tryonx.product.dto.ProductResponseDto;
 import org.example.tryonx.product.repository.MeasurementRepository;
 import org.example.tryonx.product.repository.ProductItemRepository;
 import org.example.tryonx.product.repository.ProductRepository;
+import org.example.tryonx.review.dto.ProductReviewDto;
+import org.example.tryonx.review.service.ReviewService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,14 +43,16 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final LikeRepository likeRepository;
     private final MeasurementRepository measurementRepository;
+    private final ReviewService reviewService;
 
-    public ProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository, LikeRepository likeRepository, MeasurementRepository measurementRepository) {
+    public ProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository, LikeRepository likeRepository, MeasurementRepository measurementRepository, ReviewService reviewService) {
         this.productRepository = productRepository;
         this.productItemRepository = productItemRepository;
         this.productImageRepository = productImageRepository;
         this.categoryRepository = categoryRepository;
         this.likeRepository = likeRepository;
         this.measurementRepository = measurementRepository;
+        this.reviewService = reviewService;
     }
     public Product createProduct(ProductCreateRequestDto dto, List<MultipartFile> images) {
         String middleCode;
@@ -154,6 +158,7 @@ public class ProductService {
         List<String> imageUrls = productImageRepository.findByProduct(product)
                 .stream().map(ProductImage::getImageUrl).toList();
 
+        List<ProductReviewDto> reviewsPreview = reviewService.getProductReviewsPreview(productId);
         return new ProductResponseDto(
                 product.getProductId(),
                 product.getProductName(),
@@ -162,7 +167,8 @@ public class ProductService {
                 product.getCategory().getCategoryId(),
                 product.getDescription(),
                 imageUrls,
-                itemDtos  // 사이즈 + 실측 포함된 목록
+                itemDtos,
+                reviewsPreview
         );
     }
 

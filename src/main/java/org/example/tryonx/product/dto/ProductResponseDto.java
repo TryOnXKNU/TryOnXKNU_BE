@@ -3,6 +3,7 @@ package org.example.tryonx.product.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.tryonx.review.dto.ProductReviewDto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -19,4 +20,5 @@ public class ProductResponseDto {
     private String description;
     private List<String> productImages;
     private List<ProductItemInfoDto> productItems;
+    private List<ProductReviewDto> productReviews;
 }

@@ -1,10 +1,7 @@
 package org.example.tryonx.review.controller;
 
 import okhttp3.Response;
-import org.example.tryonx.review.dto.CheckAuthForReviewDto;
-import org.example.tryonx.review.dto.ReviewCreateRequestDto;
-import org.example.tryonx.review.dto.ReviewDeleteRequest;
-import org.example.tryonx.review.dto.ReviewResponseDto;
+import org.example.tryonx.review.dto.*;
 import org.example.tryonx.review.service.ReviewService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,5 +48,16 @@ public class ReviewController {
         return ResponseEntity.ok(reviews);
     }
 
+    @GetMapping("/product")
+    public ResponseEntity<List<ProductReviewDto>> getProductReviews(@RequestParam Integer productId) {
+        List<ProductReviewDto> productReviews = reviewService.getProductReviews(productId);
+        return ResponseEntity.ok(productReviews);
+    }
+
+    @PostMapping("/product/filter")
+    public ResponseEntity<List<ProductReviewDto>> getFilteredReviews(@RequestBody FilteringRequestDto requestDto) {
+        List<ProductReviewDto> result = reviewService.getProductReviewsFiltered(requestDto);
+        return ResponseEntity.ok(result);
+    }
 
 }
