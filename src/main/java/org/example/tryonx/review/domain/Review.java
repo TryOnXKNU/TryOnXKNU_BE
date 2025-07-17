@@ -6,6 +6,7 @@ import lombok.*;
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.image.domain.ReviewImage;
 import org.example.tryonx.member.domain.Member;
+import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.product.domain.Product;
 
 import java.time.LocalDateTime;
@@ -29,6 +30,10 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_item_id")
+    private OrderItem orderItem;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

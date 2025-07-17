@@ -63,6 +63,7 @@ public class ReviewService {
         Review review = Review.builder()
                 .member(member)
                 .product(orderItem.getProductItem().getProduct())
+                .orderItem(orderItem)
                 .content(reviewCreateRequestDto.getContent())
                 .rating(reviewCreateRequestDto.getRating())
                 .size(orderItem.getProductItem().getSize())
@@ -118,8 +119,10 @@ public class ReviewService {
 
             return ReviewResponseDto.builder()
                     .reviewId(review.getId())
+                    .productId(review.getProduct().getProductId())
                     .productName(review.getProduct().getProductName())
                     .description(review.getContent())
+                    .rating(review.getRating())
                     .createdAt(review.getCreatedAt())
                     .productImage(productImage)
                     .reviewImages(reviewImages)
