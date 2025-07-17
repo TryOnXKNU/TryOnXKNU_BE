@@ -12,6 +12,8 @@ import java.time.LocalDate;
 public class MyInfoResponseDto {
     private String nickname;
 
+    private String profileImage;
+
     private String phoneNumber;
 
     private LocalDate birthDate;

@@ -29,6 +29,7 @@ public class Member {
     @Column(nullable = false, length = 100)
     private String nickname;
 
+    @Setter
     private String profileUrl;
 
     private String password;

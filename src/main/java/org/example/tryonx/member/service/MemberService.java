@@ -3,18 +3,28 @@ package org.example.tryonx.member.service;
 import jakarta.persistence.EntityNotFoundException;
 import org.example.tryonx.admin.dto.MemberInfoDto;
 import org.example.tryonx.auth.email.service.EmailService;
+import org.example.tryonx.image.domain.ReviewImage;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.dto.MemberListResponseDto;
 import org.example.tryonx.member.dto.MyInfoResponseDto;
 import org.example.tryonx.member.dto.UpdateMemberRequestDto;
 import org.example.tryonx.member.repository.MemberRepository;
+import org.example.tryonx.orders.order.domain.OrderItem;
+import org.example.tryonx.review.domain.Review;
+import org.example.tryonx.review.dto.ReviewCreateRequestDto;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -66,6 +76,7 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
         MyInfoResponseDto myInfoResponseDto = new MyInfoResponseDto(
                 member.getNickname(),
+                member.getProfileUrl(),
                 member.getPhoneNumber(),
                 member.getBirthDate(),
                 member.getAddress(),
@@ -103,5 +114,23 @@ public class MemberService {
         }
         member.update(updateMemberRequestDto);
         memberRepository.save(member);
+    }
+
+    public void updateProfileImage(String email, MultipartFile profileImage) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+        if(profileImage != null){
+            String fileName = UUID.randomUUID() + "_" + profileImage.getOriginalFilename();
+            Path filePath = Paths.get("upload/profile").resolve(fileName);
+
+            try{
+                Files.createDirectories(filePath.getParent());
+                profileImage.transferTo(filePath);
+                member.setProfileUrl("/upload/profile/" + fileName);
+                memberRepository.save(member);
+            }catch (Exception e){
+                throw new RuntimeException("이미지 저장 실패", e);
+            }
+        }
     }
 }
