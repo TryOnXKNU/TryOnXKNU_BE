@@ -133,4 +133,13 @@ public class MemberService {
             }
         }
     }
+
+    public String getProfileImage(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+        if(member.getProfileUrl() == null){
+            throw new IllegalStateException("프로필 이미지 없음.");
+        }
+        return member.getProfileUrl();
+    }
 }

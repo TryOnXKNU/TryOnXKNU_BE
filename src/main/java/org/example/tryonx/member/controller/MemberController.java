@@ -62,4 +62,11 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로필 이미지 업데이트 실패: " + e.getMessage());
         }
     }
+
+    @GetMapping("/profile-image")
+    public ResponseEntity<String> getProfileImage(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        String profileImage = memberService.getProfileImage(email);
+        return ResponseEntity.ok(profileImage);
+    }
 }
