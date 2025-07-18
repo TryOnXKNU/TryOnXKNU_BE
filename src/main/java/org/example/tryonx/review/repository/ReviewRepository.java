@@ -2,6 +2,7 @@ package org.example.tryonx.review.repository;
 
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.member.domain.Member;
+import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.review.domain.Review;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,4 +37,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             @Param("minWeight") Integer minWeight,
             @Param("maxWeight") Integer maxWeight
     );
+
+    Optional<Object> findByOrderItem(OrderItem orderItem);
 }
