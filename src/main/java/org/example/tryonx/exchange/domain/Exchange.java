@@ -34,7 +34,7 @@ public class Exchange {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_item_id")
-    private OrderItem OrderItemId;
+    private OrderItem orderItemId;
 
     @Enumerated(EnumType.STRING)
     private ExchangeStatus status; // REQUESTED, APPROVED, COMPLETED

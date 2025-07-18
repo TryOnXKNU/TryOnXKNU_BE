@@ -12,6 +12,8 @@ import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
+import org.example.tryonx.product.domain.Product;
+import org.example.tryonx.product.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +41,7 @@ public class ExchangeService {
         Exchange exchange = Exchange.builder()
                 .memberId(member)
                 .orderId(order)
-                .OrderItemId(orderItem)
+                .orderItemId(orderItem)
                 .status(ExchangeStatus.REQUESTED)
                 .reason(dto.getReason())
                 .exchange_requestedAt(LocalDateTime.now())
