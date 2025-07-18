@@ -9,7 +9,6 @@ import org.example.tryonx.enums.ExchangeStatus;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
-import org.example.tryonx.product.domain.Product;
 
 import java.time.LocalDateTime;
 
