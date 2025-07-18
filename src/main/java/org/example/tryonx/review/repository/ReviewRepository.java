@@ -17,6 +17,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findByProduct(Product product);
     Optional<Review> findByMemberAndProduct(Member member, Product product);
     Integer countByMember(Member member);
+    Integer countByProduct(Product product);
     List<Review> findByProductOrderByCreatedAtDesc(Product product);
 
     @Query("""
