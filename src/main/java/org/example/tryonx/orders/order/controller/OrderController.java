@@ -52,4 +52,10 @@ public class OrderController {
         return ResponseEntity.ok(orderDetail);
     }
 
+    @GetMapping("/my/count")
+    public ResponseEntity<Integer> getMyCount(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        Integer countMyOrders = orderService.countMyOrders(email);
+        return ResponseEntity.ok(countMyOrders);
+    }
 }

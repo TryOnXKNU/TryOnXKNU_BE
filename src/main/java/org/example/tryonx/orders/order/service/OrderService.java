@@ -209,5 +209,11 @@ public class OrderService {
         );
     }
 
+    public Integer countMyOrders(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("해당 이메일의 회원이 없습니다."));
+        return orderRepository.countByMember(member);
+    }
+
 
 }
