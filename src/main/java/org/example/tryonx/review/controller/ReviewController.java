@@ -65,5 +65,11 @@ public class ReviewController {
         Integer count = reviewService.reviewCountByProductId(productId);
         return ResponseEntity.ok(count);
     }
+    @GetMapping("/my/count")
+    public ResponseEntity<Integer> getMyCount(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        Integer count = reviewService.countMyReviews(email);
+        return ResponseEntity.ok(count);
+    }
 
 }

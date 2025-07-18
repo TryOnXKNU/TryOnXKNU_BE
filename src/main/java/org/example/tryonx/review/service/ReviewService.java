@@ -223,5 +223,10 @@ public class ReviewService {
                 .availableOrderSizes(availableSizes)
                 .build();
     }
+
+    public Integer countMyReviews(String email){
+        Member member = memberRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Member not found"));
+        return reviewRepository.countByMember(member);
+    }
 }
 
