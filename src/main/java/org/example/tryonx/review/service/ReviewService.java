@@ -10,7 +10,9 @@ import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.product.domain.Product;
+import org.example.tryonx.product.domain.ProductItem;
 import org.example.tryonx.product.dto.ProductCreateRequestDto;
+import org.example.tryonx.product.repository.ProductItemRepository;
 import org.example.tryonx.product.repository.ProductRepository;
 import org.example.tryonx.review.domain.Review;
 import org.example.tryonx.review.dto.*;
@@ -34,14 +36,16 @@ public class ReviewService {
     private final ReviewImageRepository reviewImageRepository;
     private final ProductImageRepository productImageRepository;
     private final ProductRepository productRepository;
+    private final ProductItemRepository productItemRepository;
 
-    public ReviewService(ReviewRepository reviewRepository, OrderItemRepository orderItemRepository, MemberRepository memberRepository, ReviewImageRepository reviewImageRepository, ProductImageRepository productImageRepository, ProductRepository productRepository) {
+    public ReviewService(ReviewRepository reviewRepository, OrderItemRepository orderItemRepository, MemberRepository memberRepository, ReviewImageRepository reviewImageRepository, ProductImageRepository productImageRepository, ProductRepository productRepository, ProductItemRepository productItemRepository) {
         this.reviewRepository = reviewRepository;
         this.orderItemRepository = orderItemRepository;
         this.memberRepository = memberRepository;
         this.reviewImageRepository = reviewImageRepository;
         this.productImageRepository = productImageRepository;
         this.productRepository = productRepository;
+        this.productItemRepository = productItemRepository;
     }
 
     public boolean validateReviewPermission(String email, Integer orderItemId) {
@@ -140,6 +144,9 @@ public class ReviewService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        List<Size> availableSizes = productItemRepository.findByProduct(product).stream()
+                .map(ProductItem::getSize)
+                .toList();
         List<Review> reviews = reviewRepository.findByProductOrderByCreatedAtDesc(product)  // 정렬된 리스트
                 .stream()
                 .limit(2) // 최대 2개만
@@ -149,41 +156,33 @@ public class ReviewService {
             List<String> reviewImages = reviewImageRepository.findByReviewId(review.getId()).stream()
                     .map(ReviewImage::getImageUrl)
                     .toList();
-            return getProductReviewDto(review, reviewImages);
+
+            return getProductReviewDto(review, reviewImages, availableSizes);
         }).toList();
     }
 
     public List<ProductReviewDto> getProductReviews(Integer productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        List<Size> availableSizes = productItemRepository.findByProduct(product).stream()
+                .map(ProductItem::getSize)
+                .toList();
         List<Review> reviews = reviewRepository.findByProduct(product);
         return reviews.stream().map(review -> {
             List<String> reviewImages = reviewImageRepository.findByReviewId(review.getId()).stream()
                     .map(image -> image.getImageUrl())
                     .toList();
-            return getProductReviewDto(review, reviewImages);
+            return getProductReviewDto(review, reviewImages, availableSizes);
         }).toList();
-    }
-
-    private ProductReviewDto getProductReviewDto(Review review, List<String> reviewImages) {
-        return ProductReviewDto.builder()
-                .memberNickname(review.getMember().getNickname())
-                .height(review.getMember().getHeight())
-                .weight(review.getMember().getWeight())
-                .profileImageUrl(review.getMember().getProfileUrl())
-                .rating(review.getRating())
-                .productId(review.getProduct().getProductId())
-                .productName(review.getProduct().getProductName())
-                .size(review.getSize())
-                .description(review.getContent())
-                .createdAt(review.getCreatedAt())
-                .reviewImages(reviewImages)
-                .build();
     }
 
     public List<ProductReviewDto> getProductReviewsFiltered(FilteringRequestDto requestDto) {
         Product product = productRepository.findById(requestDto.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+        List<Size> availableSizes = productItemRepository.findByProduct(product).stream()
+                .map(ProductItem::getSize)
+                .toList();
 
         List<Review> reviews = reviewRepository.findFilteredReviews(
                 product,
@@ -198,9 +197,31 @@ public class ReviewService {
                 .map(review -> {
                     List<String> reviewImages = reviewImageRepository.findByReviewId(review.getId())
                             .stream().map(image -> image.getImageUrl()).toList();
-                    return getProductReviewDto(review, reviewImages);
+                    return getProductReviewDto(review, reviewImages, availableSizes);
                 })
                 .toList();
+    }
+    public Integer reviewCountByProductId(Integer productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        return reviewRepository.countByProduct(product);
+    }
+
+    private ProductReviewDto getProductReviewDto(Review review, List<String> reviewImages, List<Size> availableSizes) {
+        return ProductReviewDto.builder()
+                .memberNickname(review.getMember().getNickname())
+                .height(review.getMember().getHeight())
+                .weight(review.getMember().getWeight())
+                .profileImageUrl(review.getMember().getProfileUrl())
+                .rating(review.getRating())
+                .productId(review.getProduct().getProductId())
+                .productName(review.getProduct().getProductName())
+                .size(review.getSize())
+                .description(review.getContent())
+                .createdAt(review.getCreatedAt())
+                .reviewImages(reviewImages)
+                .availableOrderSizes(availableSizes)
+                .build();
     }
 }
 

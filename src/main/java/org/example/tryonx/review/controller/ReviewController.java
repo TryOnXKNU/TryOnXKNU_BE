@@ -60,4 +60,10 @@ public class ReviewController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/product/count")
+    public ResponseEntity<Integer> getProductCount(@RequestParam Integer productId) {
+        Integer count = reviewService.reviewCountByProductId(productId);
+        return ResponseEntity.ok(count);
+    }
+
 }

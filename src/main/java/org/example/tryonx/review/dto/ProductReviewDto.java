@@ -27,4 +27,5 @@ public class ProductReviewDto {
     private String description;
     private LocalDateTime createdAt;
     private List<String> reviewImages;
+    private List<Size> availableOrderSizes;
 }
