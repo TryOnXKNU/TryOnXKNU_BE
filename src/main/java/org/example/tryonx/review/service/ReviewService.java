@@ -49,8 +49,11 @@ public class ReviewService {
                 .orElseThrow(() -> new RuntimeException("Order item not found"));
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
-        if(reviewRepository.findByMemberAndProduct(member,item.getProductItem().getProduct()).isPresent())
+//        if(reviewRepository.findByMemberAndProduct(member,item.getProductItem().getProduct()).isPresent())
+//            throw new RuntimeException("Review already exists");
+        if (reviewRepository.findByOrderItem(item).isPresent())
             throw new RuntimeException("Review already exists");
+
         if(item.getMember().equals(member))
             return true;
         else
