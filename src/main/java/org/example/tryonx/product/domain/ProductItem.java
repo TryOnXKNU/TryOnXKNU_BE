@@ -27,8 +27,11 @@ public class ProductItem {
     private Size size;
 
     @Column(nullable = false)
+    @Setter
     private Integer stock;
 
     @Enumerated(EnumType.STRING)
+    @Setter
     private ProductStatus status = ProductStatus.SOLDOUT;
+
 }

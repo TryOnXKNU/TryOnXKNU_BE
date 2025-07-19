@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
@@ -53,8 +54,19 @@ public class OrderService {
                     ProductItem productItem = productItemRepository.findByProductAndSize(product, item.getSize())
                             .orElseThrow(() -> new EntityNotFoundException("사이즈 정보 없음"));
 
+                    if(productItem.getStock() - item.getQuantity() < 0){
+                        throw new IllegalStateException("재고가 부족합니다.");
+                    }
+
                     BigDecimal itemPrice = product.getPrice();
                     BigDecimal discountRate = product.getDiscountRate();
+
+                    int newStock = productItem.getStock() - item.getQuantity();
+                    productItem.setStock(newStock);
+                    if (newStock == 0) {
+                        productItem.setStatus(ProductStatus.SOLDOUT);
+                    }
+                    productItemRepository.save(productItem);
 
                     return OrderItem.builder()
                             .member(member)
@@ -98,7 +110,6 @@ public class OrderService {
         orderItems.forEach(item -> item.setOrder(order));
         order.setOrderItems(orderItems);
 
-        memberRepository.save(member);
         Order savedOrder = orderRepository.save(order);
 
         //여기서 orderNum 생성
