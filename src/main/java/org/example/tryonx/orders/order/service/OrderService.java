@@ -5,6 +5,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.cart.domain.CartItem;
+import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.image.domain.ProductImage;
@@ -27,6 +29,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -40,6 +43,7 @@ public class OrderService {
     private final ProductItemRepository productItemRepository;
     private final ProductImageRepository productImageRepository;
     private final OrderItemRepository orderItemRepository;
+    private final CartItemRepository cartItemRepository;
 
     @Transactional
     public Integer createOrder(String email, OrderRequestDto requestDto) {
@@ -54,12 +58,9 @@ public class OrderService {
                     ProductItem productItem = productItemRepository.findByProductAndSize(product, item.getSize())
                             .orElseThrow(() -> new EntityNotFoundException("사이즈 정보 없음"));
 
-                    if(productItem.getStock() - item.getQuantity() < 0){
+                    if (productItem.getStock() < item.getQuantity()) {
                         throw new IllegalStateException("재고가 부족합니다.");
                     }
-
-                    BigDecimal itemPrice = product.getPrice();
-                    BigDecimal discountRate = product.getDiscountRate();
 
                     int newStock = productItem.getStock() - item.getQuantity();
                     productItem.setStock(newStock);
@@ -72,8 +73,8 @@ public class OrderService {
                             .member(member)
                             .productItem(productItem)
                             .quantity(item.getQuantity())
-                            .price(itemPrice)
-                            .discountRate(discountRate)
+                            .price(product.getPrice())
+                            .discountRate(product.getDiscountRate())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -89,8 +90,8 @@ public class OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal finalAmount = totalAmount.subtract(discountAmount);
-        int usedPoints = requestDto.getPoint();
 
+        int usedPoints = requestDto.getPoint();
         if (usedPoints > member.getPoint()) {
             throw new IllegalArgumentException("사용 가능한 포인트를 초과했습니다.");
         }
@@ -112,13 +113,33 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        //여기서 orderNum 생성
         String orderNum = generateOrderNum(savedOrder);
         savedOrder.setOrderNum(orderNum);
         orderRepository.save(savedOrder);
 
+        int savePoints = finalAmount.multiply(BigDecimal.valueOf(0.01))
+                .setScale(0, BigDecimal.ROUND_DOWN)
+                .intValue();
+        member.savePoint(savePoints);
+        memberRepository.save(member);
+
+        // ✅ 주문 생성 후 장바구니 항목 삭제
+        List<Long> cartItemIds = requestDto.getItems().stream()
+                .map(OrderRequestDto.Item::getCartItemId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        if (!cartItemIds.isEmpty()) {
+            List<CartItem> cartItemsToDelete = cartItemRepository.findAllById(cartItemIds).stream()
+                    .filter(cartItem -> cartItem.getMember().equals(member)) // 소유자 검증
+                    .toList();
+
+            cartItemRepository.deleteAll(cartItemsToDelete);
+        }
+
         return savedOrder.getOrderId();
     }
+
 
 
     //orderNum 자동 생성

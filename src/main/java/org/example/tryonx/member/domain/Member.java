@@ -98,4 +98,7 @@ public class Member {
         }
         this.point -= point;
     }
+    public void savePoint(int point) {
+        this.point += point;
+    }
 }

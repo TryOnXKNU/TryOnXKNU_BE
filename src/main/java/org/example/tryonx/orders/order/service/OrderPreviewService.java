@@ -30,19 +30,27 @@ public class OrderPreviewService {
 
         List<OrderPreviewResponseDto.Item> itemList = dto.getItems().stream()
                 .map(reqItem -> {
-                    Product product = productRepository.findById(reqItem.getProductId()).orElseThrow();
+                    Product product = productRepository.findById(reqItem.getProductId())
+                            .orElseThrow(() -> new EntityNotFoundException("상품 없음"));
+
                     ProductItem productItem = productItemRepository
                             .findByProductAndSize(product, reqItem.getSize())
-                            .orElseThrow(() -> new EntityNotFoundException("상품 또는 사이즈 정보 오류"));
+                            .orElseThrow(() -> new EntityNotFoundException("사이즈 정보 없음"));
+
+                    String imageUrl = productImageRepository
+                            .findByProductAndIsThumbnailTrue(product)
+                            .map(img -> img.getImageUrl())
+                            .orElse(null);
 
                     return new OrderPreviewResponseDto.Item(
-                            productItem.getProduct().getProductName(),
+                            product.getProductName(),
                             product.getPrice(),
                             reqItem.getQuantity(),
                             productItem.getSize(),
-                            product.getDiscountRate().toString() + "%",
-                            productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl()
-                    );
+                            product.getDiscountRate().toPlainString() + "%",
+                            imageUrl,
+                            reqItem.getCartItemId()
+                            );
                 })
                 .toList();
 
@@ -52,17 +60,14 @@ public class OrderPreviewService {
 
         BigDecimal discountAmount = dto.getItems().stream()
                 .map(reqItem -> {
-                    Product product = productRepository.findById(reqItem.getProductId()).orElseThrow();
-                    ProductItem productItem = productItemRepository
-                            .findByProductAndSize(product, reqItem.getSize())
-                            .orElseThrow();
+                    Product product = productRepository.findById(reqItem.getProductId())
+                            .orElseThrow(() -> new EntityNotFoundException("상품 없음"));
 
-                    BigDecimal discountRate = product.getDiscountRate(); // 예: 10%
-                    BigDecimal itemDiscount = product.getPrice()
+                    BigDecimal discountRate = product.getDiscountRate();
+
+                    return product.getPrice()
                             .multiply(discountRate.divide(BigDecimal.valueOf(100)))
                             .multiply(BigDecimal.valueOf(reqItem.getQuantity()));
-
-                    return itemDiscount;
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -73,7 +78,7 @@ public class OrderPreviewService {
                 .intValue();
 
         return new OrderPreviewResponseDto(
-                new MemberInfoDto(member.getName(),member.getPhoneNumber(),member.getAddress(), member.getPoint()),
+                new MemberInfoDto(member.getName(), member.getPhoneNumber(), member.getAddress(), member.getPoint()),
                 totalAmount,
                 discountAmount,
                 finalAmount,
@@ -81,5 +86,6 @@ public class OrderPreviewService {
                 itemList
         );
     }
+
 }
 

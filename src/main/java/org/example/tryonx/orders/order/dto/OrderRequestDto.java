@@ -7,14 +7,14 @@ import java.util.List;
 
 @Getter
 public class OrderRequestDto {
-    private List<OrderPreviewRequestDto.Item> items;
+    private List<Item> items;
     private Integer point;
 
     @Getter
     public static class Item {
         private Integer productId;
-        private Integer usedPoint;
         private Size size;
         private Integer quantity;
+        private Long cartItemId;
     }
 }

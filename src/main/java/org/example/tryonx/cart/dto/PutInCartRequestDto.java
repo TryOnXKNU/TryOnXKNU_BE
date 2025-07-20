@@ -1,4 +1,4 @@
-package org.example.tryonx.orders.order.dto;
+package org.example.tryonx.cart.dto;
 
 import lombok.Getter;
 import org.example.tryonx.enums.Size;
@@ -6,15 +6,13 @@ import org.example.tryonx.enums.Size;
 import java.util.List;
 
 @Getter
-public class OrderPreviewRequestDto {
-    private List<Item> items;
+public class PutInCartRequestDto {
+    private List<ReqItem> items;
 
     @Getter
-    public static class Item {
-        private Long cartItemId;
+    public static class ReqItem {
         private Integer productId;
         private Size size;
         private Integer quantity;
     }
 }
-
