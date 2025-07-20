@@ -26,5 +26,6 @@ public class OrderPreviewResponseDto {
         private Size size;
         private String discountRate;
         private String imageUrl;
+        private Long cartItemId;
     }
 }
