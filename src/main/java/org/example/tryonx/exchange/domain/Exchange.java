@@ -47,4 +47,8 @@ public class Exchange {
     private LocalDateTime exchange_requestedAt;
 
     private LocalDateTime exchange_processedAt;
+
+    @Column(name = "reject_reason")
+    private String rejectReason;
+
 }

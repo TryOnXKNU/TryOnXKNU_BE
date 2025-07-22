@@ -50,4 +50,8 @@ public class Returns {
     @Column(name = "return_approved_at")
     private LocalDateTime returnApprovedAt;
 
+    @Column(name = "reject_reason")
+    private String rejectReason;
+
+
 }

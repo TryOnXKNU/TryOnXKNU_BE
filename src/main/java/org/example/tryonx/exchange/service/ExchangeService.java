@@ -134,13 +134,25 @@ public class ExchangeService {
 
     /* 교환 상태 변경 */
     @Transactional
-    public void updateExchangeStatus(Integer exchangeId, ExchangeStatus status) {
+    public void updateExchangeStatus(Integer exchangeId, ExchangeStatus status, String reason) {
         Exchange exchange = exchangeRepository.findById(exchangeId)
                 .orElseThrow(() -> new EntityNotFoundException("교환 내역이 존재하지 않습니다."));
+
+        if (status == ExchangeStatus.REJECTED && (reason == null || reason.isBlank())) {
+            throw new IllegalArgumentException("REJECTED 상태일 때는 반려 사유가 필요합니다.");
+        }
+
         exchange.setStatus(status);
 
         if (status == ExchangeStatus.ACCEPTED) {
             exchange.setExchange_processedAt(LocalDateTime.now());
         }
+
+        if (status == ExchangeStatus.REJECTED) {
+            exchange.setRejectReason(reason);
+        }
+
+        exchangeRepository.save(exchange);
     }
+
 }
