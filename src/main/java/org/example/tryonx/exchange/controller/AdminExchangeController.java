@@ -1,15 +1,12 @@
 package org.example.tryonx.exchange.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.tryonx.exchange.domain.Exchange;
+import org.example.tryonx.enums.ExchangeStatus;
 import org.example.tryonx.exchange.dto.ExchangeDetailDto;
 import org.example.tryonx.exchange.dto.ExchangeListDto;
 import org.example.tryonx.exchange.service.ExchangeService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -31,6 +28,16 @@ public class AdminExchangeController {
     public ResponseEntity<ExchangeDetailDto> getExchangeDetail(@PathVariable Integer exchangeId) {
         ExchangeDetailDto dto = exchangeService.findByExchangeId(exchangeId);
         return ResponseEntity.ok(dto);
+    }
+
+    //교환 상태 변경
+    @PatchMapping("/{exchangeId}/status/{status}")
+    public ResponseEntity<Void> updateStatus(
+            @PathVariable Integer exchangeId,
+            @PathVariable ExchangeStatus status
+    ) {
+        exchangeService.updateExchangeStatus(exchangeId, status);
+        return ResponseEntity.ok().build();
     }
 
 }
