@@ -58,6 +58,23 @@ public class OrderService {
                     ProductItem productItem = productItemRepository.findByProductAndSize(product, item.getSize())
                             .orElseThrow(() -> new EntityNotFoundException("사이즈 정보 없음"));
 
+                    if (item.getCartItemId() != null) {
+                        CartItem cartItem = cartItemRepository.findById(item.getCartItemId())
+                                .orElseThrow(() -> new EntityNotFoundException("장바구니 항목이 존재하지 않습니다."));
+
+                        if (!cartItem.getMember().equals(member)) {
+                            throw new IllegalArgumentException("본인의 장바구니 항목만 주문할 수 있습니다.");
+                        }
+
+                        if (!cartItem.getProductItem().equals(productItem)) {
+                            throw new IllegalArgumentException("장바구니 항목의 상품 정보가 일치하지 않습니다.");
+                        }
+
+                        if (!cartItem.getQuantity().equals(item.getQuantity())) {
+                            throw new IllegalArgumentException("장바구니 항목의 수량과 요청 수량이 일치하지 않습니다.");
+                        }
+                    }
+
                     if (productItem.getStock() < item.getQuantity()) {
                         throw new IllegalStateException("재고가 부족합니다.");
                     }

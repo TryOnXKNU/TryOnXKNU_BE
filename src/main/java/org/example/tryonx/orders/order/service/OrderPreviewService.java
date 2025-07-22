@@ -1,6 +1,8 @@
 package org.example.tryonx.orders.order.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.cart.domain.CartItem;
+import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
@@ -23,6 +25,7 @@ public class OrderPreviewService {
     private final ProductItemRepository productItemRepository;
     private final MemberRepository memberRepository;
     private final ProductImageRepository productImageRepository;
+    private final CartItemRepository cartItemRepository;
 
     public OrderPreviewResponseDto calculatePreview(String email, OrderPreviewRequestDto dto) {
         Member member = memberRepository.findByEmail(email)
@@ -37,6 +40,24 @@ public class OrderPreviewService {
                             .findByProductAndSize(product, reqItem.getSize())
                             .orElseThrow(() -> new EntityNotFoundException("사이즈 정보 없음"));
 
+                    // 장바구니 기반일 경우 유효성 검증
+                    if (reqItem.getCartItemId() != null) {
+                        CartItem cartItem = cartItemRepository.findById(reqItem.getCartItemId())
+                                .orElseThrow(() -> new EntityNotFoundException("장바구니 항목 없음"));
+
+                        if (!cartItem.getMember().equals(member)) {
+                            throw new IllegalArgumentException("해당 장바구니 항목은 본인의 것이 아닙니다.");
+                        }
+
+                        if (!cartItem.getProductItem().equals(productItem)) {
+                            throw new IllegalArgumentException("장바구니 항목의 상품/사이즈 정보가 일치하지 않습니다.");
+                        }
+
+                        if (!cartItem.getQuantity().equals(reqItem.getQuantity())) {
+                            throw new IllegalArgumentException("장바구니 항목의 수량과 요청 수량이 다릅니다.");
+                        }
+                    }
+
                     String imageUrl = productImageRepository
                             .findByProductAndIsThumbnailTrue(product)
                             .map(img -> img.getImageUrl())
@@ -50,8 +71,9 @@ public class OrderPreviewService {
                             product.getDiscountRate().toPlainString() + "%",
                             imageUrl,
                             reqItem.getCartItemId()
-                            );
+                    );
                 })
+
                 .toList();
 
         BigDecimal totalAmount = itemList.stream()
