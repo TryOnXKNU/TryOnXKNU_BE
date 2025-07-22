@@ -140,7 +140,7 @@ public class ReturnService {
 
         returns.setStatus(status);
 
-        if (status == ReturnStatus.APPROVED) {
+        if (status == ReturnStatus.ACCEPTED) {
             returns.setReturnApprovedAt(LocalDateTime.now());
         }
     }
