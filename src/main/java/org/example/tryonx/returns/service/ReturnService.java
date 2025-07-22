@@ -134,15 +134,25 @@ public class ReturnService {
 
     /* 반품 상태 변경 */
     @Transactional
-    public void updateReturnStatus(Integer returnId, ReturnStatus status) {
+    public void updateReturnStatus(Integer returnId, ReturnStatus status, String reason) {
         Returns returns = returnRepository.findById(returnId)
                 .orElseThrow(() -> new EntityNotFoundException("반품 내역이 존재하지 않습니다."));
+
+        if (status == ReturnStatus.REJECTED && (reason == null || reason.isBlank())) {
+            throw new IllegalArgumentException("REJECTED 상태일 때는 반려 사유가 필요합니다.");
+        }
 
         returns.setStatus(status);
 
         if (status == ReturnStatus.ACCEPTED) {
             returns.setReturnApprovedAt(LocalDateTime.now());
         }
+
+        if (status == ReturnStatus.REJECTED) {
+            returns.setRejectReason(reason);
+        }
+
+        returnRepository.save(returns);
     }
 
 }

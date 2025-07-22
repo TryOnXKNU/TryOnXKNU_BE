@@ -34,9 +34,10 @@ public class AdminReturnsController {
     @PatchMapping("/{returnId}/status/{status}")
     public ResponseEntity<Void> updateStatus(
             @PathVariable Integer returnId,
-            @PathVariable ReturnStatus status
+            @PathVariable ReturnStatus status,
+            @RequestParam(required = false) String reason
     ) {
-        returnService.updateReturnStatus(returnId, status);
+        returnService.updateReturnStatus(returnId, status, reason);
         return ResponseEntity.ok().build();
     }
 

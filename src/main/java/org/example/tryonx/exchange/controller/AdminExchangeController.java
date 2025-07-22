@@ -34,9 +34,10 @@ public class AdminExchangeController {
     @PatchMapping("/{exchangeId}/status/{status}")
     public ResponseEntity<Void> updateStatus(
             @PathVariable Integer exchangeId,
-            @PathVariable ExchangeStatus status
+            @PathVariable ExchangeStatus status,
+            @RequestParam(required = false) String reason
     ) {
-        exchangeService.updateExchangeStatus(exchangeId, status);
+        exchangeService.updateExchangeStatus(exchangeId, status, reason);
         return ResponseEntity.ok().build();
     }
 
