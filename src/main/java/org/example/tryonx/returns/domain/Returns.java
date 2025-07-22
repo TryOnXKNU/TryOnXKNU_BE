@@ -10,6 +10,7 @@ import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,15 +26,19 @@ public class Returns {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
-    private Member memberId;
+    private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
-    private Order orderId;
+    private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_item_id")
-    private OrderItem orderItemId;
+    private OrderItem orderItem;
+
+    private BigDecimal price;
+
+    private Integer quantity;
 
     @Enumerated(EnumType.STRING)
     private ReturnStatus status;

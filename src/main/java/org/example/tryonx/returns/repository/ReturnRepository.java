@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ReturnRepository extends JpaRepository<Returns, Integer> {
-    List<Returns> findAllByMemberId(Member member);
+    List<Returns> findAllByMember(Member member);
 }

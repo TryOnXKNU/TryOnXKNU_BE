@@ -40,9 +40,11 @@ public class ReturnService {
                 .orElseThrow(() -> new EntityNotFoundException("주문 아이템 없음"));
 
         Returns returns = Returns.builder()
-                .memberId(member)
-                .orderId(order)
-                .orderItemId(orderItem)
+                .member(member)
+                .order(order)
+                .orderItem(orderItem)
+                .price(orderItem.getPrice())
+                .quantity(orderItem.getQuantity())
                 .status(ReturnStatus.REQUESTED)
                 .reason(dto.getReason())
                 .returnRequestedAt(LocalDateTime.now())
@@ -55,16 +57,18 @@ public class ReturnService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다."));
 
-        return returnRepository.findAllByMemberId(member).stream()
+        return returnRepository.findAllByMember(member).stream()
                 .map(returns -> new ReturnResponseDto(
                         returns.getReturnId(),
-                        returns.getStatus().name(),
-                        returns.getReason(),
-                        returns.getReturnRequestedAt(),
-                        returns.getReturnApprovedAt(),
                         member.getMemberId(),
-                        returns.getOrderId().getOrderId(),
-                        returns.getOrderItemId().getOrderItemId()
+                        returns.getOrder().getOrderId(),
+                        returns.getOrderItem().getOrderItemId(),
+                        returns.getPrice(),
+                        returns.getQuantity(),
+                        returns.getReason(),
+                        returns.getStatus().name(),
+                        returns.getReturnRequestedAt(),
+                        returns.getReturnApprovedAt()
                 ))
                 .toList();
     }
@@ -73,19 +77,21 @@ public class ReturnService {
         Returns returns = returnRepository.findById(returnId)
                 .orElseThrow(() -> new EntityNotFoundException("반품 내역이 존재하지 않습니다."));
 
-        if (!returns.getMemberId().getEmail().equals(email)) {
+        if (!returns.getMember().getEmail().equals(email)) {
             throw new AccessDeniedException("본인의 반품 내역만 조회할 수 있습니다.");
         }
 
         return new ReturnResponseDto(
                 returns.getReturnId(),
-                returns.getStatus().name(),
+                returns.getMember().getMemberId(),
+                returns.getOrder().getOrderId(),
+                returns.getOrderItem().getOrderItemId(),
+                returns.getPrice(),
+                returns.getQuantity(),
                 returns.getReason(),
+                returns.getStatus().name(),
                 returns.getReturnRequestedAt(),
-                returns.getReturnApprovedAt(),
-                returns.getMemberId().getMemberId(),
-                returns.getOrderId().getOrderId(),
-                returns.getOrderItemId().getOrderItemId()
+                returns.getReturnApprovedAt()
         );
     }
 }
