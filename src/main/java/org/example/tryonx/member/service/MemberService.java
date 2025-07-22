@@ -2,8 +2,14 @@ package org.example.tryonx.member.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.example.tryonx.admin.dto.MemberInfoDto;
+import org.example.tryonx.ask.domain.Ask;
+import org.example.tryonx.ask.repository.AskRepository;
 import org.example.tryonx.auth.email.service.EmailService;
+import org.example.tryonx.cart.repository.CartItemRepository;
+import org.example.tryonx.exchange.repository.ExchangeRepository;
 import org.example.tryonx.image.domain.ReviewImage;
+import org.example.tryonx.image.repository.ReviewImageRepository;
+import org.example.tryonx.like.repository.LikeRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.domain.Role;
 import org.example.tryonx.member.dto.MemberListResponseDto;
@@ -11,8 +17,12 @@ import org.example.tryonx.member.dto.MyInfoResponseDto;
 import org.example.tryonx.member.dto.UpdateMemberRequestDto;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.orders.order.domain.OrderItem;
+import org.example.tryonx.orders.order.repository.OrderItemRepository;
+import org.example.tryonx.orders.order.repository.OrderRepository;
+import org.example.tryonx.returns.repository.ReturnRepository;
 import org.example.tryonx.review.domain.Review;
 import org.example.tryonx.review.dto.ReviewCreateRequestDto;
+import org.example.tryonx.review.repository.ReviewRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,12 +44,30 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final StringRedisTemplate redisTemplate;
+    private final CartItemRepository cartItemRepository;
+    private final LikeRepository likeRepository;
+    private final ReviewRepository reviewRepository;
+    private final ReviewImageRepository reviewImageRepository;
+    private final AskRepository askRepository;
+    private final ExchangeRepository exchangeRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final ReturnRepository returnRepository;
+    private final OrderRepository orderRepository;
     private static final long EXPIRE_TIME = 3 * 60;
 
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, StringRedisTemplate redisTemplate) {
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, StringRedisTemplate redisTemplate, CartItemRepository cartItemRepository, LikeRepository likeRepository, ReviewRepository reviewRepository, ReviewImageRepository reviewImageRepository, AskRepository askRepository, ExchangeRepository exchangeRepository, OrderItemRepository orderItemRepository, ReturnRepository returnRepository, OrderRepository orderRepository) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.redisTemplate = redisTemplate;
+        this.cartItemRepository = cartItemRepository;
+        this.likeRepository = likeRepository;
+        this.reviewRepository = reviewRepository;
+        this.reviewImageRepository = reviewImageRepository;
+        this.askRepository = askRepository;
+        this.exchangeRepository = exchangeRepository;
+        this.orderItemRepository = orderItemRepository;
+        this.returnRepository = returnRepository;
+        this.orderRepository = orderRepository;
     }
 
     public List<MemberListResponseDto>  findAll() {
@@ -152,5 +180,40 @@ public class MemberService {
                 .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다."));
         member.setRole(role);
     }
+
+    @Transactional
+    public void deleteMember(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다."));
+
+        // 1. 장바구니 항목 삭제
+        cartItemRepository.deleteAllByMember(member);
+
+        // 2. 좋아요 삭제
+        likeRepository.deleteAllByMember(member);
+
+        // 3. 리뷰 이미지 + 리뷰 삭제
+        List<Review> reviews = reviewRepository.findByMember(member);
+        reviewRepository.deleteAll(reviews);
+
+        // 4. 문의 이미지 + 문의 삭제
+        List<Ask> asks = askRepository.findAllByMember(member);
+        askRepository.deleteAll(asks);
+
+        // 5. 반품 삭제
+        returnRepository.deleteAllByMember(member);
+
+        // 6. 교환 삭제
+        exchangeRepository.deleteAllByMember(member);
+
+        // 7. 주문 아이템 삭제 (order는 cascade 설정이므로 별도 처리 X)
+        orderItemRepository.deleteAllByMember(member);
+
+        orderRepository.deleteAllByMember(member);
+
+        // 8. 회원 삭제
+        memberRepository.delete(member);
+    }
+
 
 }

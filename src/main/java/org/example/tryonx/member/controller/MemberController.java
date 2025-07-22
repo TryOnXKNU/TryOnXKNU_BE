@@ -81,4 +81,11 @@ public class MemberController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMember(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        memberService.deleteMember(email);
+        return ResponseEntity.ok().build();
+    }
+
 }

@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface ReturnRepository extends JpaRepository<Returns, Integer> {
     List<Returns> findAllByMember(Member member);
+    void deleteAllByMember(Member member);
 }

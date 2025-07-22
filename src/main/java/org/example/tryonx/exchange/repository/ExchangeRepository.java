@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface ExchangeRepository extends JpaRepository<Exchange, Integer> {
     List<Exchange> findAllByMember(Member member);
+    void deleteAllByMember(Member member);
 }
