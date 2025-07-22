@@ -10,6 +10,8 @@ import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.example.tryonx.returns.domain.Returns;
+import org.example.tryonx.returns.dto.ReturnDetailDto;
+import org.example.tryonx.returns.dto.ReturnListDto;
 import org.example.tryonx.returns.dto.ReturnRequestDto;
 import org.example.tryonx.returns.dto.ReturnResponseDto;
 import org.example.tryonx.returns.repository.ReturnRepository;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -94,4 +97,52 @@ public class ReturnService {
                 returns.getReturnApprovedAt()
         );
     }
+
+    /* 반품 전체 */
+    public List<ReturnListDto> getReturnList() {
+        return returnRepository.findAll().stream()
+                .map(returns -> new ReturnListDto(
+                        returns.getReturnId(),
+                        returns.getMember().getMemberId(),
+                        returns.getOrder().getOrderId(),
+                        returns.getOrderItem().getOrderItemId(),
+                        returns.getReturnRequestedAt(),
+                        returns.getStatus().name(),
+                        returns.getPrice(),
+                        returns.getQuantity()
+        )).collect(Collectors.toList());
+    }
+
+    /* 반품 상세정보 */
+    public ReturnDetailDto findByReturnId(Integer returnId) {
+        Returns returns = returnRepository.findById(returnId)
+                .orElseThrow(() -> new EntityNotFoundException("반품 내역을 찾을 수 없습니다."));
+
+        return new ReturnDetailDto(
+                returns.getReturnId(),
+                returns.getMember().getMemberId(),
+                returns.getOrder().getOrderId(),
+                returns.getOrderItem().getOrderItemId(),
+                returns.getPrice(),
+                returns.getQuantity(),
+                returns.getReason(),
+                returns.getReturnRequestedAt(),
+                returns.getReturnApprovedAt(),
+                returns.getStatus().name()
+        );
+    }
+
+    /* 반품 상태 변경 */
+    @Transactional
+    public void updateReturnStatus(Integer returnId, ReturnStatus status) {
+        Returns returns = returnRepository.findById(returnId)
+                .orElseThrow(() -> new EntityNotFoundException("반품 내역이 존재하지 않습니다."));
+
+        returns.setStatus(status);
+
+        if (status == ReturnStatus.APPROVED) {
+            returns.setReturnApprovedAt(LocalDateTime.now());
+        }
+    }
+
 }

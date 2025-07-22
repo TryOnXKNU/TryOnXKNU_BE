@@ -131,4 +131,16 @@ public class ExchangeService {
                 exchange.getStatus().name()
         );
     }
+
+    /* 교환 상태 변경 */
+    @Transactional
+    public void updateExchangeStatus(Integer exchangeId, ExchangeStatus status) {
+        Exchange exchange = exchangeRepository.findById(exchangeId)
+                .orElseThrow(() -> new EntityNotFoundException("교환 내역이 존재하지 않습니다."));
+        exchange.setStatus(status);
+
+        if (status == ExchangeStatus.COMPLETED) {
+            exchange.setExchange_processedAt(LocalDateTime.now());
+        }
+    }
 }

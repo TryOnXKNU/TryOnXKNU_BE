@@ -1,10 +1,7 @@
 package org.example.tryonx.exchange.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.tryonx.enums.ExchangeStatus;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.orders.order.domain.Order;
@@ -16,6 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "exchange")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
