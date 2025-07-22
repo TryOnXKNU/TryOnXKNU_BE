@@ -140,7 +140,7 @@ public class MemberService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
         if(member.getProfileUrl() == null){
-            throw new IllegalStateException("프로필 이미지 없음.");
+            return null;
         }
         return member.getProfileUrl();
     }
@@ -150,7 +150,6 @@ public class MemberService {
     public void updateRole(Long memberId, Role role) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다."));
-
         member.setRole(role);
     }
 
