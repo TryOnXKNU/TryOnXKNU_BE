@@ -31,7 +31,7 @@ public class AdminMembers {
     }
 
     //멤버 상세정보
-    @GetMapping("/admin/member/{memberId}")
+    @GetMapping("/members/{memberId}")
     public ResponseEntity<MemberInfoDto> showMember(@PathVariable Long memberId) {
         MemberInfoDto dto = memberService.findById(memberId);
         return ResponseEntity.ok(dto);
