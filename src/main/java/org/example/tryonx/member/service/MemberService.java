@@ -5,6 +5,7 @@ import org.example.tryonx.admin.dto.MemberInfoDto;
 import org.example.tryonx.auth.email.service.EmailService;
 import org.example.tryonx.image.domain.ReviewImage;
 import org.example.tryonx.member.domain.Member;
+import org.example.tryonx.member.domain.Role;
 import org.example.tryonx.member.dto.MemberListResponseDto;
 import org.example.tryonx.member.dto.MyInfoResponseDto;
 import org.example.tryonx.member.dto.UpdateMemberRequestDto;
@@ -16,6 +17,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -142,4 +144,14 @@ public class MemberService {
         }
         return member.getProfileUrl();
     }
+
+    /* 권한 변경 */
+    @Transactional
+    public void updateRole(Long memberId, Role role) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다."));
+
+        member.setRole(role);
+    }
+
 }

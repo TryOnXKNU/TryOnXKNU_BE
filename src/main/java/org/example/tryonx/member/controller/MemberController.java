@@ -1,5 +1,6 @@
 package org.example.tryonx.member.controller;
 
+import org.example.tryonx.member.domain.Role;
 import org.example.tryonx.member.dto.CheckPasswordRequest;
 import org.example.tryonx.member.dto.MemberListResponseDto;
 import org.example.tryonx.member.dto.MyInfoResponseDto;
@@ -69,4 +70,15 @@ public class MemberController {
         String profileImage = memberService.getProfileImage(email);
         return ResponseEntity.ok(profileImage);
     }
+
+    /* 권한 변경 */
+    @PatchMapping("/members/{memberId}/role/{role}")
+    public ResponseEntity<Void> updateMemberRole(
+            @PathVariable Long memberId,
+            @PathVariable Role role
+    ) {
+        memberService.updateRole(memberId, role);
+        return ResponseEntity.ok().build();
+    }
+
 }
