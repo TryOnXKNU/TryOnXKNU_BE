@@ -39,6 +39,7 @@ public class Returns {
     private Integer quantity;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private ReturnStatus status;
 
     private String reason;

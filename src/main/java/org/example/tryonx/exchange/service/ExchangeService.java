@@ -139,7 +139,7 @@ public class ExchangeService {
                 .orElseThrow(() -> new EntityNotFoundException("교환 내역이 존재하지 않습니다."));
         exchange.setStatus(status);
 
-        if (status == ExchangeStatus.COMPLETED) {
+        if (status == ExchangeStatus.ACCEPTED) {
             exchange.setExchange_processedAt(LocalDateTime.now());
         }
     }

@@ -39,7 +39,8 @@ public class Exchange {
     private Integer quantity;
 
     @Enumerated(EnumType.STRING)
-    private ExchangeStatus status; // REQUESTED, APPROVED, COMPLETED
+    @Column(length = 20)
+    private ExchangeStatus status;
 
     private String reason;
 
