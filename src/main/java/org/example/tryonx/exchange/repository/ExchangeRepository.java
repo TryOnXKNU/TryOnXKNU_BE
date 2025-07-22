@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ExchangeRepository extends JpaRepository<Exchange, Integer> {
-    List<Exchange> findAllByMemberId(Member member);
+    List<Exchange> findAllByMember(Member member);
 }

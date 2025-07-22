@@ -10,14 +10,12 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ExchangeResponseDto {
+public class ExchangeListDto {
     private Integer exchangeId;
     private Long memberId;
     private Integer orderId;
     private Integer orderItemId;
-    private String reason;
     private LocalDateTime requestedAt;
-    private LocalDateTime processedAt;
     private String status;
     private BigDecimal price;
     private Integer quantity;
