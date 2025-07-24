@@ -19,4 +19,6 @@ public class ReturnListDto {
     private String status;
     private BigDecimal price;
     private Integer quantity;
+    private String productName;
+    private String productImageUrl;
 }

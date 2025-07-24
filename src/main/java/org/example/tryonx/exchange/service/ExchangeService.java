@@ -15,6 +15,7 @@ import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
+import org.example.tryonx.product.domain.Product;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,10 +43,13 @@ public class ExchangeService {
         OrderItem orderItem = orderItemRepository.findById(dto.getOrderItemId())
                 .orElseThrow(() -> new EntityNotFoundException("주문 아이템 없음"));
 
+        Product product = orderItem.getProductItem().getProduct();
+
         Exchange exchange = Exchange.builder()
                 .member(member)
                 .order(order)
                 .orderItem(orderItem)
+                .product(product)
                 .price(orderItem.getPrice())
                 .quantity(orderItem.getQuantity())
                 .status(ExchangeStatus.REQUESTED)
@@ -61,18 +65,27 @@ public class ExchangeService {
                 .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다."));
 
         return exchangeRepository.findAllByMember(member).stream()
-                .map(e -> new ExchangeResponseDto(
-                        e.getExchangeId(),
-                        member.getMemberId(),
-                        e.getOrder().getOrderId(),
-                        e.getOrderItem().getOrderItemId(),
-                        e.getReason(),
-                        e.getExchange_requestedAt(),
-                        e.getExchange_processedAt(),
-                        e.getStatus().name(),
-                        e.getPrice(),
-                        e.getQuantity()
-                ))
+                .map(e -> {
+                    String productName = e.getProduct() != null ? e.getProduct().getProductName() : null;
+                    String imageUrl = (e.getProduct() != null && !e.getProduct().getImages().isEmpty())
+                            ? e.getProduct().getImages().get(0).getImageUrl()
+                            : null;
+
+                    return new ExchangeResponseDto(
+                            e.getExchangeId(),
+                            member.getMemberId(),
+                            e.getOrder().getOrderId(),
+                            e.getOrderItem().getOrderItemId(),
+                            e.getReason(),
+                            e.getExchange_requestedAt(),
+                            e.getExchange_processedAt(),
+                            e.getStatus().name(),
+                            e.getPrice(),
+                            e.getQuantity(),
+                            productName,
+                            imageUrl
+                    );
+                })
                 .toList();
     }
 
@@ -84,6 +97,12 @@ public class ExchangeService {
             throw new AccessDeniedException("본인의 교환 내역만 조회할 수 있습니다.");
         }
 
+        Product product = exchange.getProduct();
+        String productName = product != null ? product.getProductName() : null;
+        String imageUrl = (product != null && !product.getImages().isEmpty())
+                ? product.getImages().get(0).getImageUrl()
+                : null;
+
         return new ExchangeResponseDto(
                 exchange.getExchangeId(),
                 exchange.getMember().getMemberId(),
@@ -94,29 +113,46 @@ public class ExchangeService {
                 exchange.getExchange_processedAt(),
                 exchange.getStatus().name(),
                 exchange.getPrice(),
-                exchange.getQuantity()
+                exchange.getQuantity(),
+                productName,
+                imageUrl
         );
     }
 
     /* 교환 전체 */
     public List<ExchangeListDto> getExchangeList(){
         return exchangeRepository.findAll().stream()
-                .map(exchange -> new ExchangeListDto(
-                        exchange.getExchangeId(),
-                        exchange.getMember().getMemberId(),
-                        exchange.getOrder().getOrderId(),
-                        exchange.getOrderItem().getOrderItemId(),
-                        exchange.getExchange_requestedAt(),
-                        exchange.getStatus().name(),
-                        exchange.getPrice(),
-                        exchange.getQuantity()
-                )).collect(Collectors.toList());
+                .map(exchange -> {
+                    String productName = exchange.getProduct() != null ? exchange.getProduct().getProductName() : null;
+                    String imageUrl = (exchange.getProduct() != null && !exchange.getProduct().getImages().isEmpty())
+                            ? exchange.getProduct().getImages().get(0).getImageUrl()
+                            : null;
+
+                    return new ExchangeListDto(
+                            exchange.getExchangeId(),
+                            exchange.getMember().getMemberId(),
+                            exchange.getOrder().getOrderId(),
+                            exchange.getOrderItem().getOrderItemId(),
+                            exchange.getExchange_requestedAt(),
+                            exchange.getStatus().name(),
+                            exchange.getPrice(),
+                            exchange.getQuantity(),
+                            productName,
+                            imageUrl
+                    );
+                })
+                .collect(Collectors.toList());
     }
 
     /* 교환 상세정보 */
     public ExchangeDetailDto findByExchangeId(Integer exchangeId) {
         Exchange exchange = exchangeRepository.findById(exchangeId)
                 .orElseThrow(() -> new EntityNotFoundException("교환 내역을 찾을 수 없습니다."));
+
+        String productName = exchange.getProduct() != null ? exchange.getProduct().getProductName() : null;
+        String imageUrl = (exchange.getProduct() != null && !exchange.getProduct().getImages().isEmpty())
+                ? exchange.getProduct().getImages().get(0).getImageUrl()
+                : null;
 
         return new ExchangeDetailDto(
                 exchange.getExchangeId(),
@@ -128,7 +164,9 @@ public class ExchangeService {
                 exchange.getReason(),
                 exchange.getExchange_requestedAt(),
                 exchange.getExchange_processedAt(),
-                exchange.getStatus().name()
+                exchange.getStatus().name(),
+                productName,
+                imageUrl
         );
     }
 
