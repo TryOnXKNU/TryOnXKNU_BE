@@ -21,4 +21,6 @@ public class ExchangeDetailDto {
     private LocalDateTime requestedAt;
     private LocalDateTime processedAt;
     private String status;
+    private String productName;
+    private String productImageUrl;
 }

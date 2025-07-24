@@ -19,4 +19,6 @@ public class ReturnResponseDto {
     private String status;
     private LocalDateTime returnRequestedAt;
     private LocalDateTime returnApprovedAt;
+    private String productName;
+    private String productImageUrl;
 }
