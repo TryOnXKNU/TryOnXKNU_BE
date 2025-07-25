@@ -4,10 +4,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.example.tryonx.admin.dto.MemberInfoDto;
 import org.example.tryonx.ask.domain.Ask;
 import org.example.tryonx.ask.repository.AskRepository;
-import org.example.tryonx.auth.email.service.EmailService;
 import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.exchange.repository.ExchangeRepository;
-import org.example.tryonx.image.domain.ReviewImage;
 import org.example.tryonx.image.repository.ReviewImageRepository;
 import org.example.tryonx.like.repository.LikeRepository;
 import org.example.tryonx.member.domain.Member;
@@ -16,21 +14,17 @@ import org.example.tryonx.member.dto.MemberListResponseDto;
 import org.example.tryonx.member.dto.MyInfoResponseDto;
 import org.example.tryonx.member.dto.UpdateMemberRequestDto;
 import org.example.tryonx.member.repository.MemberRepository;
-import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.example.tryonx.returns.repository.ReturnRepository;
 import org.example.tryonx.review.domain.Review;
-import org.example.tryonx.review.dto.ReviewCreateRequestDto;
 import org.example.tryonx.review.repository.ReviewRepository;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -214,6 +208,5 @@ public class MemberService {
         // 8. 회원 삭제
         memberRepository.delete(member);
     }
-
 
 }
