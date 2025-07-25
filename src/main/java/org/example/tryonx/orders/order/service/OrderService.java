@@ -2,13 +2,10 @@ package org.example.tryonx.orders.order.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.cart.domain.CartItem;
 import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.enums.ProductStatus;
-import org.example.tryonx.enums.Size;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
@@ -30,9 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -140,7 +135,7 @@ public class OrderService {
         member.savePoint(savePoints);
         memberRepository.save(member);
 
-        // ✅ 주문 생성 후 장바구니 항목 삭제
+        // 주문 생성 후 장바구니 항목 삭제
         List<Long> cartItemIds = requestDto.getItems().stream()
                 .map(OrderRequestDto.Item::getCartItemId)
                 .filter(Objects::nonNull)
