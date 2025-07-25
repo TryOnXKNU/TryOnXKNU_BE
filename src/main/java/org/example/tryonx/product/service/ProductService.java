@@ -3,12 +3,9 @@ package org.example.tryonx.product.service;
 import org.example.tryonx.category.Category;
 import org.example.tryonx.category.CategoryRepository;
 import org.example.tryonx.enums.ProductStatus;
-import org.example.tryonx.enums.Size;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
-import org.example.tryonx.like.domain.Like;
 import org.example.tryonx.like.repository.LikeRepository;
-import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.product.domain.Measurement;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.domain.ProductItem;
@@ -25,15 +22,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductService {

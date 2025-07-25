@@ -2,6 +2,7 @@ package org.example.tryonx.orders.order.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.tryonx.enums.AfterServiceStatus;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.product.domain.ProductItem;
 
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "order_items")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -43,4 +45,7 @@ public class OrderItem {
 
     @Column
     private Integer usedPoints = 0;
+
+    @Enumerated(EnumType.STRING)
+    private AfterServiceStatus afterServiceStatus = AfterServiceStatus.NONE;
 }

@@ -2,6 +2,7 @@ package org.example.tryonx.returns.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.enums.AfterServiceStatus;
 import org.example.tryonx.enums.ReturnStatus;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
@@ -42,6 +43,18 @@ public class ReturnService {
 
         OrderItem orderItem = orderItemRepository.findById(dto.getOrderItemId())
                 .orElseThrow(() -> new EntityNotFoundException("주문 아이템 없음"));
+
+        // 상태 체크
+        if (orderItem.getAfterServiceStatus() == AfterServiceStatus.EXCHANGE) {
+            throw new IllegalStateException("이미 교환이 신청된 상품입니다. 반품 신청이 불가합니다.");
+        }
+        if (orderItem.getAfterServiceStatus() == AfterServiceStatus.RETURN) {
+            throw new IllegalStateException("이미 반품이 신청된 상품입니다.");
+        }
+
+        // 상태 변경
+        orderItem.setAfterServiceStatus(AfterServiceStatus.RETURN);
+        orderItemRepository.save(orderItem);
 
         Product product = orderItem.getProductItem().getProduct();
 
@@ -190,6 +203,8 @@ public class ReturnService {
 
         if (status == ReturnStatus.REJECTED) {
             returns.setRejectReason(reason);
+            returns.getOrderItem().setAfterServiceStatus(AfterServiceStatus.NONE);
+            orderItemRepository.save(returns.getOrderItem());
         }
 
         returnRepository.save(returns);
