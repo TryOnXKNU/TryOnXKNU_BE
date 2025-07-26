@@ -45,6 +45,13 @@ public class CartItemController {
         cartItemService.updateCartItem(email, updateCartItemRequestDto);
         return ResponseEntity.ok("Updated cart item");
     }
+
+    @GetMapping
+    public ResponseEntity<?> getCartItems(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        return ResponseEntity.ok(cartItemService.getCartItems(email));
+    }
+
     @GetMapping("/selected")
     public ResponseEntity<?> getSelectedCartItems(
             @AuthenticationPrincipal UserDetails userDetails,
