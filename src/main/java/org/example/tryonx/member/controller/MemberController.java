@@ -1,15 +1,13 @@
 package org.example.tryonx.member.controller;
 
 import org.example.tryonx.member.domain.Role;
-import org.example.tryonx.member.dto.CheckPasswordRequest;
-import org.example.tryonx.member.dto.MemberListResponseDto;
-import org.example.tryonx.member.dto.MyInfoResponseDto;
-import org.example.tryonx.member.dto.UpdateMemberRequestDto;
+import org.example.tryonx.member.dto.*;
 import org.example.tryonx.member.service.MemberService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,18 +36,35 @@ public class MemberController {
         return new ResponseEntity<>(myInfo, HttpStatus.OK);
     }
 
-    @PostMapping("/check-password")
-    public ResponseEntity<?> checkPassword(@AuthenticationPrincipal UserDetails userDetails, @RequestBody CheckPasswordRequest request) {
-        String email = userDetails.getUsername();
-        return new ResponseEntity<>(memberService.checkPassword(email, request.password()), HttpStatus.OK);
-    }
 
-    @PutMapping
-    public ResponseEntity<?> updateMember(@AuthenticationPrincipal UserDetails userDetails,@RequestBody UpdateMemberRequestDto dto) {
+    @PatchMapping("/password")
+    public ResponseEntity<?> updatePassword(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdatePasswordReq updatePasswordReq){
         String email = userDetails.getUsername();
-        memberService.updateMember(email, dto);
+        memberService.updatePassword(email,updatePasswordReq.newPassword());
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    @PatchMapping("/nickname")
+    public ResponseEntity<?> updateNickname(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String nickName){
+        String email = userDetails.getUsername();
+        memberService.updateNickname(email, nickName);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PatchMapping("/address")
+    public ResponseEntity<?> updateAddress(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String address){
+        String email = userDetails.getUsername();
+        memberService.updateAddress(email, address);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PatchMapping("/bodyInfo")
+    public ResponseEntity<?> updateBodyInfo(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateBodyInfoDto dto) {
+        String email = userDetails.getUsername();
+        memberService.updateBodyInformation(email, dto);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PostMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> updateProfileImage(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -62,6 +77,12 @@ public class MemberController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로필 이미지 업데이트 실패: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/check-password")
+    public ResponseEntity<?> checkPassword(@AuthenticationPrincipal UserDetails userDetails, @RequestBody CheckPasswordRequest request) {
+        String email = userDetails.getUsername();
+        return new ResponseEntity<>(memberService.checkPassword(email, request.password()), HttpStatus.OK);
     }
 
     @GetMapping("/profile-image")

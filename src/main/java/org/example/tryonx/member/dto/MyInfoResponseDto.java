@@ -27,4 +27,6 @@ public class MyInfoResponseDto {
     private Integer height;
 
     private Integer weight;
+
+    private Integer point;
 }

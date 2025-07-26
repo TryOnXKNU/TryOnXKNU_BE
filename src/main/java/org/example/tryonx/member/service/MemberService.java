@@ -12,6 +12,7 @@ import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.domain.Role;
 import org.example.tryonx.member.dto.MemberListResponseDto;
 import org.example.tryonx.member.dto.MyInfoResponseDto;
+import org.example.tryonx.member.dto.UpdateBodyInfoDto;
 import org.example.tryonx.member.dto.UpdateMemberRequestDto;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
@@ -23,6 +24,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Files;
@@ -107,7 +109,8 @@ public class MemberService {
                 member.getEmail(),
                 member.getBodyType(),
                 member.getHeight(),
-                member.getWeight()
+                member.getWeight(),
+                member.getPoint()
         );
         return myInfoResponseDto;
     }
@@ -126,6 +129,62 @@ public class MemberService {
         return false;
     }
 
+    public void updateNickname(String email, String nickname) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+        if(memberRepository.existsByNickname(nickname)) {
+            throw new IllegalArgumentException("중복된 닉네임입니다.");
+        }else {
+            member.setNickname(nickname);
+            memberRepository.save(member);
+        }
+    }
+
+    @Transactional
+    public void updateAddress(String email, String address) {
+        if (!StringUtils.hasText(address)) {
+            throw new IllegalArgumentException("주소는 비어 있을 수 없습니다.");
+        }
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+
+        member.setAddress(address);
+        memberRepository.save(member);
+    }
+
+    @Transactional
+    public void updateBodyInformation(String email, UpdateBodyInfoDto updateBodyInfoDto) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+        Integer bodyType = updateBodyInfoDto.getBodyType();
+        Integer height = updateBodyInfoDto.getHeight();
+        Integer weight = updateBodyInfoDto.getWeight();
+        if(bodyType != null)
+            member.setBodyType(bodyType);
+        if(height != null)
+            member.setHeight(height);
+        if (weight != null)
+            member.setWeight(weight);
+        if (bodyType == null && height == null && weight == null) {
+            return;
+        }
+        memberRepository.save(member);
+
+    }
+
+    @Transactional
+    public void updatePassword(String email, String password){
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+        if(password != null && !password.isEmpty()) {
+            if ("OK".equals(redisTemplate.opsForValue().get(email))) {
+                member.updatePassword(passwordEncoder.encode(password));
+                memberRepository.save(member);
+            }else
+                throw new IllegalStateException("비밀번호 인증을 하십시오.");
+        }
+    }
     public void updateMember(String email, UpdateMemberRequestDto updateMemberRequestDto) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
