@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Table(name = "member")
 @Entity
 @Getter
 @Setter
@@ -16,7 +17,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Member {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memberId;

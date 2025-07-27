@@ -91,6 +91,7 @@ public class MemberService {
                 .phoneNumber(member.getPhoneNumber())
                 .birthday(member.getBirthDate())
                 .address(member.getAddress())
+                .email(member.getEmail())
                 .bodyType(member.getBodyType())
                 .height(member.getHeight())
                 .weight(member.getWeight())
