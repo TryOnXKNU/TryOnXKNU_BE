@@ -10,6 +10,7 @@ import org.example.tryonx.exchange.dto.ExchangeListDto;
 import org.example.tryonx.exchange.dto.ExchangeRequestDto;
 import org.example.tryonx.exchange.dto.ExchangeResponseDto;
 import org.example.tryonx.exchange.repository.ExchangeRepository;
+import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.orders.order.domain.Order;
@@ -208,4 +209,27 @@ public class ExchangeService {
         exchangeRepository.save(exchange);
     }
 
+    public List<ExchangeListDto> getExchangesByStatus(ExchangeStatus status) {
+        return exchangeRepository.findAllByStatus(status).stream()
+                .map(exchange -> {
+                    Product product = exchange.getProduct();
+
+                    return new ExchangeListDto(
+                            exchange.getExchangeId(),
+                            exchange.getMember().getMemberId(),
+                            exchange.getOrder().getOrderId(),
+                            exchange.getOrderItem().getOrderItemId(),
+                            exchange.getExchange_requestedAt(),
+                            exchange.getStatus().name(),
+                            exchange.getPrice(),
+                            exchange.getQuantity(),
+                            product.getProductName(),
+                            product.getImages().stream()
+                                    .findFirst()
+                                    .map(ProductImage::getImageUrl)
+                                    .orElse(null)
+                    );
+                })
+                .collect(Collectors.toList());
+    }
 }

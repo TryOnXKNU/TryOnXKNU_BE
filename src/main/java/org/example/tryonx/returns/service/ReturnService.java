@@ -210,4 +210,28 @@ public class ReturnService {
         returnRepository.save(returns);
     }
 
+    public List<ReturnListDto> getReturnsByStatus(ReturnStatus status) {
+        return returnRepository.findAllByStatus(status).stream()
+                .map(ret -> {
+                    Product product = ret.getProduct();
+                    String productName = product != null ? product.getProductName() : null;
+                    String imageUrl = (product != null && !product.getImages().isEmpty())
+                            ? product.getImages().get(0).getImageUrl()
+                            : null;
+
+                    return new ReturnListDto(
+                            ret.getReturnId(),
+                            ret.getMember().getMemberId(),
+                            ret.getOrder().getOrderId(),
+                            ret.getOrderItem().getOrderItemId(),
+                            ret.getReturnRequestedAt(),
+                            ret.getStatus().name(),
+                            ret.getPrice(),
+                            ret.getQuantity(),
+                            productName,
+                            imageUrl
+                    );
+                })
+                .toList();
+    }
 }

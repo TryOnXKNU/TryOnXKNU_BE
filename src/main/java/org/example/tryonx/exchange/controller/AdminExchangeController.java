@@ -41,4 +41,13 @@ public class AdminExchangeController {
         return ResponseEntity.ok().build();
     }
 
+    //교환 상태별 조회
+    @GetMapping("/status")
+    public ResponseEntity<List<ExchangeListDto>> getExchangesByStatus(
+            @RequestParam("status") ExchangeStatus status
+    ) {
+        List<ExchangeListDto> result = exchangeService.getExchangesByStatus(status);
+        return ResponseEntity.ok(result);
+    }
+
 }
