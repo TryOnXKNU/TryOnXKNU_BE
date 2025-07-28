@@ -10,6 +10,8 @@ import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
+import org.example.tryonx.notice.domain.Notification;
+import org.example.tryonx.notice.repository.NotificationRepository;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.domain.OrderStatus;
@@ -39,6 +41,8 @@ public class OrderService {
     private final ProductImageRepository productImageRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartItemRepository cartItemRepository;
+    private final NotificationRepository notificationRepository;
+
 
     @Transactional
     public Integer createOrder(String email, OrderRequestDto requestDto) {
@@ -76,6 +80,26 @@ public class OrderService {
 
                     int newStock = productItem.getStock() - item.getQuantity();
                     productItem.setStock(newStock);
+
+                    if (newStock == 3 ) {
+                        List<CartItem> cartItems = cartItemRepository.findAll(); // 또는 cartItemRepository.findByProductItem(productItem) 권장
+                        for (CartItem cartItem : cartItems) {
+                            if (cartItem.getProductItem().equals(productItem)) {
+                                Member target = cartItem.getMember();
+                                String productName = productItem.getProduct().getProductName();
+                                String size = productItem.getSize().name();
+                                String content = "[재고 알림] " + productName + " (" + size + ") 상품의 재고가 " + newStock + "개 남았습니다. 서두르세요!";
+
+                                Notification notification = Notification.builder()
+                                        .member(target)
+                                        .title("재고 알림")
+                                        .content(content)
+                                        .build();
+                                notificationRepository.save(notification);
+                            }
+                        }
+                    }
+
                     if (newStock == 0) {
                         productItem.setStatus(ProductStatus.SOLDOUT);
                     }
@@ -148,6 +172,14 @@ public class OrderService {
 
             cartItemRepository.deleteAll(cartItemsToDelete);
         }
+
+        Notification notification = Notification.builder()
+                .member(member)
+                .title("리뷰 작성 시 포인트 제공")
+                .content("구매 상품 리뷰 작성 시 10% 포인트를 드려요!")
+                .build();
+
+        notificationRepository.save(notification);
 
         return savedOrder.getOrderId();
     }
