@@ -2,12 +2,17 @@ package org.example.tryonx.member.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.tryonx.exchange.domain.Exchange;
 import org.example.tryonx.member.dto.UpdateMemberRequestDto;
+import org.example.tryonx.orders.order.domain.Order;
+import org.example.tryonx.orders.order.domain.OrderItem;
+import org.example.tryonx.returns.domain.Returns;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Table(name = "member")
 @Entity
@@ -103,4 +108,17 @@ public class Member {
     public void savePoint(int point) {
         this.point += point;
     }
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
+    private List<Order> orders;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
+    private List<OrderItem> orderItems;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
+    private List<Exchange> exchanges;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
+    private List<Returns> returns;
+
 }
