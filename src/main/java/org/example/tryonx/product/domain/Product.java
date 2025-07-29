@@ -9,7 +9,6 @@ import org.example.tryonx.image.domain.ProductImage;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Entity
 @Table(name = "products")

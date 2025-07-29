@@ -18,7 +18,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
 @PreAuthorize("hasAuthority('ADMIN')")
-@CrossOrigin(origins = {"http://localhost:3000"})
 public class AdminMembers {
     private final MemberListService memberListService;
     private final MemberService memberService;
