@@ -1,6 +1,7 @@
 package org.example.tryonx.notice.controller;
 
 import org.example.tryonx.notice.domain.Notification;
+import org.example.tryonx.notice.dto.NoticeResponseDto;
 import org.example.tryonx.notice.service.NoticeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,9 +21,9 @@ public class NoticeController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Notification>> getMyNotices(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<NoticeResponseDto>> getMyNotices(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
-        List<Notification> myNotifications = noticeService.findByEmail(email);
+        List<NoticeResponseDto> myNotifications = noticeService.findByEmail(email);
         return ResponseEntity.ok(myNotifications);
     }
 }
