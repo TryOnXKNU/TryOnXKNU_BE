@@ -86,6 +86,7 @@ public class AdminOrderService {
                 .totalPrice(order.getTotalAmount())
                 .discountAmount(order.getDiscountAmount())
                 .usedPoints(order.getUsedPoints())
+                .deliveryFee("무료배송")
                 .finalAmount(order.getFinalAmount())
                 .discountRate(
                         order.getDiscountAmount() != null && order.getTotalAmount().compareTo(BigDecimal.ZERO) > 0

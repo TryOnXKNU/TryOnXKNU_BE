@@ -24,6 +24,7 @@ public class OrderInfoDto {
     private BigDecimal totalPrice;
     private BigDecimal discountAmount;
     private Integer usedPoints;
+    private String deliveryFee;
     private BigDecimal finalAmount;
     private BigDecimal discountRate;
     private String paymentMethod;
