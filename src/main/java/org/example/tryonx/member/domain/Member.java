@@ -112,7 +112,7 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
     private List<Order> orders;
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<OrderItem> orderItems;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)

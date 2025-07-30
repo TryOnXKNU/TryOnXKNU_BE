@@ -2,11 +2,13 @@ package org.example.tryonx.orders.order.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.tryonx.ask.domain.Ask;
 import org.example.tryonx.enums.AfterServiceStatus;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.product.domain.ProductItem;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "order_items")
@@ -48,4 +50,7 @@ public class OrderItem {
 
     @Enumerated(EnumType.STRING)
     private AfterServiceStatus afterServiceStatus = AfterServiceStatus.NONE;
+
+    @OneToMany(mappedBy = "orderItem", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Ask> asks;
 }
