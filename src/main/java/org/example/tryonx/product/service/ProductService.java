@@ -136,6 +136,7 @@ public class ProductService {
             return new ProductItemInfoDto(
                     item.getSize(),
                     item.getStock(),
+                    item.getStatus(),
                     m != null ? m.getLength() : null,
                     m != null ? m.getShoulder() : null,
                     m != null ? m.getChest() : null,

@@ -21,4 +21,14 @@ public class ProductResponseDto {
     private List<String> productImages;
     private List<ProductItemInfoDto> productItems;
     private List<ProductReviewDto> productReviews;
+
+    public ProductResponseDto(Integer productId, String productName, BigDecimal productPrice, Integer categoryId, String description, List<String> productImages, List<ProductItemInfoDto> productItems) {
+        this.productId = productId;
+        this.productName = productName;
+        this.productPrice = productPrice;
+        this.categoryId = categoryId;
+        this.description = description;
+        this.productImages = productImages;
+        this.productItems = productItems;
+    }
 }

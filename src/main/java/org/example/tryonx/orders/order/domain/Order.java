@@ -27,6 +27,9 @@ public class Order {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(precision = 10, scale = 2)
+    private BigDecimal discountAmount;
+
     @Column(nullable = false)
     private Integer usedPoints = 0;
 
