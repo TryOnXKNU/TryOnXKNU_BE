@@ -46,7 +46,7 @@ public class AdminMembers {
     //멤버 삭제
     @DeleteMapping("/member/{memberId}")
     public ResponseEntity<Void> deleteMember(@PathVariable Long memberId) {
-        memberListService.deleteMember(memberId);
+        memberListService.deleteMemberWithDependencies(memberId);
         return ResponseEntity.noContent().build();
     }
 

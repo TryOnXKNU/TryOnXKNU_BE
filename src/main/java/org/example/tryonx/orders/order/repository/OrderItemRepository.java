@@ -12,4 +12,5 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     Integer countByOrder(Order order);
     List<OrderItem> findByOrder(Order order);
     void deleteAllByMember(Member member);
+
 }

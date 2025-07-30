@@ -14,4 +14,6 @@ public interface ExchangeRepository extends JpaRepository<Exchange, Integer> {
     void deleteAllByMember(Member member);
     List<Exchange> findAllByStatus(ExchangeStatus status);
     Optional<Exchange> findByOrderItem(OrderItem orderItem);
+    void deleteByOrderItem(OrderItem orderItem);
+
 }

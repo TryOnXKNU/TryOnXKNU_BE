@@ -7,15 +7,20 @@ import org.example.tryonx.admin.dto.MemberListDto;
 import org.example.tryonx.admin.dto.MemberOrderHistory;
 import org.example.tryonx.admin.dto.MemberSearchRequest;
 import org.example.tryonx.admin.specification.MemberSpecification;
+import org.example.tryonx.exchange.repository.ExchangeRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
+import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.domain.ProductItem;
+import org.example.tryonx.returns.repository.ReturnRepository;
+import org.example.tryonx.review.repository.ReviewRepository;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,6 +32,11 @@ import java.util.stream.Collectors;
 public class MemberListService {
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
+
+    private final OrderItemRepository orderItemRepository;
+    private final ReviewRepository reviewRepository;
+    private final ExchangeRepository exchangeRepository;
+    private final ReturnRepository returnRepository;
 
     /* 멤버 전체 */
     public List<MemberListDto> getUserList(){
@@ -72,11 +82,30 @@ public class MemberListService {
     }
 
     /* 멤버 삭제 */
-    public void deleteMember(Long memberId) {
-        Member member = memberRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 회원을 찾을 수 없습니다."));
+    @Transactional
+    public void deleteMemberWithDependencies(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않음"));
+
+        List<Order> orders = orderRepository.findByMember(member);
+
+        for (Order order : orders) {
+            List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+
+            for (OrderItem orderItem : orderItems) {
+                reviewRepository.deleteByOrderItem(orderItem);
+                exchangeRepository.deleteByOrderItem(orderItem);
+                returnRepository.deleteByOrderItem(orderItem);
+
+                orderItemRepository.delete(orderItem);
+            }
+
+            orderRepository.delete(order);
+        }
+
         memberRepository.delete(member);
     }
+
 
     /* 멤버 필터 검색 */
     public List<Member> searchMembers(MemberSearchRequest request) {
