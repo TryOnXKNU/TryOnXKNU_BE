@@ -121,4 +121,8 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
     private List<Returns> returns;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
 }
