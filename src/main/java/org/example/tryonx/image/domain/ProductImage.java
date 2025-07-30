@@ -1,10 +1,7 @@
 package org.example.tryonx.image.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.tryonx.product.domain.Product;
 
 import java.time.LocalDateTime;
@@ -30,6 +27,7 @@ public class ProductImage {
     private String imageUrl;
 
     @Column(nullable = false)
+    @Setter
     private Boolean isThumbnail = false;
 
     private LocalDateTime createdAt;
