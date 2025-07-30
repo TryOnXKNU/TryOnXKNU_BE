@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(
@@ -70,5 +71,20 @@ public class Measurement {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateMeasurement(
+            Double length, Double shoulder, Double chest,
+            Double sleeveLength, Double waist, Double thigh,
+            Double rise, Double hem, Double hip) {
+        if (!Objects.equals(this.length, length)) this.length = length;
+        if (!Objects.equals(this.shoulder, shoulder)) this.shoulder = shoulder;
+        if (!Objects.equals(this.chest, chest)) this.chest = chest;
+        if (!Objects.equals(this.sleeveLength, sleeveLength)) this.sleeveLength = sleeveLength;
+        if (!Objects.equals(this.waist, waist)) this.waist = waist;
+        if (!Objects.equals(this.thigh, thigh)) this.thigh = thigh;
+        if (!Objects.equals(this.rise, rise)) this.rise = rise;
+        if (!Objects.equals(this.hem, hem)) this.hem = hem;
+        if (!Objects.equals(this.hip, hip)) this.hip = hip;
     }
 }

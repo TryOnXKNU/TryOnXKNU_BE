@@ -115,6 +115,7 @@ public class OrderService {
                 })
                 .collect(Collectors.toList());
 
+
         BigDecimal totalAmount = orderItems.stream()
                 .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -138,6 +139,7 @@ public class OrderService {
         Order order = Order.builder()
                 .member(member)
                 .totalAmount(totalAmount)
+                .discountAmount(discountAmount)
                 .finalAmount(finalAmount)
                 .usedPoints(usedPoints)
                 .orderedAt(LocalDateTime.now())

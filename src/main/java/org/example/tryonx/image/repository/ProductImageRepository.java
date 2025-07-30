@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface ProductImageRepository extends JpaRepository<ProductImage, Integer> {
     List<ProductImage> findByProduct(Product product);
     Optional<ProductImage> findByProductAndIsThumbnailTrue(Product product);
+    ProductImage findByImageUrl(String imageUrl);
 }

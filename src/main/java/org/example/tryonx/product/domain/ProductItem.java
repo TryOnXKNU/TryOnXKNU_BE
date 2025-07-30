@@ -33,5 +33,4 @@ public class ProductItem {
     @Enumerated(EnumType.STRING)
     @Setter
     private ProductStatus status = ProductStatus.SOLDOUT;
-
 }

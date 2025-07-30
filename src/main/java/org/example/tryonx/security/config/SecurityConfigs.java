@@ -3,6 +3,7 @@ package org.example.tryonx.security.config;
 import org.example.tryonx.security.filter.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -32,6 +33,7 @@ public class SecurityConfigs {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(a->a
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products").hasRole("ADMIN")
                         .requestMatchers(
                         "/login",
                         "/api/v1/auth/signup",
@@ -44,8 +46,6 @@ public class SecurityConfigs {
                         "/api/v1/auth/find-id",
                         "/api/v1/auth/duplicate-nickname",
                         "/api/v1/auth/reset-password",
-                        "/api/v1/products",
-                        "/api/v1/products/*",
                                 "/upload/**",
                         "/kakao/**",
                         "/swagger-ui/**",

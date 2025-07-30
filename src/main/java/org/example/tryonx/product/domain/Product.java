@@ -9,6 +9,8 @@ import org.example.tryonx.image.domain.ProductImage;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Entity
 @Table(name = "products")
@@ -53,5 +55,28 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images;
+
+    public void updateProduct(
+            BigDecimal price,
+            BigDecimal discountRate,
+            BodyShape bodyShape,
+            Category category
+    ) {
+        Optional.ofNullable(price)
+                .filter(newPrice -> !Objects.equals(this.price, newPrice))
+                .ifPresent(newPrice -> this.price = newPrice);
+
+        Optional.ofNullable(discountRate)
+                .filter(newDiscount -> !Objects.equals(this.discountRate, newDiscount))
+                .ifPresent(newDiscount -> this.discountRate = newDiscount);
+
+        Optional.ofNullable(bodyShape)
+                .filter(newShape -> !Objects.equals(this.bodyShape, newShape))
+                .ifPresent(newShape -> this.bodyShape = newShape);
+
+        Optional.ofNullable(category)
+                .filter(newCategory -> !Objects.equals(this.category, newCategory))
+                .ifPresent(newCategory -> this.category = newCategory);
+    }
 
 }

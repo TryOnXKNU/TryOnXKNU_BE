@@ -3,6 +3,7 @@ package org.example.tryonx.product.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.enums.Size;
 
 @Data
@@ -11,6 +12,7 @@ import org.example.tryonx.enums.Size;
 public class ProductItemInfoDto {
     private Size size;
     private Integer stock;
+    private ProductStatus status;
     private Double length;
     private Double shoulder;
     private Double chest;
