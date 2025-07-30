@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminProductService {
@@ -178,14 +179,32 @@ public class AdminProductService {
         }
     }
 
-
-    public void deleteProductImage(String imgUrl){
+    @Transactional
+    public void deleteProductImage(String imgUrl) {
         ProductImage byImageUrl = productImageRepository.findByImageUrl(imgUrl);
-        if(byImageUrl != null){
-            productImageRepository.delete(byImageUrl);
-        }else
-            throw new RuntimeException("Image not found");
+
+        if (byImageUrl == null) {
+            throw new RuntimeException("해당 이미지가 없습니다.");
+        }
+
+        List<ProductImage> productImages = productImageRepository.findByProduct(byImageUrl.getProduct());
+
+        if (byImageUrl.getIsThumbnail()) {
+            // 삭제될 이미지를 제외한 목록
+            List<ProductImage> remainingImages = productImages.stream()
+                    .filter(img -> !img.getImageId().equals(byImageUrl.getImageId()))
+                    .toList();
+
+            if (!remainingImages.isEmpty()) {
+                ProductImage newThumbnail = remainingImages.get(0);
+                newThumbnail.setIsThumbnail(true);
+                productImageRepository.save(newThumbnail);
+            }
+        }
+
+        productImageRepository.delete(byImageUrl);
     }
+
 
     public void deleteProduct(Integer productId) {
         productRepository.deleteById(productId);
