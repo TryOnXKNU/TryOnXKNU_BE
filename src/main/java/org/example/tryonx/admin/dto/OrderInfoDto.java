@@ -22,8 +22,9 @@ public class OrderInfoDto {
     private String email;
     private String address;
     private BigDecimal totalPrice;
-    private BigDecimal finalAmount;
+    private BigDecimal discountAmount;
     private Integer usedPoints;
+    private BigDecimal finalAmount;
     private BigDecimal discountRate;
     private String paymentMethod;
     private List<OrderInfoItemDto> items;

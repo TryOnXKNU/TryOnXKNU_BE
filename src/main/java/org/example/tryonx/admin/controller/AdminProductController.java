@@ -5,14 +5,11 @@ import org.example.tryonx.admin.dto.ProductImageUrl;
 import org.example.tryonx.admin.dto.ProductListDto;
 import org.example.tryonx.admin.dto.ProductStockAndStateUpdateDto;
 import org.example.tryonx.admin.service.AdminProductService;
-import org.example.tryonx.like.dto.ProductDto;
 import org.example.tryonx.product.dto.ProductResponseDto;
 import org.example.tryonx.product.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import retrofit2.http.Multipart;
-import retrofit2.http.Path;
 
 import java.util.List;
 

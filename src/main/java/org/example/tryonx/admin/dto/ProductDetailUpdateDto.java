@@ -2,7 +2,6 @@ package org.example.tryonx.admin.dto;
 
 import lombok.Getter;
 import org.example.tryonx.enums.BodyShape;
-import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.product.dto.ProductItemInfoDto;
 
 import java.math.BigDecimal;
