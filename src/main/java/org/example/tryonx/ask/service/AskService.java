@@ -151,6 +151,7 @@ public class AskService {
 
         return new AskResponseDto(
                 ask.getAskId(),
+                ask.getOrderItem().getOrderItemId(),
                 ask.getTitle(),
                 productName,
                 size,

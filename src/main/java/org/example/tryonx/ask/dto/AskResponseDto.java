@@ -13,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AskResponseDto {
     private Long askId;
+    private Integer orderItemId;
     private String title;
     private String productName;
     private String size;
