@@ -9,7 +9,9 @@ import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
+import org.example.tryonx.member.domain.PointHistory;
 import org.example.tryonx.member.repository.MemberRepository;
+import org.example.tryonx.member.repository.PointHistoryRepository;
 import org.example.tryonx.notice.domain.Notification;
 import org.example.tryonx.notice.repository.NotificationRepository;
 import org.example.tryonx.orders.order.domain.Order;
@@ -42,6 +44,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final CartItemRepository cartItemRepository;
     private final NotificationRepository notificationRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
 
     @Transactional
@@ -155,11 +158,22 @@ public class OrderService {
         savedOrder.setOrderNum(orderNum);
         orderRepository.save(savedOrder);
 
+        // 포인트 사용/적립 내역 저장
+        String mainProductName = orderItems.get(0).getProductItem().getProduct().getProductName();
+        int itemCount = orderItems.size();
+        String productSummary = itemCount > 1 ? mainProductName + " 외 " + (itemCount - 1) + "건" : mainProductName;
+
+        if (usedPoints > 0) {
+            pointHistoryRepository.save(PointHistory.use(member, usedPoints, "[" + productSummary + "] 주문 결제 중 포인트 사용으로 인한 차감"));
+        }
+
         int savePoints = finalAmount.multiply(BigDecimal.valueOf(0.01))
                 .setScale(0, BigDecimal.ROUND_DOWN)
                 .intValue();
-        member.savePoint(savePoints);
-        memberRepository.save(member);
+
+        if (savePoints > 0) {
+            pointHistoryRepository.save(PointHistory.earn(member, savePoints, "[" + productSummary + "] 주문 적립 포인트 지급"));
+        }
 
         // 주문 생성 후 장바구니 항목 삭제
         List<Long> cartItemIds = requestDto.getItems().stream()
