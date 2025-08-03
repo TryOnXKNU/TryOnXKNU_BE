@@ -1,5 +1,6 @@
 package org.example.tryonx.review.service;
 
+import jakarta.transaction.Transactional;
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.domain.ReviewImage;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -62,6 +65,7 @@ public class ReviewService {
             return false;
     }
 
+    @Transactional
     public boolean create(ReviewCreateRequestDto reviewCreateRequestDto, List<MultipartFile> images){
         OrderItem orderItem = orderItemRepository.findById(reviewCreateRequestDto.getOrderItemId())
                 .orElseThrow(() -> new RuntimeException("Order item not found"));
@@ -76,6 +80,20 @@ public class ReviewService {
                 .size(orderItem.getProductItem().getSize())
                 .build();
         reviewRepository.save(review);
+
+        BigDecimal discountRate = orderItem.getDiscountRate()
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+        int savePoint = orderItem.getPrice()
+                .multiply(BigDecimal.ONE.subtract(discountRate))
+                .multiply(BigDecimal.valueOf(0.01))
+                .setScale(0, RoundingMode.DOWN)
+                .intValue();
+
+        System.out.println("Save point " + savePoint);
+        System.out.println("origin_point " + orderItem.getPrice().multiply(BigDecimal.ONE.subtract(orderItem.getDiscountRate())));
+        member.savePoint(savePoint);
+        memberRepository.save(member);
 
         if (images != null && !images.isEmpty()){
             for (MultipartFile image : images) {
