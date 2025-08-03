@@ -14,7 +14,7 @@ public class OrderItemDto {
     private Integer orderItemId;
     private String productName;
     private Size size;
-    private BigDecimal price;
+    private BigDecimal discountPrice;
     private Integer quantity;
     private String imageUrl;
 }
