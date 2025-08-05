@@ -50,3 +50,6 @@ upload/review/*
 
 upload/profile/*
 !upload/profile/.gitkeep
+
+upload/fitting/*
+!upload/fitting/.gitkeep
