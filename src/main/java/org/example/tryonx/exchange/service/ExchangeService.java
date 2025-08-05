@@ -232,4 +232,8 @@ public class ExchangeService {
                 })
                 .collect(Collectors.toList());
     }
+    public long countAllExchanges() {
+        return exchangeRepository.count();
+    }
+
 }
