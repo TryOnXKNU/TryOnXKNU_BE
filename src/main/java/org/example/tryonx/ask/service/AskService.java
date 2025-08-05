@@ -177,4 +177,7 @@ public class AskService {
         askRepository.delete(ask);
     }
 
+    public long countAllAsks() {
+        return askRepository.count();
+    }
 }

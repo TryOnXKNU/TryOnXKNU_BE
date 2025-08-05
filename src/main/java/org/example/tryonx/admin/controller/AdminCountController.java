@@ -2,6 +2,7 @@ package org.example.tryonx.admin.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.admin.dto.TotalCountsDto;
+import org.example.tryonx.ask.service.AskService;
 import org.example.tryonx.exchange.service.ExchangeService;
 import org.example.tryonx.returns.service.ReturnService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +20,17 @@ public class AdminCountController {
 
     @Autowired
     private ReturnService returnService;
+
+    @Autowired
+    private AskService askService;
     
     @GetMapping("/admin/total-counts")
     public ResponseEntity<TotalCountsDto> getTotalCounts() {
         long exchangeCount = exchangeService.countAllExchanges();
         long returnCount = returnService.countAllReturns();
+        long askCount = askService.countAllAsks();
 
-        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount);
+        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount, askCount);
         return ResponseEntity.ok(dto);
     }
 

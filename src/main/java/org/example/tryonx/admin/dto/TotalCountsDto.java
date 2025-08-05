@@ -10,4 +10,5 @@ import lombok.*;
 public class TotalCountsDto {
     private long exchangeTotalCount;
     private long returnTotalCount;
+    private long askTotalCount;
 }
