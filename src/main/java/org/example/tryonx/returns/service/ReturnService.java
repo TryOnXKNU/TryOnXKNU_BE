@@ -234,6 +234,7 @@ public class ReturnService {
                 })
                 .toList();
     }
+
     public long countAllReturns() {
         return returnRepository.count();
     }
