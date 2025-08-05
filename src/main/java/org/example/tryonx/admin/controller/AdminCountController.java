@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/admin/asks")
+@RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
 public class AdminCountController {
     @Autowired
@@ -19,6 +19,7 @@ public class AdminCountController {
 
     @Autowired
     private ReturnService returnService;
+    
     @GetMapping("/admin/total-counts")
     public ResponseEntity<TotalCountsDto> getTotalCounts() {
         long exchangeCount = exchangeService.countAllExchanges();
