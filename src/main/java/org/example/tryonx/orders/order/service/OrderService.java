@@ -307,5 +307,8 @@ public class OrderService {
         return orderRepository.countByMember(member);
     }
 
+    public long countAllOrders() {
+        return orderRepository.count();
+    }
 
 }

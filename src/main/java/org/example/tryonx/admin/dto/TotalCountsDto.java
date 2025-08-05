@@ -13,4 +13,5 @@ public class TotalCountsDto {
     private long askTotalCount;
     private long newMemberCount;
     private long totalMemberCount;
+    private long orderTotalCount;
 }
