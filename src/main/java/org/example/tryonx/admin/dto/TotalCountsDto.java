@@ -11,4 +11,6 @@ public class TotalCountsDto {
     private long exchangeTotalCount;
     private long returnTotalCount;
     private long askTotalCount;
+    private long newMemberCount;
+    private long totalMemberCount;
 }
