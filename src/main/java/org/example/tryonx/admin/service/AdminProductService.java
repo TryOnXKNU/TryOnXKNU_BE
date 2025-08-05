@@ -5,6 +5,7 @@ import org.example.tryonx.admin.dto.ProductDetailUpdateDto;
 import org.example.tryonx.admin.dto.ProductItemDto;
 import org.example.tryonx.admin.dto.ProductListDto;
 import org.example.tryonx.admin.dto.ProductStockAndStateUpdateDto;
+import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.category.Category;
 import org.example.tryonx.category.CategoryRepository;
 import org.example.tryonx.image.domain.ProductImage;
@@ -34,13 +35,15 @@ public class AdminProductService {
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
     private final MeasurementRepository measurementRepository;
+    private final CartItemRepository cartItemRepository;
 
-    public AdminProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository, MeasurementRepository measurementRepository) {
+    public AdminProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository, MeasurementRepository measurementRepository, CartItemRepository cartItemRepository) {
         this.productRepository = productRepository;
         this.productItemRepository = productItemRepository;
         this.productImageRepository = productImageRepository;
         this.categoryRepository = categoryRepository;
         this.measurementRepository = measurementRepository;
+        this.cartItemRepository = cartItemRepository;
     }
 
     public List<ProductListDto> getAllProducts() {
@@ -201,9 +204,16 @@ public class AdminProductService {
         productImageRepository.delete(byImageUrl);
     }
 
-
+    @Transactional
     public void deleteProduct(Integer productId) {
-        productRepository.deleteById(productId);
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        List<ProductItem> productItems = product.getItems();
+        if (!productItems.isEmpty()) {
+            cartItemRepository.deleteByProductItemIn(productItems);
+        }
+        productRepository.delete(product);
     }
 
     private List<ProductListDto> getProductList(List<Product> productList) {
