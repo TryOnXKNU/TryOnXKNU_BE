@@ -5,6 +5,7 @@ import org.example.tryonx.admin.dto.TotalCountsDto;
 import org.example.tryonx.admin.service.MemberListService;
 import org.example.tryonx.ask.service.AskService;
 import org.example.tryonx.exchange.service.ExchangeService;
+import org.example.tryonx.orders.order.service.OrderService;
 import org.example.tryonx.returns.service.ReturnService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,8 @@ public class AdminCountController {
     private final AskService askService;
 
     private final MemberListService memberListService;
+
+    private final OrderService orderService;
     
     @GetMapping("/admin/total-counts")
     public ResponseEntity<TotalCountsDto> getTotalCounts() {
@@ -30,9 +33,9 @@ public class AdminCountController {
         long askCount = askService.countAllAsks();
         long newMemberCount = memberListService.countNewMembers();
         long totalMemberCount = memberListService.countTotalMembers();
+        long orderCount = orderService.countAllOrders();
 
-
-        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount, askCount, newMemberCount, totalMemberCount);
+        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount, askCount, newMemberCount, totalMemberCount, orderCount);
         return ResponseEntity.ok(dto);
     }
 
