@@ -142,4 +142,12 @@ public class MemberListService {
         return result;
     }
 
+    public long countNewMembers() {
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+        return memberRepository.countByCreatedAtAfter(oneWeekAgo);
+    }
+
+    public long countTotalMembers() {
+        return memberRepository.count();
+    }
 }

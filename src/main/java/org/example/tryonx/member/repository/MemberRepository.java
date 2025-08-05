@@ -16,5 +16,6 @@ public interface MemberRepository extends JpaRepository<Member, Long>, JpaSpecif
     boolean existsByNickname(String nickname);
     Optional<Member> findByMemberId(Long memberId);
     List<Member> findByCreatedAtAfter(LocalDateTime dateTime);
-
+    long countByCreatedAtAfter(LocalDateTime dateTime);
+    long count();
 }

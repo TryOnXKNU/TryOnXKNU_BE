@@ -2,10 +2,10 @@ package org.example.tryonx.admin.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.admin.dto.TotalCountsDto;
+import org.example.tryonx.admin.service.MemberListService;
 import org.example.tryonx.ask.service.AskService;
 import org.example.tryonx.exchange.service.ExchangeService;
 import org.example.tryonx.returns.service.ReturnService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,22 +15,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
 public class AdminCountController {
-    @Autowired
-    private ExchangeService exchangeService;
+    private final ExchangeService exchangeService;
 
-    @Autowired
-    private ReturnService returnService;
+    private final ReturnService returnService;
 
-    @Autowired
-    private AskService askService;
+    private final AskService askService;
+
+    private final MemberListService memberListService;
     
     @GetMapping("/admin/total-counts")
     public ResponseEntity<TotalCountsDto> getTotalCounts() {
         long exchangeCount = exchangeService.countAllExchanges();
         long returnCount = returnService.countAllReturns();
         long askCount = askService.countAllAsks();
+        long newMemberCount = memberListService.countNewMembers();
+        long totalMemberCount = memberListService.countTotalMembers();
 
-        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount, askCount);
+
+        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount, askCount, newMemberCount, totalMemberCount);
         return ResponseEntity.ok(dto);
     }
 
