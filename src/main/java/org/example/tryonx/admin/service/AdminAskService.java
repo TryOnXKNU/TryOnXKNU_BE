@@ -29,6 +29,7 @@ public class AdminAskService {
                     return new AskListDto(
                             ask.getAskId(),
                             ask.getTitle(),
+                            ask.getContent(),
                             product.getProductName(),
                             productItem.getSize(),
                             product.getImages().isEmpty() ? null : product.getImages().get(0).getImageUrl()
@@ -45,6 +46,7 @@ public class AdminAskService {
                     return new AskListDto(
                             ask.getAskId(),
                             ask.getTitle(),
+                            ask.getContent(),
                             product.getProductName(),
                             productItem.getSize(),
                             product.getImages().isEmpty() ? null : product.getImages().get(0).getImageUrl()

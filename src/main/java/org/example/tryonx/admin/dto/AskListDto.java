@@ -11,6 +11,7 @@ import org.example.tryonx.enums.Size;
 public class AskListDto {
     private Long askId;
     private String title;
+    private String content;
     private String productName;
     private Size size;
     private String imgUrl;
