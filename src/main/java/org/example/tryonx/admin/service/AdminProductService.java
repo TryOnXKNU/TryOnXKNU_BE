@@ -10,6 +10,7 @@ import org.example.tryonx.category.Category;
 import org.example.tryonx.category.CategoryRepository;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
+import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.product.domain.Measurement;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.domain.ProductItem;
@@ -36,14 +37,16 @@ public class AdminProductService {
     private final CategoryRepository categoryRepository;
     private final MeasurementRepository measurementRepository;
     private final CartItemRepository cartItemRepository;
+    private final OrderItemRepository orderItemRepository;
 
-    public AdminProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository, MeasurementRepository measurementRepository, CartItemRepository cartItemRepository) {
+    public AdminProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository, MeasurementRepository measurementRepository, CartItemRepository cartItemRepository, OrderItemRepository orderItemRepository) {
         this.productRepository = productRepository;
         this.productItemRepository = productItemRepository;
         this.productImageRepository = productImageRepository;
         this.categoryRepository = categoryRepository;
         this.measurementRepository = measurementRepository;
         this.cartItemRepository = cartItemRepository;
+        this.orderItemRepository = orderItemRepository;
     }
 
     public List<ProductListDto> getAllProducts() {
@@ -205,16 +208,26 @@ public class AdminProductService {
     }
 
     @Transactional
-    public void deleteProduct(Integer productId) {
+    public String deleteProduct(Integer productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         List<ProductItem> productItems = product.getItems();
-        if (!productItems.isEmpty()) {
-            cartItemRepository.deleteByProductItemIn(productItems);
+
+        boolean hasOrderedItem = productItems.stream()
+                .anyMatch(orderItemRepository::existsByProductItem);
+
+        if (hasOrderedItem) {
+            return "주문 상품이 존재합니다. [상품 삭제 실패]";
+        } else {
+            if (!productItems.isEmpty()) {
+                cartItemRepository.deleteByProductItemIn(productItems);
+            }
+            productRepository.delete(product);
+            return "[상품 삭제 성공]";
         }
-        productRepository.delete(product);
     }
+
 
     private List<ProductListDto> getProductList(List<Product> productList) {
         return productList.stream()

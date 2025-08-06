@@ -175,19 +175,6 @@ public class OrderService {
             pointHistoryRepository.save(PointHistory.earn(member, savePoints, "[" + productSummary + "] 주문 적립 포인트 지급"));
         }
 
-        // 주문 생성 후 장바구니 항목 삭제
-        List<Long> cartItemIds = requestDto.getItems().stream()
-                .map(OrderRequestDto.Item::getCartItemId)
-                .filter(Objects::nonNull)
-                .toList();
-
-        if (!cartItemIds.isEmpty()) {
-            List<CartItem> cartItemsToDelete = cartItemRepository.findAllById(cartItemIds).stream()
-                    .filter(cartItem -> cartItem.getMember().equals(member)) // 소유자 검증
-                    .toList();
-
-            cartItemRepository.deleteAll(cartItemsToDelete);
-        }
 
         Notification notification = Notification.builder()
                 .member(member)

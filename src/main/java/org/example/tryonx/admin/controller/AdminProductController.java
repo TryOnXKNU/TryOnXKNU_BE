@@ -51,8 +51,8 @@ public class AdminProductController {
 
     @DeleteMapping("{productId}")
     public ResponseEntity<?> deleteProduct(@PathVariable("productId") Integer productId) {
-        adminProductService.deleteProduct(productId);
-        return ResponseEntity.ok().build();
+        String message = adminProductService.deleteProduct(productId);
+        return ResponseEntity.ok(message);
     }
 
     @DeleteMapping("/{productId}/image")
