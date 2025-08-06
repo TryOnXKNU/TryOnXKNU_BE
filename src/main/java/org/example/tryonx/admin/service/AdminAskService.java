@@ -6,6 +6,7 @@ import org.example.tryonx.admin.dto.AskAnswerRequestDto;
 import org.example.tryonx.admin.dto.AskListDto;
 import org.example.tryonx.admin.dto.CompletedAskDetailsDto;
 import org.example.tryonx.ask.domain.Ask;
+import org.example.tryonx.ask.domain.AskImage;
 import org.example.tryonx.ask.repository.AskRepository;
 import org.example.tryonx.enums.AnswerStatus;
 import org.example.tryonx.enums.Size;
@@ -26,34 +27,46 @@ public class AdminAskService {
                 .map(ask -> {
                     var productItem = ask.getOrderItem().getProductItem();
                     var product = productItem.getProduct();
+                    List<String> askImageUrls = ask.getImages().stream()
+                            .map(AskImage::getImageUrl)
+                            .toList();
+
                     return new AskListDto(
                             ask.getAskId(),
                             ask.getTitle(),
                             ask.getContent(),
                             product.getProductName(),
                             productItem.getSize(),
-                            product.getImages().isEmpty() ? null : product.getImages().get(0).getImageUrl()
+                            product.getImages().isEmpty() ? null : product.getImages().get(0).getImageUrl(),
+                            askImageUrls
                     );
                 })
                 .collect(Collectors.toList());
     }
+
 
     public List<AskListDto> getCompletedAsks() {
         return askRepository.findByAnswerStatus(AnswerStatus.COMPLETED).stream()
                 .map(ask -> {
                     var productItem = ask.getOrderItem().getProductItem();
                     var product = productItem.getProduct();
+                    List<String> askImageUrls = ask.getImages().stream()
+                            .map(AskImage::getImageUrl)
+                            .toList();
+
                     return new AskListDto(
                             ask.getAskId(),
                             ask.getTitle(),
                             ask.getContent(),
                             product.getProductName(),
                             productItem.getSize(),
-                            product.getImages().isEmpty() ? null : product.getImages().get(0).getImageUrl()
+                            product.getImages().isEmpty() ? null : product.getImages().get(0).getImageUrl(),
+                            askImageUrls
                     );
                 })
                 .collect(Collectors.toList());
     }
+
 
     public void answerAsk(AskAnswerRequestDto dto) {
         Ask ask = askRepository.findById(dto.getAskId())
