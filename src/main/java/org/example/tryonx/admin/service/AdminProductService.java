@@ -88,6 +88,7 @@ public class AdminProductService {
                 product.getPrice(),
                 product.getCategory().getCategoryId(),
                 product.getDescription(),
+                product.getBodyShape(),
                 imageUrls,
                 itemDtos
         );
@@ -105,20 +106,20 @@ public class AdminProductService {
     }
 
     @Transactional
-    public void updateProductDetail(Integer productId, ProductDetailUpdateDto dto, List<MultipartFile> images) {
+    public void updateProductDetail(Integer productId, ProductDetailUpdateDto dto) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        Category category = null;
+        Category category = product.getCategory();
         if (dto.getCategoryId() != null) {
             category = categoryRepository.findById(dto.getCategoryId())
                     .orElseThrow(() -> new RuntimeException("Category not found"));
         }
 
         product.updateProduct(
-                dto.getPrice(),
-                dto.getDiscountRate(),
-                dto.getBodyShape(),
+                dto.getPrice() != null ? dto.getPrice() : product.getPrice(),
+                dto.getDiscountRate() != null ? dto.getDiscountRate() : product.getDiscountRate(),
+                dto.getBodyShape() != null ? dto.getBodyShape() : product.getBodyShape(),
                 category
         );
 
@@ -126,7 +127,7 @@ public class AdminProductService {
         // --- ProductItem & Measurement 업데이트 ---
         dto.getProductItemInfoDtos().forEach(itemDto -> {
             ProductItem productItem = productItemRepository.findByProductAndSize(product, itemDto.getSize())
-                    .orElseThrow(() -> new RuntimeException("Product item not found"));
+                    .orElseThrow(() -> new RuntimeException("Product item  (size :" + itemDto.getSize() +  ")not found"));
 
             if (itemDto.getStock() != null) {
                 productItem.setStock(itemDto.getStock());
@@ -143,7 +144,7 @@ public class AdminProductService {
                     itemDto.getLength() != null ? itemDto.getLength() : measurement.getLength(),
                     itemDto.getShoulder() != null ? itemDto.getShoulder() : measurement.getShoulder(),
                     itemDto.getChest() != null ? itemDto.getChest() : measurement.getChest(),
-                    itemDto.getSleeve_length() != null ? itemDto.getSleeve_length() : measurement.getSleeveLength(),
+                    itemDto.getSleeveLength() != null ? itemDto.getSleeveLength() : measurement.getSleeveLength(),
                     itemDto.getWaist() != null ? itemDto.getWaist() : measurement.getWaist(),
                     itemDto.getThigh() != null ? itemDto.getThigh() : measurement.getThigh(),
                     itemDto.getRise() != null ? itemDto.getRise() : measurement.getRise(),
@@ -153,32 +154,6 @@ public class AdminProductService {
 
             measurementRepository.save(measurement);
         });
-
-        // --- 이미지 저장 ---
-        if (images != null && !images.isEmpty()) {
-            boolean isFirst = productImageRepository.findByProductAndIsThumbnailTrue(product).isEmpty();
-
-            for (MultipartFile image : images) {
-                String filename = UUID.randomUUID() + "_" + image.getOriginalFilename();
-                Path savePath = Paths.get("upload/product").resolve(filename);
-
-                try {
-                    Files.createDirectories(savePath.getParent());
-                    image.transferTo(savePath);
-
-                    ProductImage productImage = ProductImage.builder()
-                            .product(product)
-                            .imageUrl("/upload/product/" + filename)
-                            .isThumbnail(isFirst)
-                            .build();
-
-                    productImageRepository.save(productImage);
-                    isFirst = false;
-                } catch (IOException e) {
-                    throw new RuntimeException("이미지 저장 실패", e);
-                }
-            }
-        }
     }
 
     @Transactional

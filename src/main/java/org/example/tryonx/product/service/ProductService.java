@@ -160,6 +160,7 @@ public class ProductService {
                 likeRepository.countByProduct(product),
                 product.getCategory().getCategoryId(),
                 product.getDescription(),
+                product.getBodyShape(),
                 imageUrls,
                 itemDtos,
                 reviewsPreview
@@ -183,7 +184,7 @@ public class ProductService {
                 .length(dto.getLength())
                 .shoulder(dto.getShoulder())
                 .chest(dto.getChest())
-                .sleeveLength(dto.getSleeve_length())
+                .sleeveLength(dto.getSleeveLength())
                 .waist(dto.getWaist())
                 .thigh(dto.getThigh())
                 .rise(dto.getRise())
