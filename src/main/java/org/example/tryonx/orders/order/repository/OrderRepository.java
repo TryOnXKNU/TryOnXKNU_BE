@@ -5,6 +5,7 @@ import org.example.tryonx.orders.order.domain.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -13,4 +14,5 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<Order> findByMemberEmail(String email);
     Integer countByMember(Member member);
     void deleteAllByMember(Member member);
+    List<Order> findByOrderedAtBetween(LocalDateTime start, LocalDateTime end);
 }

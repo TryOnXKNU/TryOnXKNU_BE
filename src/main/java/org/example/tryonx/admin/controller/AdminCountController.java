@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
@@ -34,8 +36,10 @@ public class AdminCountController {
         long newMemberCount = memberListService.countNewMembers();
         long totalMemberCount = memberListService.countTotalMembers();
         long orderCount = orderService.countAllOrders();
+        BigDecimal todaySalesAmount = orderService.getTodaySalesAmount();
 
-        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount, askCount, newMemberCount, totalMemberCount, orderCount);
+
+        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount, askCount, newMemberCount, totalMemberCount, orderCount, todaySalesAmount);
         return ResponseEntity.ok(dto);
     }
 
