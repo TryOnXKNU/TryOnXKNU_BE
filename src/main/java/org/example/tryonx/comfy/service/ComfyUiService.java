@@ -1,12 +1,14 @@
 package org.example.tryonx.comfy.service;
 
+import lombok.RequiredArgsConstructor;
+import org.example.tryonx.fitting.domain.ProductFitting;
+import org.example.tryonx.fitting.repository.ProductFittingRepository;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
@@ -22,6 +24,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+@RequiredArgsConstructor
 @Service
 public class ComfyUiService {
 
@@ -29,13 +32,15 @@ public class ComfyUiService {
     private final ProductImageRepository productImageRepository;
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
+    private final ProductFittingRepository productFittingRepository;
 
-    public ComfyUiService(RestTemplateBuilder builder, ProductImageRepository productImageRepository, ProductRepository productRepository, MemberRepository memberRepository) {
-        this.restTemplate = builder.build();
-        this.productImageRepository = productImageRepository;
-        this.productRepository = productRepository;
-        this.memberRepository = memberRepository;
-    }
+
+//    public ComfyUiService(RestTemplateBuilder builder, ProductImageRepository productImageRepository, ProductRepository productRepository, MemberRepository memberRepository) {
+//        this.restTemplate = builder.build();
+//        this.productImageRepository = productImageRepository;
+//        this.productRepository = productRepository;
+//        this.memberRepository = memberRepository;
+//    }
 
     @Value("${ngrok.url}")
     private String baseUrl;
@@ -218,31 +223,98 @@ public class ComfyUiService {
         throw new IOException(" 이미지 다운로드 실패: " + filename);
     }
 
-    public String executeFittingFlowWithClothingName(String email, String clothingImageName) throws IOException, InterruptedException {
-        // 1. 로그인된 사용자 정보 확인
+    // 상품사진파일명으로 한장 생성
+//    public String executeFittingFlowWithClothingName(String email, String clothingImageName) throws IOException, InterruptedException {
+//        // 1. 로그인된 사용자 정보 확인
+//        Member member = memberRepository.findByEmail(email)
+//                .orElseThrow(() -> new RuntimeException("Member not found"));
+//
+//        // 2. 이미지 이름이 경로 접두어를 포함하는 경우 제거
+//        String prefix = "/upload/product/";
+//        String fileNameOnly = clothingImageName.startsWith(prefix)
+//                ? clothingImageName.substring(prefix.length())
+//                : clothingImageName;
+//
+//        // 3. 워크플로우 JSON 불러와서 옷 이미지 파일명 치환
+//        String workflowJson = loadWorkflowFromResource("tryon_flow.json")
+//                .replace("{{imageName}}", fileNameOnly);
+//
+//        // 4. ComfyUI에 워크플로우 전송 및 실행 대기
+//        String promptId = sendWorkflow(workflowJson);
+//        waitUntilComplete(promptId);
+//
+//        // 5. 결과 이미지 추출 및 저장
+//        String filename = getGeneratedOutputImageFilename(promptId);
+//        downloadImage(filename);
+//
+//        return filename;
+//    }
+
+    public void executeFittingFlowWithClothingName(String email, String clothingImageName, Product product) throws IOException, InterruptedException {
+        // 1. 사용자 확인
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
 
-        // 2. 이미지 이름이 경로 접두어를 포함하는 경우 제거
+        // 2. 파일명 전처리
         String prefix = "/upload/product/";
         String fileNameOnly = clothingImageName.startsWith(prefix)
                 ? clothingImageName.substring(prefix.length())
                 : clothingImageName;
 
-        // 3. 워크플로우 JSON 불러와서 옷 이미지 파일명 치환
+        // 3. 워크플로우 JSON 설정
         String workflowJson = loadWorkflowFromResource("tryon_flow.json")
                 .replace("{{imageName}}", fileNameOnly);
 
-        // 4. ComfyUI에 워크플로우 전송 및 실행 대기
+        // 4. ComfyUI 실행
         String promptId = sendWorkflow(workflowJson);
         waitUntilComplete(promptId);
 
-        // 5. 결과 이미지 추출 및 저장
-        String filename = getGeneratedOutputImageFilename(promptId);
-        downloadImage(filename);
+        // 5. 결과 이미지 원래 이름 → 다운로드용 이름
+        String originalFilename = getGeneratedOutputImageFilename(promptId);
+        String finalFilename = "downloaded_" + originalFilename;
 
-        return filename;
+        // 6. 이미지 저장
+        downloadImageAs(originalFilename, finalFilename);
+
+        // 7. DB 저장
+        ProductFitting fitting = new ProductFitting();
+        fitting.setProduct(product);
+        fitting.setSequence(1);
+        fitting.setFittingImageUrl("/upload/fitting/" + finalFilename);  // 저장된 경로 반영
+        productFittingRepository.save(fitting);
     }
+    private void downloadImageAs(String originalFilename, String finalFilename) throws IOException, InterruptedException {
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new IllegalArgumentException("원본 이미지 파일 이름이 null이거나 비어 있습니다.");
+        }
+
+        String url = baseUrl + "/view?filename=" + originalFilename;
+        int maxRetries = 10;
+
+        Path uploadPath = Paths.get("upload/fitting");
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                byte[] imageData = restTemplate.getForObject(url, byte[].class);
+                if (imageData != null && imageData.length > 0) {
+                    Path outputPath = uploadPath.resolve(finalFilename);
+                    Files.write(outputPath, imageData);
+                    System.out.println("✅ 이미지 저장 완료: " + outputPath);
+                    return;
+                }
+            } catch (HttpClientErrorException.NotFound e) {
+                System.out.println(" [대기 중] 이미지가 아직 준비되지 않음. 재시도 " + attempt);
+            }
+
+            Thread.sleep(1000);
+        }
+
+        throw new IOException("이미지 다운로드 실패: " + originalFilename);
+    }
+
 
 
 }
