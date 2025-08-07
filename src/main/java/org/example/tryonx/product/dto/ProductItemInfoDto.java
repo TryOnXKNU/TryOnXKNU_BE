@@ -16,7 +16,7 @@ public class ProductItemInfoDto {
     private Double length;
     private Double shoulder;
     private Double chest;
-    private Double sleeve_length;
+    private Double sleeveLength;
     private Double waist;
     private Double thigh;
     private Double rise;

@@ -31,6 +31,7 @@ public class ProductItem {
     private Integer stock;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     @Setter
     private ProductStatus status = ProductStatus.SOLDOUT;
 }

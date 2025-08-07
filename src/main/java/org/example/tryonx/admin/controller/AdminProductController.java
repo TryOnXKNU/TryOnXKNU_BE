@@ -44,8 +44,8 @@ public class AdminProductController {
 
 
     @PatchMapping("/{productId}/detail")
-    public ResponseEntity<?> updateProductDetail(@PathVariable("productId") Integer productId, @RequestPart(name = "dto") ProductDetailUpdateDto detail, @RequestPart(name = "images") List<MultipartFile> images) {
-        adminProductService.updateProductDetail(productId, detail, images);
+    public ResponseEntity<?> updateProductDetail(@PathVariable("productId") Integer productId, @RequestBody ProductDetailUpdateDto detail) {
+        adminProductService.updateProductDetail(productId, detail);
         return ResponseEntity.ok().build();
     }
 

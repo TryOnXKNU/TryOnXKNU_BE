@@ -3,6 +3,7 @@ package org.example.tryonx.product.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.review.dto.ProductReviewDto;
 
 import java.math.BigDecimal;
@@ -18,16 +19,18 @@ public class ProductResponseDto {
     private Long likeCount;
     private Integer categoryId;
     private String description;
+    private BodyShape bodyShape;
     private List<String> productImages;
     private List<ProductItemInfoDto> productItems;
     private List<ProductReviewDto> productReviews;
 
-    public ProductResponseDto(Integer productId, String productName, BigDecimal productPrice, Integer categoryId, String description, List<String> productImages, List<ProductItemInfoDto> productItems) {
+    public ProductResponseDto(Integer productId, String productName, BigDecimal productPrice, Integer categoryId, String description, BodyShape bodyShape,List<String> productImages, List<ProductItemInfoDto> productItems) {
         this.productId = productId;
         this.productName = productName;
         this.productPrice = productPrice;
         this.categoryId = categoryId;
         this.description = description;
+        this.bodyShape = bodyShape;
         this.productImages = productImages;
         this.productItems = productItems;
     }
