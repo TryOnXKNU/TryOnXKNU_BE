@@ -1,6 +1,5 @@
 package org.example.tryonx.cart.controller;
 
-import org.example.tryonx.cart.domain.CartItem;
 import org.example.tryonx.cart.dto.DeleteRequest;
 import org.example.tryonx.cart.dto.PutInCartRequestDto;
 import org.example.tryonx.cart.dto.UpdateCartItemRequestDto;

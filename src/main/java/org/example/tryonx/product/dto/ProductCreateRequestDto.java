@@ -3,7 +3,6 @@ package org.example.tryonx.product.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.tryonx.category.Category;
 import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.enums.ProductStatus;
 

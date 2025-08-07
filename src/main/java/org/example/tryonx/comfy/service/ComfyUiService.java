@@ -1,6 +1,5 @@
 package org.example.tryonx.comfy.service;
 
-import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
@@ -122,7 +121,7 @@ public class ComfyUiService {
 
     private void waitUntilComplete(String promptId) throws InterruptedException {
         String url = baseUrl + "/history/" + promptId;
-        int retryCount = 0, maxRetries = 240;
+        int retryCount = 0, maxRetries = 600;
 
         while (retryCount < maxRetries) {
             try {
@@ -218,5 +217,32 @@ public class ComfyUiService {
 
         throw new IOException(" 이미지 다운로드 실패: " + filename);
     }
+
+    public String executeFittingFlowWithClothingName(String email, String clothingImageName) throws IOException, InterruptedException {
+        // 1. 로그인된 사용자 정보 확인
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+
+        // 2. 이미지 이름이 경로 접두어를 포함하는 경우 제거
+        String prefix = "/upload/product/";
+        String fileNameOnly = clothingImageName.startsWith(prefix)
+                ? clothingImageName.substring(prefix.length())
+                : clothingImageName;
+
+        // 3. 워크플로우 JSON 불러와서 옷 이미지 파일명 치환
+        String workflowJson = loadWorkflowFromResource("tryon_flow.json")
+                .replace("{{imageName}}", fileNameOnly);
+
+        // 4. ComfyUI에 워크플로우 전송 및 실행 대기
+        String promptId = sendWorkflow(workflowJson);
+        waitUntilComplete(promptId);
+
+        // 5. 결과 이미지 추출 및 저장
+        String filename = getGeneratedOutputImageFilename(promptId);
+        downloadImage(filename);
+
+        return filename;
+    }
+
 
 }
