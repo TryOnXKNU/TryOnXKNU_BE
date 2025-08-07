@@ -298,4 +298,16 @@ public class OrderService {
         return orderRepository.count();
     }
 
+
+    public BigDecimal getTodaySalesAmount() {
+        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+
+        List<Order> todayOrders = orderRepository.findByOrderedAtBetween(startOfDay, endOfDay);
+
+        return todayOrders.stream()
+                .map(Order::getFinalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
 }
