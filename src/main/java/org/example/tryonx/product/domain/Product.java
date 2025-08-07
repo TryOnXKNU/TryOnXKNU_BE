@@ -15,6 +15,7 @@ import java.util.Optional;
 @Entity
 @Table(name = "products")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
