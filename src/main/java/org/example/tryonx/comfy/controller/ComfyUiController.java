@@ -28,4 +28,15 @@ public class ComfyUiController {
         String filename = comfyUiService.executeFittingFlow(email, productId);
         return ResponseEntity.ok(" 생성된 이미지 파일: " + filename);
     }
+
+    @PostMapping("/clothing")
+    public ResponseEntity<String> generateMyFittingWithClothingName(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String clothingImageName) throws Exception {
+
+        String email = userDetails.getUsername();
+        String filename = comfyUiService.executeFittingFlowWithClothingName(email, clothingImageName);
+        return ResponseEntity.ok(" 생성된 이미지 파일: " + filename);
+    }
+
 }
