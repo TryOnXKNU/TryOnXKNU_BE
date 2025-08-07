@@ -171,6 +171,9 @@ public class OrderService {
                 .setScale(0, BigDecimal.ROUND_DOWN)
                 .intValue();
 
+        member.savePoint(savePoints);
+        memberRepository.save(member);
+        
         if (savePoints > 0) {
             pointHistoryRepository.save(PointHistory.earn(member, savePoints, "[" + productSummary + "] 주문 적립 포인트 지급"));
         }
