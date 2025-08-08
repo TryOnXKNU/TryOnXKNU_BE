@@ -157,6 +157,7 @@ public class ProductService {
                 product.getProductId(),
                 product.getProductName(),
                 product.getPrice(),
+                product.getDiscountRate(),
                 likeRepository.countByProduct(product),
                 product.getCategory().getCategoryId(),
                 product.getDescription(),

@@ -1,6 +1,7 @@
 package org.example.tryonx.admin.service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.example.tryonx.admin.dto.ProductDetailUpdateDto;
 import org.example.tryonx.admin.dto.ProductItemDto;
 import org.example.tryonx.admin.dto.ProductListDto;
@@ -10,6 +11,7 @@ import org.example.tryonx.category.Category;
 import org.example.tryonx.category.CategoryRepository;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
+import org.example.tryonx.like.repository.LikeRepository;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.product.domain.Measurement;
 import org.example.tryonx.product.domain.Product;
@@ -19,16 +21,13 @@ import org.example.tryonx.product.dto.ProductResponseDto;
 import org.example.tryonx.product.repository.MeasurementRepository;
 import org.example.tryonx.product.repository.ProductItemRepository;
 import org.example.tryonx.product.repository.ProductRepository;
+import org.example.tryonx.review.dto.ProductReviewDto;
+import org.example.tryonx.review.service.ReviewService;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 
+@RequiredArgsConstructor
 @Service
 public class AdminProductService {
     private final ProductRepository productRepository;
@@ -38,16 +37,9 @@ public class AdminProductService {
     private final MeasurementRepository measurementRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderItemRepository orderItemRepository;
+    private final LikeRepository likeRepository;
+    private final ReviewService reviewService;
 
-    public AdminProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository, MeasurementRepository measurementRepository, CartItemRepository cartItemRepository, OrderItemRepository orderItemRepository) {
-        this.productRepository = productRepository;
-        this.productItemRepository = productItemRepository;
-        this.productImageRepository = productImageRepository;
-        this.categoryRepository = categoryRepository;
-        this.measurementRepository = measurementRepository;
-        this.cartItemRepository = cartItemRepository;
-        this.orderItemRepository = orderItemRepository;
-    }
 
     public List<ProductListDto> getAllProducts() {
         List<Product> products = productRepository.findAll();
@@ -82,15 +74,21 @@ public class AdminProductService {
         List<String> imageUrls = productImageRepository.findByProduct(product)
                 .stream().map(ProductImage::getImageUrl).toList();
 
+        // 리뷰 프리뷰
+        List<ProductReviewDto> reviewsPreview = reviewService.getProductReviewsPreview(productId);
+
         return new ProductResponseDto(
                 product.getProductId(),
                 product.getProductName(),
                 product.getPrice(),
+                product.getDiscountRate(),
+                likeRepository.countByProduct(product),
                 product.getCategory().getCategoryId(),
                 product.getDescription(),
                 product.getBodyShape(),
                 imageUrls,
-                itemDtos
+                itemDtos,
+                reviewsPreview
         );
     }
 

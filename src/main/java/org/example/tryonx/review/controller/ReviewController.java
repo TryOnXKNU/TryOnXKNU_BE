@@ -1,6 +1,5 @@
 package org.example.tryonx.review.controller;
 
-import okhttp3.Response;
 import org.example.tryonx.review.dto.*;
 import org.example.tryonx.review.service.ReviewService;
 import org.springframework.http.HttpStatus;
