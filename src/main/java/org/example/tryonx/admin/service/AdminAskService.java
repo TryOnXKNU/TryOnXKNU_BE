@@ -10,6 +10,7 @@ import org.example.tryonx.ask.domain.AskImage;
 import org.example.tryonx.ask.repository.AskRepository;
 import org.example.tryonx.enums.AnswerStatus;
 import org.example.tryonx.enums.Size;
+import org.example.tryonx.product.domain.Product;
 import org.springframework.stereotype.Service;
 
 
@@ -89,11 +90,17 @@ public class AdminAskService {
         }
 
         // 상품명과 사이즈 추출
-        String productName = ask.getOrderItem().getProductItem().getProduct().getProductName();
+        Product product = ask.getOrderItem().getProductItem().getProduct();
+        String productName = product.getProductName();
         Size size = ask.getOrderItem().getProductItem().getSize();
 
-        // 이미지 URL 리스트 추출
+        // 사용자 업로드 이미지
         List<String> imageUrls = ask.getImages().stream()
+                .map(image -> image.getImageUrl())
+                .collect(Collectors.toList());
+
+        // 상품 이미지
+        List<String> productImageUrls = product.getImages().stream()
                 .map(image -> image.getImageUrl())
                 .collect(Collectors.toList());
 
@@ -107,10 +114,8 @@ public class AdminAskService {
                 ask.getAnswer(),
                 ask.getCreatedAt(),
                 ask.getAnsweredAt(),
-                imageUrls
+                imageUrls,
+                productImageUrls
         );
     }
-
-
-
 }

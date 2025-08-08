@@ -21,5 +21,6 @@ public class CompletedAskDetailsDto {
     private String answer;
     private LocalDateTime createdAt;
     private LocalDateTime answeredAt;
-    private List<String> imageUrls;
+    private List<String> userImageUrls;
+    private List<String> productImageUrls;
 }
