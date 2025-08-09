@@ -13,6 +13,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -33,14 +34,6 @@ public class ComfyUiService {
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
     private final ProductFittingRepository productFittingRepository;
-
-
-//    public ComfyUiService(RestTemplateBuilder builder, ProductImageRepository productImageRepository, ProductRepository productRepository, MemberRepository memberRepository) {
-//        this.restTemplate = builder.build();
-//        this.productImageRepository = productImageRepository;
-//        this.productRepository = productRepository;
-//        this.memberRepository = memberRepository;
-//    }
 
     @Value("${ngrok.url}")
     private String baseUrl;
@@ -273,15 +266,24 @@ public class ComfyUiService {
         String originalFilename = getGeneratedOutputImageFilename(promptId);
         String finalFilename = "downloaded_" + originalFilename;
 
+//        // 6. 이미지 저장
+//        downloadImageAs(originalFilename, finalFilename);
+//
+//        // 7. DB 저장
+//        ProductFitting fitting = new ProductFitting();
+//        fitting.setProduct(product);
+//        fitting.setSequence(1);
+//        fitting.setFittingImageUrl("/upload/fitting/" + finalFilename);  // 저장된 경로 반영
+//        productFittingRepository.save(fitting);
+
         // 6. 이미지 저장
         downloadImageAs(originalFilename, finalFilename);
+        String publicUrl = "/upload/fitting/" + finalFilename;
 
-        // 7. DB 저장
-        ProductFitting fitting = new ProductFitting();
-        fitting.setProduct(product);
-        fitting.setSequence(1);
-        fitting.setFittingImageUrl("/upload/fitting/" + finalFilename);  // 저장된 경로 반영
-        productFittingRepository.save(fitting);
+        // 7. DB 저장 (한 장일 때)
+        saveOrRotateFittings(product, List.of(publicUrl));
+//        saveOrRotateFittings(product, List.of(publicUrl1, publicUrl2));
+
     }
     private void downloadImageAs(String originalFilename, String finalFilename) throws IOException, InterruptedException {
         if (originalFilename == null || originalFilename.isBlank()) {
@@ -315,6 +317,39 @@ public class ComfyUiService {
         throw new IOException("이미지 다운로드 실패: " + originalFilename);
     }
 
+    @Transactional
+    public void saveOrRotateFittings(Product product, List<String> urls) {
+        if (urls == null || urls.isEmpty()) return;
 
+        // 현재 슬롯 상황
+        List<ProductFitting> current = productFittingRepository.findByProductOrderByUpdatedAtAsc(product);
+        boolean hasSeq1 = current.stream().anyMatch(p -> p.getSequence() == 1);
+        boolean hasSeq2 = current.stream().anyMatch(p -> p.getSequence() == 2);
+
+        for (String url : urls) {
+            if (current.size() < 2) {
+                // 빈 슬롯에 채우기
+                int targetSeq = !hasSeq1 ? 1 : (!hasSeq2 ? 2 : 1); // 이 경우 1,2 중 비어있는 쪽
+                ProductFitting pf = productFittingRepository.findByProductAndSequence(product, targetSeq)
+                        .orElseGet(ProductFitting::new);
+                pf.setProduct(product);
+                pf.setSequence(targetSeq);
+                pf.setFittingImageUrl(url);
+                productFittingRepository.save(pf);
+
+                if (targetSeq == 1) hasSeq1 = true; else hasSeq2 = true;
+                // 리스트 최신화
+                if (current.stream().noneMatch(p -> p.getSequence() == targetSeq)) {
+                    current.add(pf);
+                }
+            } else {
+                ProductFitting oldest = current.get(0);
+                oldest.setFittingImageUrl(url); // @PreUpdate로 updatedAt 갱신
+                productFittingRepository.save(oldest);
+
+                current = productFittingRepository.findByProductOrderByUpdatedAtAsc(product);
+            }
+        }
+    }
 
 }
