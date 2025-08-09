@@ -6,8 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductFittingRepository extends JpaRepository<ProductFitting, Long> {
-    List<ProductFitting> findByProductOrderBySequenceAsc(Product product);
+    List<ProductFitting> findByProductOrderByUpdatedAtAsc(Product product);
+    Optional<ProductFitting> findByProductAndSequence(Product product, int sequence);
+    long countByProduct(Product product);
 }
