@@ -52,11 +52,19 @@ public class LikeService {
         Member member = memberRepository.findByEmail(username)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
+        // 사용자가 좋아요한 항목들
         List<Like> likes = likeRepository.findByMember(member);
 
+
         return likes.stream()
-                .map(like -> ProductDto.from(like.getProduct()))
+                .map(Like::getProduct)
+                .distinct()
+                .map(p -> {
+                    long likeCount = likeRepository.countByProduct(p);
+                    return ProductDto.of(p, likeCount);
+                })
                 .collect(Collectors.toList());
+
     }
 
 }

@@ -13,14 +13,18 @@ public class ProductDto {
     private String productName;
     private String imageUrl;
     private BigDecimal price;
+    private Long likeCount;
 
-    public static ProductDto from(Product product) {
+    public static ProductDto of(Product p, long likeCount) {
+        String imageUrl = p.getImages().isEmpty() ? null : p.getImages().get(0).getImageUrl();
         return new ProductDto(
-                product.getProductId(),
-                product.getProductName(),
-                product.getImages().isEmpty() ? null : product.getImages().get(0).getImageUrl(),
-                product.getPrice()
+                p.getProductId(),
+                p.getProductName(),
+                imageUrl,
+                p.getPrice(),
+                likeCount
         );
     }
+
 }
 
