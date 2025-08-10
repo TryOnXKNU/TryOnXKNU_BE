@@ -1,5 +1,6 @@
 package org.example.tryonx.product.service;
 
+import lombok.RequiredArgsConstructor;
 import org.example.tryonx.category.Category;
 import org.example.tryonx.category.CategoryRepository;
 import org.example.tryonx.enums.ProductStatus;
@@ -7,6 +8,7 @@ import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.like.dto.ProductDto;
 import org.example.tryonx.like.repository.LikeRepository;
+import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.product.domain.Measurement;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.domain.ProductItem;
@@ -19,6 +21,7 @@ import org.example.tryonx.product.repository.ProductItemRepository;
 import org.example.tryonx.product.repository.ProductRepository;
 import org.example.tryonx.review.dto.ProductReviewDto;
 import org.example.tryonx.review.service.ReviewService;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +34,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
@@ -40,16 +44,8 @@ public class ProductService {
     private final LikeRepository likeRepository;
     private final MeasurementRepository measurementRepository;
     private final ReviewService reviewService;
+    private final MemberRepository memberRepository;
 
-    public ProductService(ProductRepository productRepository, ProductItemRepository productItemRepository, ProductImageRepository productImageRepository, CategoryRepository categoryRepository, LikeRepository likeRepository, MeasurementRepository measurementRepository, ReviewService reviewService) {
-        this.productRepository = productRepository;
-        this.productItemRepository = productItemRepository;
-        this.productImageRepository = productImageRepository;
-        this.categoryRepository = categoryRepository;
-        this.likeRepository = likeRepository;
-        this.measurementRepository = measurementRepository;
-        this.reviewService = reviewService;
-    }
     public Product createProduct(ProductCreateRequestDto dto, List<MultipartFile> images) {
         String middleCode;
         if(dto.getCategoryId() == 1)
@@ -236,4 +232,21 @@ public class ProductService {
     }
 
     private record Ranked(Product product, long likeCount) {}
+
+    @Transactional(readOnly = true)
+    public List<ProductDto> getSimilarByBodyShape(String email, int size) {
+        var member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("회원 없음"));
+
+        var shape = member.getBodyShape(); // null 가능하면 대비
+        var pageable = PageRequest.of(0, size);
+
+        List<Product> products = (shape != null)
+                ? productRepository.findByBodyShapeOrderByCreatedAtDesc(shape, pageable)
+                : productRepository.findAll(pageable).getContent(); // fallback
+
+        return products.stream()
+                .map(p -> ProductDto.of(p, likeRepository.countByProduct(p)))
+                .toList();
+    }
 }
