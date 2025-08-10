@@ -1,6 +1,7 @@
 package org.example.tryonx.comfy.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.comfy.service.ComfyUiDualService;
 import org.example.tryonx.comfy.service.ComfyUiService;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.repository.ProductRepository;
@@ -16,7 +17,7 @@ public class ComfyUiController {
 
     private final ComfyUiService comfyUiService;
     private final ProductRepository productRepository;
-
+    private final ComfyUiDualService comfyUiDualService;
 
 //    public ComfyUiController(ComfyUiService comfyUiService) {
 //        this.comfyUiService = comfyUiService;
@@ -59,5 +60,21 @@ public class ComfyUiController {
         comfyUiService.executeFittingFlowWithClothingName(email, clothingImageName, product);
 
         return ResponseEntity.ok("피팅 이미지 1장 생성 및 저장 완료");
+    }
+
+    @PostMapping("/clothing/dual")
+    public ResponseEntity<String> generateMyFittingWithClothingNameDual(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String clothingImageName,
+            @RequestParam Integer productId
+    ) throws Exception {
+
+        String email = userDetails.getUsername();
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        comfyUiDualService.executeFittingFlowWithClothingNameTwoImages(email, clothingImageName, product);
+
+        return ResponseEntity.ok("피팅 이미지 2장 생성 및 저장 완료");
     }
 }
