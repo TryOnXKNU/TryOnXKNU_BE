@@ -5,6 +5,7 @@ import org.example.tryonx.category.CategoryRepository;
 import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
+import org.example.tryonx.like.dto.ProductDto;
 import org.example.tryonx.like.repository.LikeRepository;
 import org.example.tryonx.product.domain.Measurement;
 import org.example.tryonx.product.domain.Product;
@@ -19,12 +20,14 @@ import org.example.tryonx.product.repository.ProductRepository;
 import org.example.tryonx.review.dto.ProductReviewDto;
 import org.example.tryonx.review.service.ReviewService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -218,4 +221,19 @@ public class ProductService {
                     );
                 }).toList();
     }
+    @Transactional(readOnly = true)
+    public List<ProductDto> getTopLikedProducts(int size) {
+        return productRepository.findAll().stream()
+                .map(p -> new Ranked(p, likeRepository.countByProduct(p))) // 기존 카운터 그대로 사용
+                .sorted(
+                        Comparator.<Ranked, Long>comparing(r -> r.likeCount)
+                                .reversed()
+                                .thenComparing(r -> r.product.getCreatedAt(), Comparator.nullsLast(Comparator.reverseOrder()))
+                )
+                .limit(size)
+                .map(r -> ProductDto.of(r.product, r.likeCount)) // 네가 쓰던 of(dto) 그대로
+                .toList();
+    }
+
+    private record Ranked(Product product, long likeCount) {}
 }
