@@ -52,7 +52,7 @@ public class LocalAuthService {
                 .phoneNumber(dto.getPhoneNumber())
                 .height(dto.getHeight())
                 .weight(dto.getWeight())
-                .bodyType(dto.getBodyType())
+                .bodyShape(dto.getBodyShape())
                 .birthDate(dto.getBirthDate())
                 .point(0)
                 .build();

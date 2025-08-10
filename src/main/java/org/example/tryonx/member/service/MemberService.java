@@ -5,6 +5,7 @@ import org.example.tryonx.admin.dto.MemberInfoDto;
 import org.example.tryonx.ask.domain.Ask;
 import org.example.tryonx.ask.repository.AskRepository;
 import org.example.tryonx.cart.repository.CartItemRepository;
+import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.exchange.repository.ExchangeRepository;
 import org.example.tryonx.image.repository.ReviewImageRepository;
 import org.example.tryonx.like.repository.LikeRepository;
@@ -92,7 +93,7 @@ public class MemberService {
                 .birthday(member.getBirthDate())
                 .address(member.getAddress())
                 .email(member.getEmail())
-                .bodyType(member.getBodyType())
+                .bodyShape(member.getBodyShape())
                 .height(member.getHeight())
                 .weight(member.getWeight())
                 .build();
@@ -108,7 +109,7 @@ public class MemberService {
                 member.getBirthDate(),
                 member.getAddress(),
                 member.getEmail(),
-                member.getBodyType(),
+                member.getBodyShape(),
                 member.getHeight(),
                 member.getWeight(),
                 member.getPoint()
@@ -158,16 +159,16 @@ public class MemberService {
     public void updateBodyInformation(String email, UpdateBodyInfoDto updateBodyInfoDto) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
-        Integer bodyType = updateBodyInfoDto.getBodyType();
+        BodyShape bodyShape = updateBodyInfoDto.getBodyShape();
         Integer height = updateBodyInfoDto.getHeight();
         Integer weight = updateBodyInfoDto.getWeight();
-        if(bodyType != null)
-            member.setBodyType(bodyType);
+        if(bodyShape != null)
+            member.setBodyShape(bodyShape);
         if(height != null)
             member.setHeight(height);
         if (weight != null)
             member.setWeight(weight);
-        if (bodyType == null && height == null && weight == null) {
+        if (bodyShape == null && height == null && weight == null) {
             return;
         }
         memberRepository.save(member);
