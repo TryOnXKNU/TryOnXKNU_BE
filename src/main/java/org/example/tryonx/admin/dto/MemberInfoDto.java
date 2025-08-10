@@ -1,6 +1,7 @@
 package org.example.tryonx.admin.dto;
 
 import lombok.*;
+import org.example.tryonx.enums.BodyShape;
 
 import java.time.LocalDate;
 
@@ -18,7 +19,7 @@ public class MemberInfoDto {
     private LocalDate birthday;
     private String address;
     private String email;
-    private Integer bodyType;
+    private BodyShape bodyShape;
     private Integer height;
     private Integer weight;
 }

@@ -2,6 +2,7 @@ package org.example.tryonx.member.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.exchange.domain.Exchange;
 import org.example.tryonx.member.dto.UpdateMemberRequestDto;
 import org.example.tryonx.orders.order.domain.Order;
@@ -47,7 +48,8 @@ public class Member {
 
     private Integer weight;
 
-    private Integer bodyType;
+    @Enumerated(EnumType.STRING)
+    private BodyShape bodyShape;
 
     private LocalDate birthDate;
 
@@ -86,8 +88,8 @@ public class Member {
         if(request.getWeight() != null){
             this.weight = request.getWeight();
         }
-        if(request.getBodyType() != null){
-            this.bodyType = request.getBodyType();
+        if(request.getBodyShape() != null){
+            this.bodyShape = request.getBodyShape();
         }
     }
 

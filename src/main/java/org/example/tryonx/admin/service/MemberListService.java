@@ -63,7 +63,7 @@ public class MemberListService {
                 .birthday(member.getBirthDate())
                 .address(member.getAddress())
                 .email(member.getEmail())
-                .bodyType(member.getBodyType())
+                .bodyShape(member.getBodyShape())
                 .height(member.getHeight())
                 .weight(member.getWeight())
                 .build();

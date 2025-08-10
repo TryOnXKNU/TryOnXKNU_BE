@@ -1,6 +1,7 @@
 package org.example.tryonx.member.dto;
 
 import lombok.Getter;
+import org.example.tryonx.enums.BodyShape;
 
 @Getter
 public class UpdateBodyInfoDto {
@@ -8,5 +9,5 @@ public class UpdateBodyInfoDto {
 
     private Integer weight;
 
-    private Integer bodyType;
+    private BodyShape bodyShape;
 }

@@ -3,6 +3,7 @@ package org.example.tryonx.member.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.tryonx.enums.BodyShape;
 
 import java.time.LocalDate;
 
@@ -22,7 +23,7 @@ public class MyInfoResponseDto {
 
     private String email;
 
-    private Integer bodyType;
+    private BodyShape bodyShape;
 
     private Integer height;
 
