@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.cart.domain.CartItem;
 import org.example.tryonx.cart.repository.CartItemRepository;
+import org.example.tryonx.enums.PaymentStatus;
 import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
@@ -20,6 +21,8 @@ import org.example.tryonx.orders.order.domain.OrderStatus;
 import org.example.tryonx.orders.order.dto.*;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
+import org.example.tryonx.orders.payment.domain.Payment;
+import org.example.tryonx.orders.payment.repository.PaymentRepository;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.domain.ProductItem;
 import org.example.tryonx.product.repository.ProductItemRepository;
@@ -27,6 +30,7 @@ import org.example.tryonx.product.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -45,6 +49,7 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final NotificationRepository notificationRepository;
     private final PointHistoryRepository pointHistoryRepository;
+    private final PaymentRepository paymentRepository;
 
 
     @Transactional
@@ -52,6 +57,22 @@ public class OrderService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 찾을 수 없습니다."));
 
+        // 0) 결제 존재/상태 확인 및 멱등 처리
+        if (requestDto.getMerchantUid() == null || requestDto.getMerchantUid().isBlank()) {
+            throw new IllegalArgumentException("merchantUid가 없습니다.");
+        }
+        Payment pay = paymentRepository.findByMerchantUid(requestDto.getMerchantUid())
+                .orElseThrow(() -> new IllegalStateException("결제 정보가 없습니다. merchantUid=" + requestDto.getMerchantUid()));
+
+        if (pay.getStatus() != PaymentStatus.PAID) {
+            throw new IllegalStateException("결제가 완료되지 않았습니다.");
+        }
+        if (pay.getOrder() != null) {
+            // 멱등: 이미 주문이 연결되어 있으면 그 주문 반환
+            return pay.getOrder().getOrderId();
+        }
+
+        // 1) 아이템 검증/재고 차감
         List<OrderItem> orderItems = requestDto.getItems().stream()
                 .map(item -> {
                     Product product = productRepository.findById(item.getProductId())
@@ -63,16 +84,13 @@ public class OrderService {
                     if (item.getCartItemId() != null) {
                         CartItem cartItem = cartItemRepository.findById(item.getCartItemId())
                                 .orElseThrow(() -> new EntityNotFoundException("장바구니 항목이 존재하지 않습니다."));
-
                         if (!cartItem.getMember().equals(member)) {
                             throw new IllegalArgumentException("본인의 장바구니 항목만 주문할 수 있습니다.");
                         }
-
                         if (!cartItem.getProductItem().equals(productItem)) {
                             throw new IllegalArgumentException("장바구니 항목의 상품 정보가 일치하지 않습니다.");
                         }
-
-                        if (!cartItem.getQuantity().equals(item.getQuantity())) {
+                        if (!Objects.equals(cartItem.getQuantity(), item.getQuantity())) {
                             throw new IllegalArgumentException("장바구니 항목의 수량과 요청 수량이 일치하지 않습니다.");
                         }
                     }
@@ -84,8 +102,8 @@ public class OrderService {
                     int newStock = productItem.getStock() - item.getQuantity();
                     productItem.setStock(newStock);
 
-                    if (newStock == 3 ) {
-                        List<CartItem> cartItems = cartItemRepository.findAll(); // 또는 cartItemRepository.findByProductItem(productItem) 권장
+                    if (newStock == 3) {
+                        List<CartItem> cartItems = cartItemRepository.findAll(); // TODO: findByProductItem(productItem)로 최적화
                         for (CartItem cartItem : cartItems) {
                             if (cartItem.getProductItem().equals(productItem)) {
                                 Member target = cartItem.getMember();
@@ -118,7 +136,7 @@ public class OrderService {
                 })
                 .collect(Collectors.toList());
 
-
+        // 2) 금액 계산
         BigDecimal totalAmount = orderItems.stream()
                 .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -139,6 +157,17 @@ public class OrderService {
         finalAmount = finalAmount.subtract(BigDecimal.valueOf(usedPoints));
         member.usePoint(usedPoints);
 
+        // (선택) 결제 금액과 주문 금액 일치 검증 — 준비검증을 안 쓰므로 UI 조작 방지용
+        Integer paidAmountKrw = pay.getAmount(); // INT KRW
+        System.out.println("결제 금액 : " + pay.getAmount());
+        System.out.println("주문 금액 : " + finalAmount.setScale(0,RoundingMode.DOWN).intValue());
+        if (paidAmountKrw != null && paidAmountKrw.intValue() != finalAmount.setScale(0, RoundingMode.DOWN).intValue()) {
+            // 엄격 모드: 불일치 시 실패 처리
+            throw new IllegalStateException("결제 금액과 주문 금액이 일치하지 않습니다.");
+            // 느슨하게 운영하려면 위를 주석 처리하고 로그만 남기세요.
+        }
+
+        // 3) 주문 생성
         Order order = Order.builder()
                 .member(member)
                 .totalAmount(totalAmount)
@@ -154,11 +183,19 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
+        // 주문번호 생성 후 저장
         String orderNum = generateOrderNum(savedOrder);
         savedOrder.setOrderNum(orderNum);
         orderRepository.save(savedOrder);
 
-        // 포인트 사용/적립 내역 저장
+        // 4) 결제-주문 연결 및 상태 전환
+        pay.setOrder(savedOrder);
+        paymentRepository.save(pay);
+
+        savedOrder.setStatus(OrderStatus.PAID); // 정책에 따라 유지/전환 결정
+        orderRepository.save(savedOrder);
+
+        // 5) 포인트 이력 처리
         String mainProductName = orderItems.get(0).getProductItem().getProduct().getProductName();
         int itemCount = orderItems.size();
         String productSummary = itemCount > 1 ? mainProductName + " 외 " + (itemCount - 1) + "건" : mainProductName;
@@ -168,23 +205,21 @@ public class OrderService {
         }
 
         int savePoints = finalAmount.multiply(BigDecimal.valueOf(0.01))
-                .setScale(0, BigDecimal.ROUND_DOWN)
+                .setScale(0, RoundingMode.DOWN)
                 .intValue();
 
         member.savePoint(savePoints);
         memberRepository.save(member);
-        
+
         if (savePoints > 0) {
             pointHistoryRepository.save(PointHistory.earn(member, savePoints, "[" + productSummary + "] 주문 적립 포인트 지급"));
         }
-
 
         Notification notification = Notification.builder()
                 .member(member)
                 .title("리뷰 작성 시 포인트 제공")
                 .content("구매 상품 리뷰 작성 시 10% 포인트를 드려요!")
                 .build();
-
         notificationRepository.save(notification);
 
         return savedOrder.getOrderId();

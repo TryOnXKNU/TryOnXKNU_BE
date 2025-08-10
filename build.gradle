@@ -21,6 +21,7 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -49,6 +50,8 @@ dependencies {
     implementation 'net.nurigo:sdk:4.3.0'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     implementation 'org.hibernate.common:hibernate-commons-annotations:6.0.6.Final'
+
+    implementation 'com.github.iamport:iamport-rest-client-java:0.2.23'
 
 }
 
