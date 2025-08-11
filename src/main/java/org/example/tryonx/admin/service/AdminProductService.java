@@ -127,16 +127,19 @@ public class AdminProductService {
         dto.getProductItemInfoDtos().forEach(itemDto -> {
             ProductItem productItem = productItemRepository.findByProductAndSize(product, itemDto.getSize())
                     .orElseThrow(() -> new RuntimeException("Product item  (size :" + itemDto.getSize() +  ")not found"));
+            if(itemDto.getStock() <0)
+                throw new IllegalArgumentException("재고는 음수를 입력할 수 없습니다.");
 
-            if (itemDto.getStock() != null) {
-                productItem.setStock(itemDto.getStock());
-            }
-            if (itemDto.getStatus() != null) {
-                if(itemDto.getStock() == 0)
-                    productItem.setStatus(ProductStatus.SOLDOUT);
+            productItem.setStock(itemDto.getStock());
+
+            if(itemDto.getStatus().equals(productItem.getStatus())){
+                if(itemDto.getStock() > 0)
+                    productItem.setStatus(ProductStatus.AVAILABLE);
                 else
-                    productItem.setStatus(itemDto.getStatus());
-            }
+                    productItem.setStatus(ProductStatus.SOLDOUT);
+            }else
+                productItem.setStatus(itemDto.getStatus());
+
 
             Measurement measurement = measurementRepository.findByProductItem(productItem)
                     .orElseGet(() -> Measurement.builder().productItem(productItem).build());
