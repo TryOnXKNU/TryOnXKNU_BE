@@ -6,14 +6,22 @@ import com.siot.IamportRestClient.exception.IamportResponseException;
 import com.siot.IamportRestClient.response.IamportResponse;
 import com.siot.IamportRestClient.response.Payment;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import org.example.tryonx.enums.PaymentStatus;
+import org.example.tryonx.enums.Size;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
+import org.example.tryonx.orders.order.dto.OrderPreviewRequestDto;
 import org.example.tryonx.orders.payment.dto.PaymentCompleteReqDto;
 import org.example.tryonx.orders.payment.dto.PaymentCompleteResDto;
+import org.example.tryonx.orders.payment.dto.PrecheckRequstDto;
 import org.example.tryonx.orders.payment.repository.PaymentRepository;
+import org.example.tryonx.product.domain.Product;
+import org.example.tryonx.product.repository.ProductItemRepository;
+import org.example.tryonx.product.repository.ProductRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,6 +40,31 @@ public class PaymentService {
     private final IamportClient iamportClient;
     private final PaymentRepository paymentRepository;
     private final MemberRepository memberRepository;// 로그인 유효성 체크용(필요 없으면 제거)
+    private final ProductItemRepository productItemRepo;
+    private final ProductRepository productRepo;
+
+    @Transactional(readOnly = true)
+    public PrecheckResp precheck(PrecheckRequstDto req) {
+        List<PrecheckResp.Fail> fails = new ArrayList<>();
+        for (var it : req.getItems()) {
+            Product pd = productRepo.findById(it.getProductId())
+                    .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+            var pi = productItemRepo.findByProductAndSize(pd, it.getSize()).orElse(null);
+            if (pi == null) {
+                fails.add(new PrecheckResp.Fail(it.getProductId(), it.getSize(), "NOT_AVAILABLE"));
+                continue;
+            }
+            int need = Optional.ofNullable(it.getQuantity()).orElse(0);
+            int have = productItemRepo.findStock(pi.getProductItemId()).orElse(0);
+            if (need <= 0 || have < need) {
+                fails.add(new PrecheckResp.Fail(it.getProductId(), it.getSize(),
+                        need <= 0 ? "INVALID_QTY" : "INSUFFICIENT_STOCK"));
+            }
+        }
+        if (!fails.isEmpty()) return PrecheckResp.fail(fails);
+        return PrecheckResp.ok();
+    }
+
 
     @Transactional
     public PaymentCompleteResDto verifyPaymentComplete(String email, PaymentCompleteReqDto req) {
@@ -104,4 +139,20 @@ public class PaymentService {
     }
 
     private boolean isBlank(String s) { return s == null || s.isBlank(); }
+
+    // 응답 DTO
+    @Getter
+    @AllArgsConstructor
+    public static class PrecheckResp {
+        private boolean ok;
+        private List<Fail> fails;
+        public static PrecheckResp ok() { return new PrecheckResp(true, List.of()); }
+        public static PrecheckResp fail(List<Fail> f) { return new PrecheckResp(false, f); }
+        @Getter @AllArgsConstructor
+        public static class Fail {
+            private Integer productId;
+            private Size size;
+            private String reason;
+        }
+    }
 }

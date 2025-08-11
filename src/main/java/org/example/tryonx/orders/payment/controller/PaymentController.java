@@ -2,11 +2,15 @@ package org.example.tryonx.orders.payment.controller;
 
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.tryonx.orders.order.dto.OrderPreviewRequestDto;
 import org.example.tryonx.orders.payment.dto.PaymentCompleteReqDto;
 import org.example.tryonx.orders.payment.dto.PaymentCompleteResDto;
+import org.example.tryonx.orders.payment.dto.PrecheckRequstDto;
 import org.example.tryonx.orders.payment.service.PaymentService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,6 +23,13 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PaymentController {
     private final PaymentService paymentService;
+
+    @PostMapping("/precheck")
+    public ResponseEntity<?> precheck(@RequestBody @Valid PrecheckRequstDto req) {
+        var res = paymentService.precheck(req);
+        if (!res.isOk()) return ResponseEntity.status(HttpStatus.CONFLICT).body(false);
+        return ResponseEntity.ok(true);
+    }
 
     @PostMapping("/complete")
     public ResponseEntity<PaymentCompleteResDto> complete(
