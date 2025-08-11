@@ -116,10 +116,15 @@ public class ProductService {
         return this.getProductListResponseDto(productList);
     }
 
+    public List<ProductListResponseDto> getAllAvailableProducts() {
+        List<Product> productList = productRepository.findAllWithAnyAvailableItem();
+        return this.getProductListResponseAvailabeDto(productList);
+    }
+
     public List<ProductListResponseDto> getProductsByCategoryId(Integer categoryId){
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalStateException("해당 카테고리가 존재하지 않습니다."));
-        List<Product> byCategory = productRepository.findByCategory(category);
+        List<Product> byCategory = productRepository.findByCategoryWithAnyAvailableItem(category);
         return this.getProductListResponseDto(byCategory);
     }
 
@@ -217,9 +222,24 @@ public class ProductService {
                     );
                 }).toList();
     }
+    private List<ProductListResponseDto> getProductListResponseAvailabeDto(List<Product> products) {
+        return products.stream()
+                .map(product -> {
+                    ProductImage image = productImageRepository.findByProductAndIsThumbnailTrue(product)
+                            .orElseThrow(() -> new IllegalStateException("썸네일 이미지 혹은 상품이 없습니다."));
+                    return new ProductListResponseDto(
+                            product.getProductId(),
+                            product.getProductName(),
+                            product.getPrice(),
+                            likeRepository.countByProduct(product),
+                            product.getCategory().getCategoryId(),
+                            image.getImageUrl()
+                    );
+                }).toList();
+    }
     @Transactional(readOnly = true)
     public List<ProductDto> getTopLikedProducts(int size) {
-        return productRepository.findAll().stream()
+        return productRepository.findAllWithAnyAvailableItem().stream()
                 .map(p -> new Ranked(p, likeRepository.countByProduct(p))) // 기존 카운터 그대로 사용
                 .sorted(
                         Comparator.<Ranked, Long>comparing(r -> r.likeCount)
@@ -238,12 +258,12 @@ public class ProductService {
         var member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("회원 없음"));
 
-        var shape = member.getBodyShape(); // null 가능하면 대비
+        var shape = member.getBodyShape(); // null 가능
         var pageable = PageRequest.of(0, size);
 
         List<Product> products = (shape != null)
-                ? productRepository.findByBodyShapeOrderByCreatedAtDesc(shape, pageable)
-                : productRepository.findAll(pageable).getContent(); // fallback
+                ? productRepository.findByBodyShapeWithAnyAvailableItem(shape, pageable)
+                : productRepository.findAllWithAnyAvailableItem(pageable);
 
         return products.stream()
                 .map(p -> ProductDto.of(p, likeRepository.countByProduct(p)))

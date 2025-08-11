@@ -5,10 +5,14 @@ import org.example.tryonx.admin.dto.ProductImageUrl;
 import org.example.tryonx.admin.dto.ProductListDto;
 import org.example.tryonx.admin.dto.ProductStockAndStateUpdateDto;
 import org.example.tryonx.admin.service.AdminProductService;
+import org.example.tryonx.product.domain.Product;
+import org.example.tryonx.product.dto.ProductCreateRequestDto;
 import org.example.tryonx.product.dto.ProductResponseDto;
 import org.example.tryonx.product.service.ProductService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,6 +25,14 @@ public class AdminProductController {
     public AdminProductController(AdminProductService adminProductService, ProductService productService) {
         this.adminProductService = adminProductService;
         this.productService = productService;
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Product> createProduct(
+            @RequestPart(value="dto") ProductCreateRequestDto dto,
+            @RequestPart(value="images", required = false) List<MultipartFile> images) {
+        Product product = productService.createProduct(dto, images);
+        return ResponseEntity.ok(product);
     }
 
     @GetMapping

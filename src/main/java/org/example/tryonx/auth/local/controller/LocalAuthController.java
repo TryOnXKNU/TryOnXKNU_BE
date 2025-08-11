@@ -74,5 +74,4 @@ public class LocalAuthController {
             return ResponseEntity.ok("중복된 이메일이 존재합니다.");
         return ResponseEntity.ok("중복된 이메일이 존재하지 않습니다.");
     }
-
 }
