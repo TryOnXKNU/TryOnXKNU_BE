@@ -9,6 +9,7 @@ import org.example.tryonx.admin.dto.ProductStockAndStateUpdateDto;
 import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.category.Category;
 import org.example.tryonx.category.CategoryRepository;
+import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.like.repository.LikeRepository;
@@ -131,7 +132,10 @@ public class AdminProductService {
                 productItem.setStock(itemDto.getStock());
             }
             if (itemDto.getStatus() != null) {
-                productItem.setStatus(itemDto.getStatus());
+                if(itemDto.getStock() == 0)
+                    productItem.setStatus(ProductStatus.SOLDOUT);
+                else
+                    productItem.setStatus(itemDto.getStatus());
             }
 
             Measurement measurement = measurementRepository.findByProductItem(productItem)
