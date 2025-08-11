@@ -21,16 +21,9 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Product> createProduct(
-            @RequestPart(value="dto") ProductCreateRequestDto dto,
-            @RequestPart(value="images", required = false) List<MultipartFile> images) {
-        Product product = productService.createProduct(dto, images);
-        return ResponseEntity.ok(product);
-    }
     @GetMapping
     public ResponseEntity<List<ProductListResponseDto>> getAllProducts() {
-        List<ProductListResponseDto> products = productService.getAllProducts();
+        List<ProductListResponseDto> products = productService.getAllAvailableProducts();
         return ResponseEntity.ok(products);
     }
     @GetMapping("/category/{categoryId}")
