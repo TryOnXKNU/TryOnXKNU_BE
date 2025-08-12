@@ -253,6 +253,7 @@ public class OrderService {
                                         .orElseThrow(() -> new EntityNotFoundException("상품 이미지가 없습니다."));
                                 return new OrderItemDto(
                                         item.getOrderItemId(),
+                                        product.getProductId(),
                                         product.getProductName(),
                                         productItem.getSize(),
                                         product.getPrice().multiply(product.getDiscountRate().divide(BigDecimal.valueOf(100))),
@@ -297,6 +298,7 @@ public class OrderService {
             Product product = productItem.getProduct();
 
             return new OrderDetailResponseDto.Item(
+                    product.getProductId(),
                     product.getProductName(),
                     orderItem.getPrice(),
                     orderItem.getQuantity(),
