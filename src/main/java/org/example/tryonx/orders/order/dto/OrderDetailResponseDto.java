@@ -30,6 +30,7 @@ public class OrderDetailResponseDto {
     @Getter
     @AllArgsConstructor
     public static class Item {
+        private Integer productId;
         private String productName;
         private BigDecimal price;
         private Integer quantity;
