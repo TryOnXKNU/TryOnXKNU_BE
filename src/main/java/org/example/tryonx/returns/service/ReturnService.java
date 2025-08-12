@@ -103,13 +103,9 @@ public class ReturnService {
                 .toList();
     }
 
-    public ReturnResponseDto getReturnDetail(String email, Integer returnId) {
+    public ReturnDetailDto findByReturnIdForAdmin(Integer returnId) {
         Returns returns = returnRepository.findById(returnId)
-                .orElseThrow(() -> new EntityNotFoundException("반품 내역이 존재하지 않습니다."));
-
-        if (!returns.getMember().getEmail().equals(email)) {
-            throw new AccessDeniedException("본인의 반품 내역만 조회할 수 있습니다.");
-        }
+                .orElseThrow(() -> new EntityNotFoundException("반품 내역을 찾을 수 없습니다."));
 
         Product product = returns.getProduct();
         String productName = product != null ? product.getProductName() : null;
@@ -117,7 +113,11 @@ public class ReturnService {
                 ? product.getImages().get(0).getImageUrl()
                 : null;
 
-        return new ReturnResponseDto(
+        String rejectReason = returns.getStatus() == ReturnStatus.REJECTED
+                ? returns.getRejectReason()
+                : null;
+
+        return new ReturnDetailDto(
                 returns.getReturnId(),
                 returns.getMember().getMemberId(),
                 returns.getOrder().getOrderId(),
@@ -125,11 +125,12 @@ public class ReturnService {
                 returns.getPrice(),
                 returns.getQuantity(),
                 returns.getReason(),
-                returns.getStatus().name(),
                 returns.getReturnRequestedAt(),
                 returns.getReturnApprovedAt(),
+                returns.getStatus().name(),
                 productName,
-                imageUrl
+                imageUrl,
+                rejectReason
         );
     }
 
@@ -159,14 +160,24 @@ public class ReturnService {
     }
 
     /* 반품 상세정보 */
-    public ReturnDetailDto findByReturnId(Integer returnId) {
+    public ReturnDetailDto findByReturnId(String email, Integer returnId) {
         Returns returns = returnRepository.findById(returnId)
                 .orElseThrow(() -> new EntityNotFoundException("반품 내역을 찾을 수 없습니다."));
+
+        // 본인만 조회 가능
+        if (!returns.getMember().getEmail().equals(email)) {
+            throw new AccessDeniedException("본인의 반품 내역만 조회할 수 있습니다.");
+        }
 
         Product product = returns.getProduct();
         String productName = product != null ? product.getProductName() : null;
         String imageUrl = (product != null && !product.getImages().isEmpty())
                 ? product.getImages().get(0).getImageUrl()
+                : null;
+
+        // 상태가 REJECTED일 때만 반려 사유 세팅
+        String rejectReason = returns.getStatus() == ReturnStatus.REJECTED
+                ? returns.getRejectReason()
                 : null;
 
         return new ReturnDetailDto(
@@ -181,7 +192,8 @@ public class ReturnService {
                 returns.getReturnApprovedAt(),
                 returns.getStatus().name(),
                 productName,
-                imageUrl
+                imageUrl,
+                rejectReason
         );
     }
 
@@ -199,12 +211,16 @@ public class ReturnService {
 
         if (status == ReturnStatus.ACCEPTED) {
             returns.setReturnApprovedAt(LocalDateTime.now());
-        }
-
-        if (status == ReturnStatus.REJECTED) {
+            returns.setRejectReason(null); // 반려 사유 초기화
+        } else if (status == ReturnStatus.REJECTED) {
             returns.setRejectReason(reason);
             returns.getOrderItem().setAfterServiceStatus(AfterServiceStatus.NONE);
             orderItemRepository.save(returns.getOrderItem());
+            returns.setReturnApprovedAt(null); // 승인일시 제거
+        } else {
+            // 다른 상태일 경우 초기화
+            returns.setRejectReason(null);
+            returns.setReturnApprovedAt(null);
         }
 
         returnRepository.save(returns);

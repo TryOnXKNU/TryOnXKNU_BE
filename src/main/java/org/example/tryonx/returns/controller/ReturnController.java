@@ -1,10 +1,12 @@
 package org.example.tryonx.returns.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.returns.dto.ReturnDetailDto;
 import org.example.tryonx.returns.dto.ReturnRequestDto;
 import org.example.tryonx.returns.dto.ReturnResponseDto;
 import org.example.tryonx.returns.service.ReturnService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -38,10 +40,15 @@ public class ReturnController {
 
     // 반품 신청 상세 조회
     @GetMapping("/{returnId}")
-    public ResponseEntity<ReturnResponseDto> getReturnDetail(@PathVariable Integer returnId,
-                                                                 @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<ReturnDetailDto> getReturnDetail(
+            @PathVariable Integer returnId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("로그인이 필요합니다.");
+        }
         String email = userDetails.getUsername();
-        ReturnResponseDto dto = returnService.getReturnDetail(email, returnId);
+        ReturnDetailDto dto = returnService.findByReturnId(email, returnId);
         return ResponseEntity.ok(dto);
     }
 }

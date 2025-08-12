@@ -26,7 +26,7 @@ public class AdminReturnsController {
     //반품 상세 정보
     @GetMapping("/{returnId}")
     public ResponseEntity<ReturnDetailDto> getReturnDetail(@PathVariable Integer returnId) {
-        ReturnDetailDto dto = returnService.findByReturnId(returnId);
+        ReturnDetailDto dto = returnService.findByReturnIdForAdmin(returnId);
         return ResponseEntity.ok(dto);
     }
 

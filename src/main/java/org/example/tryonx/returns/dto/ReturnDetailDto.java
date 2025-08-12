@@ -1,5 +1,6 @@
 package org.example.tryonx.returns.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReturnDetailDto {
     private Integer returnId;
     private Long memberId;
@@ -23,4 +25,5 @@ public class ReturnDetailDto {
     private String status;
     private String productName;
     private String productImageUrl;
+    private String rejectReason;
 }
