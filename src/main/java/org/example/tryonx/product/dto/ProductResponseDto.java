@@ -24,4 +24,7 @@ public class ProductResponseDto {
     private List<String> productImages;
     private List<ProductItemInfoDto> productItems;
     private List<ProductReviewDto> productReviews;
+
+    private Double averageRating;
+    private Integer reviewCount;
 }

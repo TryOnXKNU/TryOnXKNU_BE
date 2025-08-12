@@ -156,6 +156,9 @@ public class ProductService {
         List<String> imageUrls = productImageRepository.findByProduct(product)
                 .stream().map(ProductImage::getImageUrl).toList();
 
+        Double avg = reviewService.getAverageRatingByProductId(productId);
+        Integer cnt = reviewService.getReviewCountByProductId(productId);
+
         List<ProductReviewDto> reviewsPreview = reviewService.getProductReviewsPreview(productId);
         return new ProductResponseDto(
                 product.getProductId(),
@@ -168,7 +171,9 @@ public class ProductService {
                 product.getBodyShape(),
                 imageUrls,
                 itemDtos,
-                reviewsPreview
+                reviewsPreview,
+                avg,
+                cnt
         );
     }
 

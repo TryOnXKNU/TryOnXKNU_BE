@@ -1,6 +1,5 @@
 package org.example.tryonx.review.domain;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.tryonx.enums.Size;
@@ -10,7 +9,6 @@ import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.product.domain.Product;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity

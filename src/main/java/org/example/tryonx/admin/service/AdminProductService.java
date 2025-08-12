@@ -78,6 +78,9 @@ public class AdminProductService {
         // 리뷰 프리뷰
         List<ProductReviewDto> reviewsPreview = reviewService.getProductReviewsPreview(productId);
 
+        Double avg = reviewService.getAverageRatingByProductId(productId);
+        Integer cnt = reviewService.getReviewCountByProductId(productId);
+
         return new ProductResponseDto(
                 product.getProductId(),
                 product.getProductName(),
@@ -89,7 +92,9 @@ public class AdminProductService {
                 product.getBodyShape(),
                 imageUrls,
                 itemDtos,
-                reviewsPreview
+                reviewsPreview,
+                avg,
+                cnt
         );
     }
 

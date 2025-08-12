@@ -1,6 +1,7 @@
 package org.example.tryonx.review.service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.domain.ReviewImage;
@@ -29,6 +30,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 @Service
 public class ReviewService {
     private final ReviewRepository reviewRepository;
@@ -39,30 +41,16 @@ public class ReviewService {
     private final ProductRepository productRepository;
     private final ProductItemRepository productItemRepository;
 
-    public ReviewService(ReviewRepository reviewRepository, OrderItemRepository orderItemRepository, MemberRepository memberRepository, ReviewImageRepository reviewImageRepository, ProductImageRepository productImageRepository, ProductRepository productRepository, ProductItemRepository productItemRepository) {
-        this.reviewRepository = reviewRepository;
-        this.orderItemRepository = orderItemRepository;
-        this.memberRepository = memberRepository;
-        this.reviewImageRepository = reviewImageRepository;
-        this.productImageRepository = productImageRepository;
-        this.productRepository = productRepository;
-        this.productItemRepository = productItemRepository;
-    }
-
     public boolean validateReviewPermission(String email, Integer orderItemId) {
         OrderItem item = orderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new RuntimeException("Order item not found"));
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
-//        if(reviewRepository.findByMemberAndProduct(member,item.getProductItem().getProduct()).isPresent())
-//            throw new RuntimeException("Review already exists");
-        if (reviewRepository.findByOrderItem(item).isPresent())
+
+        if (reviewRepository.existsByOrderItem(item))
             throw new RuntimeException("Review already exists");
 
-        if(item.getMember().equals(member))
-            return true;
-        else
-            return false;
+        return item.getMember().equals(member);
     }
 
     @Transactional
@@ -243,6 +231,23 @@ public class ReviewService {
     public Integer countMyReviews(String email){
         Member member = memberRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Member not found"));
         return reviewRepository.countByMember(member);
+    }
+
+    // 평균/카운트 요약만 필요할 때
+    public double getAverageRatingByProductId(Integer productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        Double avg = reviewRepository.findAverageRatingByProduct(product);
+        // 소수 1자리 반올림
+        return BigDecimal.valueOf(avg == null ? 0.0 : avg)
+                .setScale(1, RoundingMode.HALF_UP)
+                .doubleValue();
+    }
+
+    public int getReviewCountByProductId(Integer productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        return reviewRepository.countByProduct(product);
     }
 }
 
