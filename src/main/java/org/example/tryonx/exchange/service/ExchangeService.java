@@ -159,13 +159,50 @@ public class ExchangeService {
     }
 
     /* 교환 상세정보 */
-    public ExchangeDetailDto findByExchangeId(Integer exchangeId) {
+//    public ExchangeDetailDto findByExchangeId(Integer exchangeId) {
+//        Exchange exchange = exchangeRepository.findById(exchangeId)
+//                .orElseThrow(() -> new EntityNotFoundException("교환 내역을 찾을 수 없습니다."));
+//
+//        String productName = exchange.getProduct() != null ? exchange.getProduct().getProductName() : null;
+//        String imageUrl = (exchange.getProduct() != null && !exchange.getProduct().getImages().isEmpty())
+//                ? exchange.getProduct().getImages().get(0).getImageUrl()
+//                : null;
+//
+//        return new ExchangeDetailDto(
+//                exchange.getExchangeId(),
+//                exchange.getMember().getMemberId(),
+//                exchange.getOrder().getOrderId(),
+//                exchange.getOrderItem().getOrderItemId(),
+//                exchange.getPrice(),
+//                exchange.getQuantity(),
+//                exchange.getReason(),
+//                exchange.getExchange_requestedAt(),
+//                exchange.getExchange_processedAt(),
+//                exchange.getStatus().name(),
+//                productName,
+//                imageUrl
+//        );
+//    }
+
+    //교환 상세조회 (사용자 본인만)
+    public ExchangeDetailDto findByExchangeId(String email, Integer exchangeId) {
         Exchange exchange = exchangeRepository.findById(exchangeId)
                 .orElseThrow(() -> new EntityNotFoundException("교환 내역을 찾을 수 없습니다."));
 
-        String productName = exchange.getProduct() != null ? exchange.getProduct().getProductName() : null;
-        String imageUrl = (exchange.getProduct() != null && !exchange.getProduct().getImages().isEmpty())
-                ? exchange.getProduct().getImages().get(0).getImageUrl()
+        // 본인만 조회 가능
+        if (!exchange.getMember().getEmail().equals(email)) {
+            throw new AccessDeniedException("본인의 교환 내역만 조회할 수 있습니다.");
+        }
+
+        Product product = exchange.getProduct();
+        String productName = (product != null) ? product.getProductName() : null;
+        String imageUrl = (product != null && !product.getImages().isEmpty())
+                ? product.getImages().get(0).getImageUrl()
+                : null;
+
+        // 상태가 REJECTED일 때만 반려 사유 세팅
+        String rejectReason = exchange.getStatus() == ExchangeStatus.REJECTED
+                ? exchange.getRejectReason()
                 : null;
 
         return new ExchangeDetailDto(
@@ -180,9 +217,42 @@ public class ExchangeService {
                 exchange.getExchange_processedAt(),
                 exchange.getStatus().name(),
                 productName,
-                imageUrl
+                imageUrl,
+                rejectReason
         );
     }
+    //교환 상세조회 (관리자용)
+    public ExchangeDetailDto findByExchangeIdForAdmin(Integer exchangeId) {
+        Exchange exchange = exchangeRepository.findById(exchangeId)
+                .orElseThrow(() -> new EntityNotFoundException("교환 내역을 찾을 수 없습니다."));
+
+        Product product = exchange.getProduct();
+        String productName = (product != null) ? product.getProductName() : null;
+        String imageUrl = (product != null && !product.getImages().isEmpty())
+                ? product.getImages().get(0).getImageUrl()
+                : null;
+
+        String rejectReason = exchange.getStatus() == ExchangeStatus.REJECTED
+                ? exchange.getRejectReason()
+                : null;
+
+        return new ExchangeDetailDto(
+                exchange.getExchangeId(),
+                exchange.getMember().getMemberId(),
+                exchange.getOrder().getOrderId(),
+                exchange.getOrderItem().getOrderItemId(),
+                exchange.getPrice(),
+                exchange.getQuantity(),
+                exchange.getReason(),
+                exchange.getExchange_requestedAt(),
+                exchange.getExchange_processedAt(),
+                exchange.getStatus().name(),
+                productName,
+                imageUrl,
+                rejectReason
+        );
+    }
+
 
     /* 교환 상태 변경 */
     @Transactional

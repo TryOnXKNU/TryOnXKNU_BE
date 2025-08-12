@@ -1,10 +1,12 @@
 package org.example.tryonx.exchange.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.exchange.dto.ExchangeDetailDto;
 import org.example.tryonx.exchange.dto.ExchangeRequestDto;
 import org.example.tryonx.exchange.dto.ExchangeResponseDto;
 import org.example.tryonx.exchange.service.ExchangeService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -38,10 +40,15 @@ public class ExchangeController {
 
     // 교환 신청 상세 조회
     @GetMapping("/{exchangeId}")
-    public ResponseEntity<ExchangeResponseDto> getExchangeDetail(@PathVariable Integer exchangeId,
-                                                                 @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<ExchangeDetailDto> getExchangeDetail(
+            @PathVariable Integer exchangeId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("로그인이 필요합니다.");
+        }
         String email = userDetails.getUsername();
-        ExchangeResponseDto dto = exchangeService.getExchangeDetail(email, exchangeId);
+        ExchangeDetailDto dto = exchangeService.findByExchangeId(email, exchangeId);
         return ResponseEntity.ok(dto);
     }
 

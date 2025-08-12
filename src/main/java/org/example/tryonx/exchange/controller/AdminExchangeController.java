@@ -25,8 +25,8 @@ public class AdminExchangeController {
 
     //교환 상세 정보
     @GetMapping("/{exchangeId}")
-    public ResponseEntity<ExchangeDetailDto> getExchangeDetail(@PathVariable Integer exchangeId) {
-        ExchangeDetailDto dto = exchangeService.findByExchangeId(exchangeId);
+    public ResponseEntity<ExchangeDetailDto> getExchangeDetailForAdmin(@PathVariable Integer exchangeId) {
+        ExchangeDetailDto dto = exchangeService.findByExchangeIdForAdmin(exchangeId);
         return ResponseEntity.ok(dto);
     }
 
