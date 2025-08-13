@@ -1,14 +1,10 @@
 package org.example.tryonx.product.controller;
 
-import org.example.tryonx.product.domain.Product;
-import org.example.tryonx.product.dto.ProductCreateRequestDto;
 import org.example.tryonx.product.dto.ProductListResponseDto;
 import org.example.tryonx.product.dto.ProductResponseDto;
 import org.example.tryonx.product.service.ProductService;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 

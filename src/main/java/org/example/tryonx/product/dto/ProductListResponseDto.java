@@ -1,8 +1,6 @@
 package org.example.tryonx.product.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -16,4 +14,7 @@ public class ProductListResponseDto {
     private Long likeCount;
     private Integer categoryId;
     private String thumbnailUrl;
+
+    private Double averageRating;
+    private Integer reviewCount;
 }

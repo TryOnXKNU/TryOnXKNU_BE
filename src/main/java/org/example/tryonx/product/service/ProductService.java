@@ -217,13 +217,20 @@ public class ProductService {
                 .map(product -> {
                     ProductImage image = productImageRepository.findByProductAndIsThumbnailTrue(product)
                             .orElseThrow(() -> new IllegalStateException("썸네일 이미지 혹은 상품이 없습니다."));
+
+                    Double avg = reviewService.getAverageRatingByProductId(product.getProductId());
+                    Integer cnt = reviewService.getReviewCountByProductId(product.getProductId()
+                    );
+
                     return new ProductListResponseDto(
                             product.getProductId(),
                             product.getProductName(),
                             product.getPrice(),
                             likeRepository.countByProduct(product),
                             product.getCategory().getCategoryId(),
-                            image.getImageUrl()
+                            image.getImageUrl(),
+                            avg,
+                            cnt
                     );
                 }).toList();
     }
@@ -232,13 +239,19 @@ public class ProductService {
                 .map(product -> {
                     ProductImage image = productImageRepository.findByProductAndIsThumbnailTrue(product)
                             .orElseThrow(() -> new IllegalStateException("썸네일 이미지 혹은 상품이 없습니다."));
+
+                    Double avg = reviewService.getAverageRatingByProductId(product.getProductId());
+                    Integer cnt = reviewService.getReviewCountByProductId(product.getProductId());
+
                     return new ProductListResponseDto(
                             product.getProductId(),
                             product.getProductName(),
                             product.getPrice(),
                             likeRepository.countByProduct(product),
                             product.getCategory().getCategoryId(),
-                            image.getImageUrl()
+                            image.getImageUrl(),
+                            avg,
+                            cnt
                     );
                 }).toList();
     }
