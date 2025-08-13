@@ -62,6 +62,8 @@ public class AskService {
 
         return orders.stream()
                 .flatMap(order -> orderItemRepository.findByOrder(order).stream())
+                // 이미 문의한 상품은 제외
+                .filter(orderItem -> !askRepository.existsByOrderItem(orderItem))
                 .map(orderItem -> {
                     ProductItem productItem = orderItem.getProductItem();
                     Product product = productItem.getProduct();
@@ -80,6 +82,7 @@ public class AskService {
                 })
                 .collect(Collectors.toList());
     }
+
 
     // 문의 작성
     @Transactional
