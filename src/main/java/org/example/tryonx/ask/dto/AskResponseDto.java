@@ -18,7 +18,8 @@ public class AskResponseDto {
     private String productName;
     private String size;
     private String content;
-    private List<String> imageUrls;
+    private List<String> userImageUrls;
+    private List<String> productImageUrls;
 
     private LocalDateTime createdAt;
 

@@ -43,18 +43,28 @@ public class AskService {
     // 문의 내역 조회
     public List<AskHistoryItem> getMyAsks(String email) {
         List<Ask> asks = askRepository.findByMemberEmail(email);
+
         return asks.stream()
-                .map(ask -> new AskHistoryItem(
-                        ask.getAskId(),
-                        ask.getTitle(),
-                        ask.getImages().stream()
-                                .map(AskImage::getImageUrl)
-                                .collect(Collectors.toList()),
-                        ask.getAnswerStatus(),
-                        ask.getCreatedAt()
-                ))
-                .collect(Collectors.toList());
+                .map(ask -> {
+                    var productItem = ask.getOrderItem().getProductItem();
+                    var product = productItem.getProduct();
+
+                    // 상품 이미지 리스트
+                    List<String> productImageUrls = product.getImages().stream()
+                            .map(ProductImage::getImageUrl)
+                            .toList();
+
+                    return new AskHistoryItem(
+                            ask.getAskId(),
+                            ask.getTitle(),
+                            productImageUrls,
+                            ask.getAnswerStatus(),
+                            ask.getCreatedAt()
+                    );
+                })
+                .toList();
     }
+
 
     // 문의 가능한 상품 목록 조회
     public List<AskListItem> getAskableItems(String email) {
@@ -145,12 +155,21 @@ public class AskService {
             throw new RuntimeException("본인의 문의글만 조회할 수 있습니다.");
         }
 
-        String productName = ask.getOrderItem().getProductItem().getProduct().getProductName();
-        String size = ask.getOrderItem().getProductItem().getSize().name(); // enum -> String
+        var productItem = ask.getOrderItem().getProductItem();
+        var product = productItem.getProduct();
 
-        List<String> imageUrls = ask.getImages().stream()
-                .map(image -> image.getImageUrl())
-                .collect(Collectors.toList());
+        // 변수 선언
+        String productName = product.getProductName();
+        String size = productItem.getSize().name();
+
+        List<String> userImageUrls = ask.getImages().stream()
+                .map(AskImage::getImageUrl)
+                .toList();
+
+        List<String> productImageUrls = product.getImages().stream()
+                .map(ProductImage::getImageUrl)
+                .toList();
+
 
         return new AskResponseDto(
                 ask.getAskId(),
@@ -159,7 +178,8 @@ public class AskService {
                 productName,
                 size,
                 ask.getContent(),
-                imageUrls,
+                userImageUrls,
+                productImageUrls,
                 ask.getCreatedAt(),
                 ask.getAnswerStatus(),
                 ask.getAnswer(),
