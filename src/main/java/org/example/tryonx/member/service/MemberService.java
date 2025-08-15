@@ -7,6 +7,7 @@ import org.example.tryonx.ask.repository.AskRepository;
 import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.exchange.repository.ExchangeRepository;
+import org.example.tryonx.fitting.dto.BodyShapeRequest;
 import org.example.tryonx.image.repository.ReviewImageRepository;
 import org.example.tryonx.like.repository.LikeRepository;
 import org.example.tryonx.member.domain.Member;
@@ -172,6 +173,19 @@ public class MemberService {
             return;
         }
         memberRepository.save(member);
+    }
+    @Transactional
+    public String updateBodyShape(String email, BodyShapeRequest bodyShapeRequest) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+        BodyShape bodyShape = bodyShapeRequest.bodyShape();
+        String response = "no change";
+        if(bodyShape != null && !member.getBodyShape().equals(bodyShape)){
+            member.setBodyShape(bodyShape);
+            response = "change success";
+            memberRepository.save(member);
+        }
+        return response;
 
     }
 
