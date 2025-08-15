@@ -8,7 +8,9 @@ import org.example.tryonx.image.domain.ReviewImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.image.repository.ReviewImageRepository;
 import org.example.tryonx.member.domain.Member;
+import org.example.tryonx.member.domain.PointHistory;
 import org.example.tryonx.member.repository.MemberRepository;
+import org.example.tryonx.member.repository.PointHistoryRepository;
 import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.product.domain.Product;
@@ -40,6 +42,7 @@ public class ReviewService {
     private final ProductImageRepository productImageRepository;
     private final ProductRepository productRepository;
     private final ProductItemRepository productItemRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
     public boolean validateReviewPermission(String email, Integer orderItemId) {
         OrderItem item = orderItemRepository.findById(orderItemId)
@@ -59,6 +62,9 @@ public class ReviewService {
                 .orElseThrow(() -> new RuntimeException("Order item not found"));
         Member member = memberRepository.findById(orderItem.getMember().getMemberId())
                 .orElseThrow(() -> new RuntimeException("Member not found"));
+
+        String productName = orderItem.getProductItem().getProduct().getProductName();
+
         Review review = Review.builder()
                 .member(member)
                 .product(orderItem.getProductItem().getProduct())
@@ -82,6 +88,8 @@ public class ReviewService {
         System.out.println("origin_point " + orderItem.getPrice().multiply(BigDecimal.ONE.subtract(orderItem.getDiscountRate())));
         member.savePoint(savePoint);
         memberRepository.save(member);
+
+        pointHistoryRepository.save(PointHistory.earn(member, savePoint, "[" + productName + "] 리뷰 작성 포인트 " + savePoint + "지급"));
 
         if (images != null && !images.isEmpty()){
             for (MultipartFile image : images) {
