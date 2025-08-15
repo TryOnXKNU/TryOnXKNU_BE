@@ -28,7 +28,7 @@ public class AdminCountController {
 
     private final OrderService orderService;
     
-    @GetMapping("/admin/total-counts")
+    @GetMapping("/total-counts")
     public ResponseEntity<TotalCountsDto> getTotalCounts() {
         long exchangeCount = exchangeService.countAllExchanges();
         long returnCount = returnService.countAllReturns();
