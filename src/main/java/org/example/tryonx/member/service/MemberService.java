@@ -174,20 +174,7 @@ public class MemberService {
         }
         memberRepository.save(member);
     }
-    @Transactional
-    public String updateBodyShape(String email, BodyShapeRequest bodyShapeRequest) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
-        BodyShape bodyShape = bodyShapeRequest.bodyShape();
-        String response = "no change";
-        if(bodyShape != null && !member.getBodyShape().equals(bodyShape)){
-            member.setBodyShape(bodyShape);
-            response = "change success";
-            memberRepository.save(member);
-        }
-        return response;
 
-    }
 
     @Transactional
     public void updatePassword(String email, String password){
