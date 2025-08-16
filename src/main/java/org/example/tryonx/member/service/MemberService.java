@@ -68,6 +68,12 @@ public class MemberService {
         this.orderRepository = orderRepository;
     }
 
+    public Member getMember(String email){
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Member not found"));
+        return member;
+    }
+
     public List<MemberListResponseDto>  findAll() {
         List<Member> members = memberRepository.findAll();
         List<MemberListResponseDto> memberListResDtos = new ArrayList<>();

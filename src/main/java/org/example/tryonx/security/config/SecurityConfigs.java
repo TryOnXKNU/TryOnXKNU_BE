@@ -36,7 +36,10 @@ public class SecurityConfigs {
                         .requestMatchers(HttpMethod.POST, "/api/v1/products").hasRole("ADMIN")
                         .requestMatchers(
                         "/login",
+                                "/ws/**",
+                        "/index.html",
                         "/api/v1/auth/signup",
+                        "/api/v1/fitting/camera/*",
                         "/api/v1/auth/login",
                         "/api/v1/auth/check-email",
                         "/api/v1/auth/email/send",

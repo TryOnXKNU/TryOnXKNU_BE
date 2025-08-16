@@ -21,10 +21,12 @@
     </div>
 </div>
 
-<script type="module">
-    // 서버가 주입하는 값: null 일 수도 있음
-    const memberId = /*[[${memberId}]]*/ null;
-
+<script type="module" th:inline="javascript">
+    // 서버가 주입하는 값
+    const memberId = /*[[${memberId}]]*/ null; // ← 이 줄 유지
+    // WS 스킴 자동
+    const wsScheme = location.protocol === 'https:' ? 'wss' : 'ws';
+    // openWS에서 사용: new WebSocket(`${wsScheme}://${location.host}/ws/pose`);
     import { PoseLandmarker, FilesetResolver, DrawingUtils }
         from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
 
@@ -49,6 +51,10 @@
     const MEASURE_MS = 10_000;
     let startAt = 0;
 
+    // 전역 에러/프로미스 에러도 화면에 찍기
+    window.addEventListener('error', (e) => log('window error: ' + (e?.message || e)));
+    window.addEventListener('unhandledrejection', (e) => log('unhandled: ' + (e?.reason || e)));
+
     function stopCamera() {
         try {
             const stream = video.srcObject;
@@ -58,39 +64,61 @@
 
     function log(msg) {
         logEl.textContent = `[${new Date().toISOString()}] ${msg}\n` + logEl.textContent;
+        console.log(msg);
     }
 
     async function initModel() {
-        statusEl.textContent = 'loading model...';
-        const resolver = await FilesetResolver.forVisionTasks(
-            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
-        );
-        landmarker = await PoseLandmarker.createFromOptions(resolver, {
-            baseOptions: {
-                modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
-            },
-            runningMode: "VIDEO",
-            numPoses: 1
-        });
-        statusEl.textContent = 'model loaded';
+        try {
+            statusEl.textContent = 'loading model...';
+            log('initModel: start');
+            const resolver = await FilesetResolver.forVisionTasks(
+                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+            );
+            landmarker = await PoseLandmarker.createFromOptions(resolver, {
+                baseOptions: {
+                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
+                },
+                runningMode: "VIDEO",
+                numPoses: 1
+            });
+            statusEl.textContent = 'model loaded';
+            log('initModel: done');
+        } catch (e) {
+            log('initModel error: ' + (e?.message || e));
+            throw e;
+        }
     }
 
     function openWS() {
-        ws = new WebSocket(`ws://${location.host}/ws/pose`);
+        const wsScheme = location.protocol === 'https:' ? 'wss' : 'ws';
+        const url = `${wsScheme}://${location.host}/ws/pose`;
+        log('WS connect: ' + url);
+        ws = new WebSocket(url);
         ws.onopen = () => log('WS connected');
+        ws.onerror = (e) => log('WS error');
+        ws.onclose = (e) => log('WS closed: code=' + e.code);
+        ws.onmessage = (e) => { /* 서버 {"ok":true} 응답 등 필요시 log */ };
     }
 
     async function startCamera() {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 640, height: 480, facingMode: 'user' },
-            audio: false
-        });
-        video.srcObject = stream;
-        await video.play();
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        running = true;
-        requestAnimationFrame(loop);
+        try {
+            log('startCamera: requesting getUserMedia');
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480, facingMode: 'user' },
+                audio: false
+            });
+            log('startCamera: granted');
+            video.srcObject = stream;
+            await video.play();
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            running = true;
+            requestAnimationFrame(loop);
+        } catch (e) {
+            log('camera error: ' + (e?.name || e));
+            alert('카메라 접근 실패: 권한/HTTPS/기기 설정을 확인하세요.\n' + (e?.message || e));
+            throw e;
+        }
     }
 
     function classifyBodyType(lm) {
@@ -119,9 +147,7 @@
             currentLm = newLm.map(p => ({ ...p }));
         } else {
             newLm.forEach((p, i) => {
-                if (!(isDragging && selectedIndex === i)) {
-                    currentLm[i] = { ...p };
-                }
+                if (!(isDragging && selectedIndex === i)) currentLm[i] = { ...p };
             });
         }
     }
@@ -190,10 +216,9 @@
                     visibility: p.visibility != null ? +p.visibility.toFixed(3) : null
                 }));
 
-                // memberId 포함 전송
                 ws.send(JSON.stringify({
                     frameTs: Date.now(),
-                    memberId: memberId,  // 주입된 값
+                    memberId: memberId,
                     bodyType,
                     landmarks: flat
                 }));
@@ -204,11 +229,18 @@
         requestAnimationFrame(loop);
     }
 
+    // iOS/모바일에서 사용자 제스처 필요할 수 있으니 버튼 시작도 고려 가능
     window.onload = async () => {
-        await initModel();
-        openWS();
-        await startCamera();
-        startAt = performance.now();
-        statusEl.textContent = 'running';
+        try {
+            log('page onload');
+            await initModel();
+            openWS();
+            await startCamera();
+            startAt = performance.now();
+            statusEl.textContent = 'running';
+            log('all started');
+        } catch (e) {
+            // 이미 각 함수에서 alert/log 처리함
+        }
     };
 </script>
