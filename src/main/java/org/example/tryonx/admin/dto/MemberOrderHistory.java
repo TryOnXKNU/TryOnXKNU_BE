@@ -3,7 +3,7 @@ package org.example.tryonx.admin.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.tryonx.orders.order.domain.OrderStatus;
+import org.example.tryonx.enums.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

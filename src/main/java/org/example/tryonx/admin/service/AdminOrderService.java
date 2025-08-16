@@ -6,12 +6,15 @@ import org.example.tryonx.admin.dto.OrderInfoDto;
 import org.example.tryonx.admin.dto.OrderInfoItemDto;
 import org.example.tryonx.admin.dto.OrderItemsDto;
 import org.example.tryonx.admin.dto.OrderListDto;
+import org.example.tryonx.enums.DeliveryStatus;
+import org.example.tryonx.enums.OrderStatus;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -98,5 +101,17 @@ public class AdminOrderService {
                 .paymentMethod("신한카드(일시불)")
                 .items(itemDtos)
                 .build();
+    }
+
+    @Transactional
+    public void updateDeliveryStatus(Integer orderId, DeliveryStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("주문 없음"));
+
+        if (order.getStatus() != OrderStatus.PAID) {
+            throw new IllegalStateException("결제 완료된 주문만 배송 상태 변경 가능");
+        }
+
+        order.setDeliveryStatus(newStatus);
     }
 }
