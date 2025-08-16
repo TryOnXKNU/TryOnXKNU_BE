@@ -17,6 +17,12 @@ public class PoseSocketHandler implements WebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        // ngrok 도메인에서의 연결 허용
+        String origin = session.getHandshakeHeaders().getFirst("Origin");
+        if (origin != null && (origin.contains("ngrok-free.app") || origin.contains("localhost"))) {
+            log.info("WS connected from allowed origin: {}", origin);
+        }
+
         log.info("WS connected: {}", session.getId());
     }
 
