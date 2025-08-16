@@ -2,6 +2,8 @@ package org.example.tryonx.orders.order.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.tryonx.enums.DeliveryStatus;
+import org.example.tryonx.enums.OrderStatus;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.orders.payment.domain.PaymentMethod;
 import org.hibernate.annotations.CreationTimestamp;
@@ -15,6 +17,7 @@ import java.util.List;
 @Entity
 @Table(name = "orders")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -87,4 +90,7 @@ public class Order {
             orderNum = "ORD" + DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS").format(LocalDateTime.now());
         }
     }
+
+    @Enumerated(EnumType.STRING)
+    private DeliveryStatus deliveryStatus;
 }

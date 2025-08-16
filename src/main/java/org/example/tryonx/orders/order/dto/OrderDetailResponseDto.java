@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.tryonx.enums.Size;
-import org.example.tryonx.orders.order.domain.OrderStatus;
+import org.example.tryonx.enums.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

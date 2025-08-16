@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.cart.domain.CartItem;
 import org.example.tryonx.cart.repository.CartItemRepository;
+import org.example.tryonx.enums.DeliveryStatus;
 import org.example.tryonx.enums.PaymentStatus;
 import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.image.domain.ProductImage;
@@ -17,7 +18,7 @@ import org.example.tryonx.notice.domain.Notification;
 import org.example.tryonx.notice.repository.NotificationRepository;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
-import org.example.tryonx.orders.order.domain.OrderStatus;
+import org.example.tryonx.enums.OrderStatus;
 import org.example.tryonx.orders.order.dto.*;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
@@ -192,7 +193,8 @@ public class OrderService {
         pay.setOrder(savedOrder);
         paymentRepository.save(pay);
 
-        savedOrder.setStatus(OrderStatus.PAID); // 정책에 따라 유지/전환 결정
+        savedOrder.setStatus(OrderStatus.PAID); // 주문 상태 전환
+        savedOrder.setDeliveryStatus(DeliveryStatus.ORDERED); // 배송 상태 초기화 (주문 완료)
         orderRepository.save(savedOrder);
 
         // 5) 포인트 이력 처리

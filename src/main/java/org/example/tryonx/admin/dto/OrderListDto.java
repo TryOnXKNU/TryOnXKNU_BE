@@ -1,7 +1,8 @@
 package org.example.tryonx.admin.dto;
 
 import lombok.*;
-import org.example.tryonx.orders.order.domain.OrderStatus;
+import org.example.tryonx.enums.DeliveryStatus;
+import org.example.tryonx.enums.OrderStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,4 +18,5 @@ public class OrderListDto {
     private LocalDateTime orderAt;
     private OrderStatus orderStatus;
     private List<OrderItemsDto> items;
+    private DeliveryStatus deliveryStatus;
 }

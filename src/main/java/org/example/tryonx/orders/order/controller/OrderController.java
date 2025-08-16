@@ -3,7 +3,7 @@ package org.example.tryonx.orders.order.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.PaymentStatus;
 import org.example.tryonx.orders.order.domain.Order;
-import org.example.tryonx.orders.order.domain.OrderStatus;
+import org.example.tryonx.enums.OrderStatus;
 import org.example.tryonx.orders.order.dto.*;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.example.tryonx.orders.order.service.OrderPreviewService;
