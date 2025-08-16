@@ -29,12 +29,12 @@ public class ComfyUiController {
 //        return ResponseEntity.ok(" 생성된 이미지 파일: " + filename);
 //    }
 
-    @PostMapping("/save")
-    public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId) throws Exception {
-        String email = userDetails.getUsername();
-        String filename = comfyUiService.executeFittingFlow(email, productId);
-        return ResponseEntity.ok(" 생성된 이미지 파일: " + filename);
-    }
+//    @PostMapping("/try-on")
+//    public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId) throws Exception {
+//        String email = userDetails.getUsername();
+//        String filename = comfyUiService.executeFittingFlow(email, productId);
+//        return ResponseEntity.ok(" 생성된 이미지 파일: " + filename);
+//    }
 
     //상품파일명으로 한장 생성
 //    @PostMapping("/clothing")
@@ -47,34 +47,34 @@ public class ComfyUiController {
 //        return ResponseEntity.ok(" 생성된 이미지 파일: " + filename);
 //    }
 
-    @PostMapping("/clothing")
-    public ResponseEntity<String> generateMyFittingWithClothingName(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam String clothingImageName,
-            @RequestParam Integer productId) throws Exception {
-
-        String email = userDetails.getUsername();
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        comfyUiService.executeFittingFlowWithClothingName(email, clothingImageName, product);
-
-        return ResponseEntity.ok("피팅 이미지 1장 생성 및 저장 완료");
-    }
-
-    @PostMapping("/clothing/dual")
-    public ResponseEntity<String> generateMyFittingWithClothingNameDual(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam String clothingImageName,
-            @RequestParam Integer productId
-    ) throws Exception {
-
-        String email = userDetails.getUsername();
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        comfyUiDualService.executeFittingFlowWithClothingNameTwoImages(email, clothingImageName, product);
-
-        return ResponseEntity.ok("피팅 이미지 2장 생성 및 저장 완료");
-    }
+//    @PostMapping("/clothing")
+//    public ResponseEntity<String> generateMyFittingWithClothingName(
+//            @AuthenticationPrincipal UserDetails userDetails,
+//            @RequestParam String clothingImageName,
+//            @RequestParam Integer productId) throws Exception {
+//
+//        String email = userDetails.getUsername();
+//        Product product = productRepository.findById(productId)
+//                .orElseThrow(() -> new RuntimeException("Product not found"));
+//
+//        comfyUiService.executeFittingFlowWithClothingName(email, clothingImageName, product);
+//
+//        return ResponseEntity.ok("피팅 이미지 1장 생성 및 저장 완료");
+//    }
+//
+//    @PostMapping("/clothing/dual")
+//    public ResponseEntity<String> generateMyFittingWithClothingNameDual(
+//            @AuthenticationPrincipal UserDetails userDetails,
+//            @RequestParam String clothingImageName,
+//            @RequestParam Integer productId
+//    ) throws Exception {
+//
+//        String email = userDetails.getUsername();
+//        Product product = productRepository.findById(productId)
+//                .orElseThrow(() -> new RuntimeException("Product not found"));
+//
+//        comfyUiDualService.executeFittingFlowWithClothingNameTwoImages(email, clothingImageName, product);
+//
+//        return ResponseEntity.ok("피팅 이미지 2장 생성 및 저장 완료");
+//    }
 }
