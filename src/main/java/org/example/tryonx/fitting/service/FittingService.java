@@ -110,4 +110,29 @@ public class FittingService {
         return bodyShape;
     }
 
+    @Transactional
+    public void updateMemberBodyShape(Long memberId, String bodyTypeRaw) {
+        if (memberId == null || bodyTypeRaw == null) return;
+
+        BodyShape shape = mapToEnum(bodyTypeRaw);
+        if (shape == null) return;
+
+        Member m = memberRepository.findById(memberId)
+                .orElse(null);
+        if (m == null) return;
+
+        m.setBodyShape(shape); // JPA dirty checking으로 update
+        // 별도 save() 불필요 (영속 상태라면)
+    }
+
+    private BodyShape mapToEnum(String s) {
+        String k = s.trim().toUpperCase();
+        switch (k) {
+            case "STRAIGHT": return BodyShape.STRAIGHT;
+            case "WAVE":     return BodyShape.WAVE;
+            case "NATURAL":  return BodyShape.NATURAL;
+            default:         return null; // UNKNOWN 등은 저장하지 않음
+        }
+    }
+
 }
