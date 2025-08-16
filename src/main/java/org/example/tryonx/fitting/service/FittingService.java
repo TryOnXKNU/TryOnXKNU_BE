@@ -33,6 +33,7 @@ public class FittingService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
         FittingMemberInfo memberInfo = new FittingMemberInfo(
+                member.getMemberId(),
                 member.getWeight(),
                 member.getHeight(),
                 member.getBodyShape()

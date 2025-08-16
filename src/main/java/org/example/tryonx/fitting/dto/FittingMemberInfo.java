@@ -9,7 +9,9 @@ import org.example.tryonx.enums.BodyShape;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FittingMemberInfo {
+    private Long memberId;
     private Integer height;
     private Integer weight;
     private BodyShape bodyShape;
+
 }
