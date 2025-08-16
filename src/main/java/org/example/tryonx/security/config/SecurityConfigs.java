@@ -16,6 +16,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class SecurityConfigs {
@@ -68,7 +69,16 @@ public class SecurityConfigs {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        //configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+
+        // 변경: ngrok 주소를 허용 목록에 추가
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "https://*.ngrok-free.app"
+        ));
+
+        // WebSocket 엔드포인트 허용 추가
+        configuration.addAllowedOriginPattern("*");
         configuration.setAllowedMethods(Arrays.asList("*"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
