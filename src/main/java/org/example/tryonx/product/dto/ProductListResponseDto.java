@@ -15,6 +15,7 @@ public class ProductListResponseDto {
     private Integer categoryId;
     private String thumbnailUrl;
 
+    private BigDecimal discountRate;
     private Double averageRating;
     private Integer reviewCount;
 }

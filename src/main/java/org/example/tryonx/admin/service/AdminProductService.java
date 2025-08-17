@@ -26,6 +26,7 @@ import org.example.tryonx.review.dto.ProductReviewDto;
 import org.example.tryonx.review.service.ReviewService;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -50,7 +51,6 @@ public class AdminProductService {
     public ProductResponseDto getProductDetail(Integer productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalStateException("해당 상품이 없습니다."));
-
         List<ProductItem> productItems = productItemRepository.findByProduct(product);
 
         List<ProductItemInfoDto> itemDtos = productItems.stream().map(item -> {
@@ -78,6 +78,18 @@ public class AdminProductService {
         // 리뷰 프리뷰
         List<ProductReviewDto> reviewsPreview = reviewService.getProductReviewsPreview(productId);
 
+        BigDecimal discountRate = product.getDiscountRate();
+        BigDecimal price = product.getPrice();
+        BigDecimal discountedPrice = price.multiply(discountRate.divide(BigDecimal.valueOf(100)));
+
+        Integer pointForOrder = price
+                .subtract(discountedPrice)
+                .multiply(BigDecimal.valueOf(0.01))
+                .intValue();
+        Integer pointForReview = price
+                .subtract(discountedPrice)
+                .multiply(BigDecimal.valueOf(0.05))
+                .intValue();
         Double avg = reviewService.getAverageRatingByProductId(productId);
         Integer cnt = reviewService.getReviewCountByProductId(productId);
 
@@ -94,7 +106,9 @@ public class AdminProductService {
                 itemDtos,
                 reviewsPreview,
                 avg,
-                cnt
+                cnt,
+                pointForOrder,
+                pointForReview
         );
     }
 

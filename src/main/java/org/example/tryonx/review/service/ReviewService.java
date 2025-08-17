@@ -80,7 +80,7 @@ public class ReviewService {
 
         int savePoint = orderItem.getPrice()
                 .multiply(BigDecimal.ONE.subtract(discountRate))
-                .multiply(BigDecimal.valueOf(0.01))
+                .multiply(BigDecimal.valueOf(0.05))
                 .setScale(0, RoundingMode.DOWN)
                 .intValue();
 
