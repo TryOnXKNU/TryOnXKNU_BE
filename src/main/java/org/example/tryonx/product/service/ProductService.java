@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -160,6 +161,20 @@ public class ProductService {
         Integer cnt = reviewService.getReviewCountByProductId(productId);
 
         List<ProductReviewDto> reviewsPreview = reviewService.getProductReviewsPreview(productId);
+
+        BigDecimal discountRate = product.getDiscountRate();
+        BigDecimal price = product.getPrice();
+        BigDecimal discountedPrice = price.multiply(discountRate.divide(BigDecimal.valueOf(100)));
+
+        Integer pointForOrder = price
+                .subtract(discountedPrice)
+                .multiply(BigDecimal.valueOf(0.01))
+                .intValue();
+        Integer pointForReview = price
+                .subtract(discountedPrice)
+                .multiply(BigDecimal.valueOf(0.05))
+                .intValue();
+
         return new ProductResponseDto(
                 product.getProductId(),
                 product.getProductName(),
@@ -173,7 +188,9 @@ public class ProductService {
                 itemDtos,
                 reviewsPreview,
                 avg,
-                cnt
+                cnt,
+                pointForOrder,
+                pointForReview
         );
     }
 
@@ -217,6 +234,7 @@ public class ProductService {
                 .map(product -> {
                     ProductImage image = productImageRepository.findByProductAndIsThumbnailTrue(product)
                             .orElseThrow(() -> new IllegalStateException("썸네일 이미지 혹은 상품이 없습니다."));
+                    BigDecimal discountRate = product.getDiscountRate();
 
                     Double avg = reviewService.getAverageRatingByProductId(product.getProductId());
                     Integer cnt = reviewService.getReviewCountByProductId(product.getProductId()
@@ -229,6 +247,7 @@ public class ProductService {
                             likeRepository.countByProduct(product),
                             product.getCategory().getCategoryId(),
                             image.getImageUrl(),
+                            discountRate,
                             avg,
                             cnt
                     );
@@ -239,7 +258,7 @@ public class ProductService {
                 .map(product -> {
                     ProductImage image = productImageRepository.findByProductAndIsThumbnailTrue(product)
                             .orElseThrow(() -> new IllegalStateException("썸네일 이미지 혹은 상품이 없습니다."));
-
+                    BigDecimal discountRate = product.getDiscountRate();
                     Double avg = reviewService.getAverageRatingByProductId(product.getProductId());
                     Integer cnt = reviewService.getReviewCountByProductId(product.getProductId());
 
@@ -250,6 +269,7 @@ public class ProductService {
                             likeRepository.countByProduct(product),
                             product.getCategory().getCategoryId(),
                             image.getImageUrl(),
+                            discountRate,
                             avg,
                             cnt
                     );

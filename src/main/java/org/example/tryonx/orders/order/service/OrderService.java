@@ -222,7 +222,7 @@ public class OrderService {
         Notification notification = Notification.builder()
                 .member(member)
                 .title("리뷰 작성 시 포인트 제공")
-                .content("구매 상품 리뷰 작성 시 10% 포인트를 드려요!")
+                .content("구매 상품 리뷰 작성 시 상품 구매 금액의 5% 포인트를 드려요!")
                 .build();
         notificationRepository.save(notification);
 
