@@ -7,6 +7,7 @@ import org.example.tryonx.admin.dto.MemberListDto;
 import org.example.tryonx.admin.dto.MemberOrderHistory;
 import org.example.tryonx.admin.dto.MemberSearchRequest;
 import org.example.tryonx.admin.specification.MemberSpecification;
+import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.exchange.repository.ExchangeRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 public class MemberListService {
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
+    private final CartItemRepository cartItemRepository;
 
     private final OrderItemRepository orderItemRepository;
     private final ReviewRepository reviewRepository;
@@ -86,7 +88,7 @@ public class MemberListService {
     public void deleteMemberWithDependencies(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않음"));
-
+        cartItemRepository.deleteAllByMember(member);
         List<Order> orders = orderRepository.findByMember(member);
 
         for (Order order : orders) {
