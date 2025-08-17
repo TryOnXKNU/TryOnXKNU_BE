@@ -25,6 +25,7 @@ public class OrderDetailResponseDto {
     private Integer usedPoints;
     private List<Item> items;
     private Integer orderItemsCount;
+    private String paymentMethod;
     private LocalDateTime orderedAt;
 
     @Getter

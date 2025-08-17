@@ -12,5 +12,5 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     boolean existsByMerchantUid(String merchantUid);
 
     // 주문별 결제 조회가 필요할 때
-    List<Payment> findAllByOrder_OrderId(Integer orderId);
+    Optional<Payment> findByOrder_OrderId(Integer orderId);
 }
