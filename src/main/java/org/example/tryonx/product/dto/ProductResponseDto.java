@@ -27,4 +27,5 @@ public class ProductResponseDto {
 
     private Double averageRating;
     private Integer reviewCount;
+//    private I
 }

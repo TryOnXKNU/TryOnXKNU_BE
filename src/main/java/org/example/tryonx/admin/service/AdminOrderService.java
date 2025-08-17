@@ -13,6 +13,8 @@ import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
+import org.example.tryonx.orders.payment.domain.Payment;
+import org.example.tryonx.orders.payment.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 public class AdminOrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final PaymentRepository paymentRepository;
 
 
     public List<OrderListDto> getAllOrders() {
@@ -76,7 +79,8 @@ public class AdminOrderService {
         }).toList();
 
         Member member = order.getMember();
-
+        Payment payment = paymentRepository.findByOrder_OrderId(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("주문에 대한 결제내역이 없습니다.."));
         return OrderInfoDto.builder()
                 .orderId(order.getOrderId())
                 .orderStatus(order.getStatus())
@@ -98,7 +102,7 @@ public class AdminOrderService {
                                 .multiply(BigDecimal.valueOf(100))
                                 : BigDecimal.ZERO
                 )
-                .paymentMethod("신한카드(일시불)")
+                .paymentMethod(payment.getCardName())
                 .items(itemDtos)
                 .build();
     }

@@ -289,7 +289,8 @@ public class OrderService {
     public OrderDetailResponseDto getOrderDetail(Integer orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 주문 정보가 존재하지 않습니다."));
-
+        Payment payment = paymentRepository.findByOrder_OrderId(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 주문에 대한 결제 내역이 없습니다."));
         Member member = order.getMember();
         BigDecimal totalAmount = order.getTotalAmount();
         BigDecimal finalAmount = order.getFinalAmount();
@@ -326,6 +327,7 @@ public class OrderService {
                 order.getUsedPoints(),
                 items,
                 items.size(),
+                payment.getCardName(),
                 order.getOrderedAt()
         );
     }

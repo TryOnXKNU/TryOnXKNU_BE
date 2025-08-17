@@ -111,10 +111,10 @@ public class ProductService {
     }
 
 
-    public List<ProductListResponseDto> getAllProducts() {
-        List<Product> productList = productRepository.findAll();
-        return this.getProductListResponseDto(productList);
-    }
+//    public List<ProductListResponseDto> getAllProducts() {
+//        List<Product> productList = productRepository.findAll();
+//        return this.getProductListResponseDto(productList);
+//    }
 
     public List<ProductListResponseDto> getAllAvailableProducts() {
         List<Product> productList = productRepository.findAllWithAnyAvailableItem();
