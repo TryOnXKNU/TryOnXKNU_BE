@@ -51,11 +51,11 @@ public class CartItemController {
         return ResponseEntity.ok(cartItemService.getCartItems(email));
     }
 
-    @GetMapping("/selected")
-    public ResponseEntity<?> getSelectedCartItems(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam(required = false) List<Long> ids) {
-        String email = userDetails.getUsername();
-        return ResponseEntity.ok(cartItemService.getCartWithCheckedInfo(email, ids));
-    }
+//    @GetMapping("/selected")
+//    public ResponseEntity<?> getSelectedCartItems(
+//            @AuthenticationPrincipal UserDetails userDetails,
+//            @RequestParam(required = false) List<Long> ids) {
+//        String email = userDetails.getUsername();
+//        return ResponseEntity.ok(cartItemService.getCartWithCheckedInfo(email, ids));
+//    }
 }

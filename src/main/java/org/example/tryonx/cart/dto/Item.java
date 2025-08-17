@@ -23,4 +23,5 @@ public class Item {
     private BigDecimal price;
     private String imageUrl;
     private List<Size> availableSizes;
+    private BigDecimal discountRate;
 }

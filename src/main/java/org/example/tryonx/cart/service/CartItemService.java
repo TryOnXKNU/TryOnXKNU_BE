@@ -17,6 +17,7 @@ import org.example.tryonx.product.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -79,66 +80,82 @@ public class CartItemService {
         List<CartItem> cartItems = cartItemRepository.findByMember(member);
         List<Item> items = cartItems.stream().map(this::toItemDto).toList();
 
-        // 총 상품 가격 계산
+        // 상품 금액(할인 반영 전)
         BigDecimal productPrice = items.stream()
                 .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal deliveryFee = BigDecimal.ZERO;
-        BigDecimal totalPrice = productPrice.add(deliveryFee);
+        // 할인 반영 금액
+        BigDecimal discountedPrice = items.stream()
+                .map(i -> {
+                    BigDecimal discountRate = i.getDiscountRate() != null ? i.getDiscountRate() : BigDecimal.ZERO;
+                    // 정수 %를 소수 비율로 변환 (예: 10 → 0.10)
+                    BigDecimal discountPercent = discountRate.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-        int expectedPoint = productPrice.multiply(BigDecimal.valueOf(0.01))
+                    BigDecimal discountMultiplier = BigDecimal.ONE.subtract(discountPercent);
+
+                    return i.getPrice()
+                            .multiply(discountMultiplier)   // 할인 적용
+                            .multiply(BigDecimal.valueOf(i.getQuantity()));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal deliveryFee = BigDecimal.ZERO;
+        BigDecimal totalPrice = discountedPrice.add(deliveryFee);
+
+        int expectedPoint = discountedPrice.multiply(BigDecimal.valueOf(0.01))
                 .intValue(); // 1% 적립
 
         return CartListResponseDto.builder()
-                .productPrice(productPrice)
+                .productPrice(productPrice)   // 원가 기준 총액
                 .deliveryFee(deliveryFee)
-                .totalPrice(totalPrice)
+                .totalPrice(totalPrice)       // 할인 반영된 총액
                 .expectedPoint(expectedPoint)
                 .items(items)
                 .build();
     }
 
-    public CartListResponseDto getCartWithCheckedInfo(String email, List<Long> checkedIds) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
-        List<CartItem> allCartItems = cartItemRepository.findByMember(member);
-        List<Item> items = allCartItems.stream().map(this::toItemDto).toList();
-
-        // checkedIds가 null이거나 빈 경우 → 금액 정보는 0 처리
-        if (checkedIds == null || checkedIds.isEmpty()) {
-            return CartListResponseDto.builder()
-                    .productPrice(BigDecimal.ZERO)
-                    .deliveryFee(BigDecimal.ZERO)
-                    .totalPrice(BigDecimal.ZERO)
-                    .expectedPoint(0)
-                    .items(items)
-                    .build();
-        }
-
-        // 체크된 항목만 필터링
-        List<CartItem> checkedItems = allCartItems.stream()
-                .filter(item -> checkedIds.contains(item.getCartItemId()))
-                .toList();
-
-        BigDecimal productPrice = checkedItems.stream()
-                .map(i -> i.getProductItem().getProduct().getPrice()
-                        .multiply(BigDecimal.valueOf(i.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal deliveryFee = productPrice.compareTo(BigDecimal.valueOf(50000)) >= 0 ? BigDecimal.ZERO : BigDecimal.valueOf(3000);
-        BigDecimal totalPrice = productPrice.add(deliveryFee);
-        int expectedPoint = productPrice.multiply(BigDecimal.valueOf(0.01)).intValue();
-
-        return CartListResponseDto.builder()
-                .productPrice(productPrice)
-                .deliveryFee(deliveryFee)
-                .totalPrice(totalPrice)
-                .expectedPoint(expectedPoint)
-                .items(items)
-                .build();
-    }
+//    public CartListResponseDto getCartWithCheckedInfo(String email, List<Long> checkedIds) {
+//        Member member = memberRepository.findByEmail(email)
+//                .orElseThrow(() -> new RuntimeException("사용자 없음"));
+//
+//        List<CartItem> allCartItems = cartItemRepository.findByMember(member);
+//        List<Item> items = allCartItems.stream().map(this::toItemDto).toList();
+//
+//        // checkedIds가 null이거나 빈 경우 → 금액 정보는 0 처리
+//        if (checkedIds == null || checkedIds.isEmpty()) {
+//            return CartListResponseDto.builder()
+//                    .productPrice(BigDecimal.ZERO)
+//                    .deliveryFee(BigDecimal.ZERO)
+//                    .totalPrice(BigDecimal.ZERO)
+//                    .expectedPoint(0)
+//                    .items(items)
+//                    .build();
+//        }
+//
+//        // 체크된 항목만 필터링
+//        List<CartItem> checkedItems = allCartItems.stream()
+//                .filter(item -> checkedIds.contains(item.getCartItemId()))
+//                .toList();
+//
+//        BigDecimal productPrice = checkedItems.stream()
+//                .map(i -> i.getProductItem().getProduct().getPrice()
+//                        .multiply(BigDecimal.valueOf(i.getQuantity())))
+//                .reduce(BigDecimal.ZERO, BigDecimal::add);
+//
+//        BigDecimal deliveryFee = productPrice.compareTo(BigDecimal.valueOf(50000)) >= 0 ? BigDecimal.ZERO : BigDecimal.valueOf(3000);
+//        BigDecimal totalPrice = productPrice.add(deliveryFee);
+//        int expectedPoint = productPrice.multiply(BigDecimal.valueOf(0.01)).intValue();
+//
+//        return CartListResponseDto.builder()
+//                .productPrice(productPrice)
+//                .deliveryFee(deliveryFee)
+//                .totalPrice(totalPrice)
+//                .expectedPoint(expectedPoint)
+//                .items(items)
+//                .build();
+//    }
 
     @Transactional
     public void deleteCartItem(String email, List<DeleteRequest> deleteRequests) {
@@ -214,6 +231,8 @@ public class CartItemService {
                 .map(ProductImage::getImageUrl)
                 .orElse(null);
 
+        BigDecimal discountRate = product.getDiscountRate() != null ? product.getDiscountRate() : BigDecimal.ZERO;
+
         return Item.builder()
                 .cartItemId(cartItem.getCartItemId())
                 .productId(product.getProductId())                      // 상품 ID
@@ -224,6 +243,7 @@ public class CartItemService {
                 .price(product.getPrice())                              // 원가 기준
                 .imageUrl(thumbnailUrl)
                 .availableSizes(availableSizes)                         // 가능한 사이즈 리스트
+                .discountRate(discountRate)
                 .build();
     }
 }
