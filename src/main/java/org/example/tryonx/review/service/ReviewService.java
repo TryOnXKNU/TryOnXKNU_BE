@@ -83,9 +83,7 @@ public class ReviewService {
                 .multiply(BigDecimal.valueOf(0.05))
                 .setScale(0, RoundingMode.DOWN)
                 .intValue();
-
-        System.out.println("Save point " + savePoint);
-        System.out.println("origin_point " + orderItem.getPrice().multiply(BigDecimal.ONE.subtract(orderItem.getDiscountRate())));
+        
         member.savePoint(savePoint);
         memberRepository.save(member);
 
