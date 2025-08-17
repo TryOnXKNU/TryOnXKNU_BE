@@ -168,6 +168,7 @@ public class OrderService {
             // 느슨하게 운영하려면 위를 주석 처리하고 로그만 남기세요.
         }
 
+        String deliveryRequest = requestDto.getDeliveryRequest();
         // 3) 주문 생성
         Order order = Order.builder()
                 .member(member)
@@ -177,6 +178,7 @@ public class OrderService {
                 .usedPoints(usedPoints)
                 .orderedAt(LocalDateTime.now())
                 .status(OrderStatus.PENDING)
+                .deliveryRequest(deliveryRequest)
                 .build();
 
         orderItems.forEach(item -> item.setOrder(order));
