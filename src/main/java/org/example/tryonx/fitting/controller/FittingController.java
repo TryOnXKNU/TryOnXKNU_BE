@@ -31,12 +31,6 @@ public class FittingController {
         return ResponseEntity.ok(pageData);
     }
 
-//    @GetMapping("/{categoryId}")
-//    public ResponseEntity<?> fittingPageInfoByCategory(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Integer categoryId) {
-//        String email = userDetails.getUsername();
-//        FittingResponse pageData = fittingService.getFittingPageData(email, categoryId);
-//        return ResponseEntity.ok(pageData);
-//    }
 
     @PostMapping("/body-shape")
     public ResponseEntity<?> selectBodyShape(@AuthenticationPrincipal UserDetails userDetails, @RequestBody BodyShapeRequest request) {
