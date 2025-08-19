@@ -257,19 +257,28 @@ public class OrderService {
                                         .orElseThrow(() -> new EntityNotFoundException("상품 이미지가 없습니다."));
 
                                 // 원가(정가)
-                                BigDecimal originalPrice = product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO;
+                                BigDecimal originalPrice = nz(product.getPrice());
 
-                                // 할인율(%)  예: 10 -> 10%
-                                BigDecimal ratePercent = product.getDiscountRate() != null ? product.getDiscountRate() : BigDecimal.ZERO;
+                                // 할인율(%), null 방지
+                                BigDecimal ratePercent = nz(product.getDiscountRate()); // 예: 10 => 10%
 
-                                // 할인가(단가): 주문 확정 단가 우선, 없으면 정가 * (1 - rate/100)
-                                BigDecimal discountedPrice = item.getPrice();
-                                if (discountedPrice == null || discountedPrice.compareTo(BigDecimal.ZERO) == 0) {
-                                    BigDecimal multiplier = BigDecimal.ONE.subtract(
-                                            ratePercent.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)
-                                    );
-                                    discountedPrice = originalPrice.multiply(multiplier)
-                                            .setScale(0, RoundingMode.HALF_UP); // 정책에 맞게 조정
+                                // 할인율로 계산한 할인가
+                                BigDecimal discountedByRate = originalPrice.multiply(
+                                        BigDecimal.ONE.subtract(
+                                                ratePercent.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)
+                                        )
+                                ).setScale(0, RoundingMode.HALF_UP); // 정책에 맞게 자리수 조정
+
+                                // OrderItem.price (있다면)와 할인율 계산값 중 더 낮은 값을 최종 단가로
+                                BigDecimal itemPrice = nz(item.getPrice()); // 일부 시스템에선 정가가 들어있을 수 있음
+                                BigDecimal finalDiscountedUnitPrice;
+                                if (itemPrice.signum() > 0 && ratePercent.signum() > 0) {
+                                    // 둘 다 있을 땐 더 낮은 값
+                                    finalDiscountedUnitPrice = itemPrice.min(discountedByRate);
+                                } else if (itemPrice.signum() > 0) {
+                                    finalDiscountedUnitPrice = itemPrice;
+                                } else {
+                                    finalDiscountedUnitPrice = (ratePercent.signum() > 0) ? discountedByRate : originalPrice;
                                 }
 
                                 return OrderItemDto.builder()
@@ -279,9 +288,9 @@ public class OrderService {
                                         .size(productItem.getSize())
                                         .quantity(item.getQuantity())
                                         .imageUrl(productImage.getImageUrl())
-                                        .price(originalPrice)          // 원가
-                                        .discountRate(ratePercent)     // %
-                                        .discountPrice(discountedPrice)// 할인가(적용가)
+                                        .price(originalPrice)                 // 원가
+                                        .discountRate(ratePercent)            // %
+                                        .discountPrice(finalDiscountedUnitPrice) // 최종 할인가(적용가)
                                         .build();
                             })
                             .toList();
@@ -316,6 +325,13 @@ public class OrderService {
                 })
                 .toList();
     }
+
+    // 유틸
+    private static BigDecimal nz(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
+    }
+
+
     public OrderDetailResponseDto getOrderDetail(Integer orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 주문 정보가 존재하지 않습니다."));
