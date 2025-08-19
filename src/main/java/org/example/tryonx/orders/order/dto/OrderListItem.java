@@ -21,6 +21,5 @@ public class OrderListItem {
     private BigDecimal totalPrice;
     private Integer orderItemsCount;
     private LocalDateTime orderedAt;
-    private BigDecimal price;
     private DeliveryStatus deliveryStatus;
 }

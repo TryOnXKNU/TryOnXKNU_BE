@@ -255,16 +255,36 @@ public class OrderService {
                                 Product product = productItem.getProduct();
                                 ProductImage productImage = productImageRepository.findByProductAndIsThumbnailTrue(product)
                                         .orElseThrow(() -> new EntityNotFoundException("상품 이미지가 없습니다."));
-                                return new OrderItemDto(
-                                        item.getOrderItemId(),
-                                        product.getProductId(),
-                                        product.getProductName(),
-                                        productItem.getSize(),
-                                        product.getPrice().multiply(product.getDiscountRate().divide(BigDecimal.valueOf(100))),
-                                        item.getQuantity(),
-                                        productImage.getImageUrl()
-                                );
-                            }).toList();
+
+                                // 원가(정가)
+                                BigDecimal originalPrice = product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO;
+
+                                // 할인율(%)  예: 10 -> 10%
+                                BigDecimal ratePercent = product.getDiscountRate() != null ? product.getDiscountRate() : BigDecimal.ZERO;
+
+                                // 할인가(단가): 주문 확정 단가 우선, 없으면 정가 * (1 - rate/100)
+                                BigDecimal discountedPrice = item.getPrice();
+                                if (discountedPrice == null || discountedPrice.compareTo(BigDecimal.ZERO) == 0) {
+                                    BigDecimal multiplier = BigDecimal.ONE.subtract(
+                                            ratePercent.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)
+                                    );
+                                    discountedPrice = originalPrice.multiply(multiplier)
+                                            .setScale(0, RoundingMode.HALF_UP); // 정책에 맞게 조정
+                                }
+
+                                return OrderItemDto.builder()
+                                        .orderItemId(item.getOrderItemId())
+                                        .productId(product.getProductId())
+                                        .productName(product.getProductName())
+                                        .size(productItem.getSize())
+                                        .quantity(item.getQuantity())
+                                        .imageUrl(productImage.getImageUrl())
+                                        .price(originalPrice)          // 원가
+                                        .discountRate(ratePercent)     // %
+                                        .discountPrice(discountedPrice)// 할인가(적용가)
+                                        .build();
+                            })
+                            .toList();
 
                     // 첫 상품 기준 썸네일 이미지 가져오기 (대표 이미지)
                     String imageUrl = orderItems.stream()
@@ -291,7 +311,6 @@ public class OrderService {
                             order.getFinalAmount(),
                             orderItemCount,
                             order.getOrderedAt(),
-                            price,
                             order.getDeliveryStatus()
                     );
                 })
