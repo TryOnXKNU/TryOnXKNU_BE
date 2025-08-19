@@ -22,13 +22,6 @@ public class MemberController {
         this.memberService = memberService;
     }
 
-    @GetMapping("/list")
-    //걍 테스트용 하나 만들어봤수
-    public ResponseEntity<?> memberList() {
-        List<MemberListResponseDto> dtos = memberService.findAll();
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
-    }
-
     @GetMapping
     public ResponseEntity<MyInfoResponseDto> myInfo(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();

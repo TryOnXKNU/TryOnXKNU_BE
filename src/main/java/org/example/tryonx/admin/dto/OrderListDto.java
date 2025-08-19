@@ -4,6 +4,7 @@ import lombok.*;
 import org.example.tryonx.enums.DeliveryStatus;
 import org.example.tryonx.enums.OrderStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,4 +20,5 @@ public class OrderListDto {
     private OrderStatus orderStatus;
     private List<OrderItemsDto> items;
     private DeliveryStatus deliveryStatus;
+    private BigDecimal totalPrice;
 }

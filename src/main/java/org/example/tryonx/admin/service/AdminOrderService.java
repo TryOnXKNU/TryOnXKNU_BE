@@ -38,7 +38,6 @@ public class AdminOrderService {
                             .map(item -> OrderItemsDto.builder()
                                     .orderItemId(item.getOrderItemId())
                                     .productName(item.getProductItem().getProduct().getProductName())
-                                    .price(item.getPrice())
                                     .quantity(item.getQuantity())
                                     .build())
                             .collect(Collectors.toList());
@@ -50,6 +49,7 @@ public class AdminOrderService {
                             .orderStatus(order.getStatus())
                             .items(items)
                             .deliveryStatus(order.getDeliveryStatus())
+                            .totalPrice(order.getFinalAmount())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -88,6 +88,7 @@ public class AdminOrderService {
                 .orderAt(order.getOrderedAt())
                 .orderNum(order.getOrderNum())
                 .name(member.getName())
+                .profileUrl(member.getProfileUrl())
                 .phoneNumber(member.getPhoneNumber())
                 .email(member.getEmail())
                 .address(order.getMember().getAddress())
