@@ -49,6 +49,7 @@ public class AdminOrderService {
                             .orderAt(order.getOrderedAt())
                             .orderStatus(order.getStatus())
                             .items(items)
+                            .deliveryStatus(order.getDeliveryStatus())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -104,6 +105,7 @@ public class AdminOrderService {
                 )
                 .paymentMethod(payment.getCardName())
                 .items(itemDtos)
+                .deliveryStatus(order.getDeliveryStatus())
                 .build();
     }
 

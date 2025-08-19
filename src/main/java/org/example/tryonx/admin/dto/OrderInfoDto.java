@@ -1,6 +1,7 @@
 package org.example.tryonx.admin.dto;
 
 import lombok.*;
+import org.example.tryonx.enums.DeliveryStatus;
 import org.example.tryonx.enums.OrderStatus;
 
 import java.math.BigDecimal;
@@ -29,4 +30,5 @@ public class OrderInfoDto {
     private BigDecimal discountRate;
     private String paymentMethod;
     private List<OrderInfoItemDto> items;
+    private DeliveryStatus deliveryStatus;
 }
