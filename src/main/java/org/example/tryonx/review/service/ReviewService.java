@@ -136,6 +136,11 @@ public class ReviewService {
                     .map(image -> image.getImageUrl())
                     .toList();
 
+            // 주문아이템 / 주문 ID 추출 (null 안전)
+            OrderItem oi = review.getOrderItem();
+            Integer orderItemId = (oi != null) ? oi.getOrderItemId() : null;
+            Integer orderId = (oi != null && oi.getOrder() != null) ? oi.getOrder().getOrderId() : null;
+
             return ReviewResponseDto.builder()
                     .reviewId(review.getId())
                     .productId(review.getProduct().getProductId())
@@ -146,6 +151,8 @@ public class ReviewService {
                     .productImage(productImage)
                     .reviewImages(reviewImages)
                     .size(review.getSize())
+                    .orderId(orderId)
+                    .orderItemId(orderItemId)
                     .build();
         }).toList();
     }

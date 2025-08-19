@@ -23,4 +23,6 @@ public class ReviewResponseDto {
     private LocalDateTime createdAt;
     private String productImage;
     private List<String> reviewImages;
+    private Integer orderId;
+    private Integer orderItemId;
 }
