@@ -3,6 +3,7 @@ package org.example.tryonx.admin.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.tryonx.enums.DeliveryStatus;
 import org.example.tryonx.enums.OrderStatus;
 
 import java.math.BigDecimal;
@@ -21,4 +22,5 @@ public class MemberOrderHistory {
     private String productName;
     private BigDecimal price;
     private OrderStatus orderStatus;
+    private DeliveryStatus deliveryStatus;
 }

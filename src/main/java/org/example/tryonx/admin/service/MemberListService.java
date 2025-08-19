@@ -136,7 +136,8 @@ public class MemberListService {
                         product.getProductId(),
                         product.getProductName(),
                         product.getPrice(),
-                        order.getStatus()
+                        order.getStatus(),
+                        order.getDeliveryStatus()
                 ));
             }
         }
