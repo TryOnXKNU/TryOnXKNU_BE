@@ -3,6 +3,7 @@ package org.example.tryonx.orders.order.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.tryonx.enums.DeliveryStatus;
 import org.example.tryonx.enums.Size;
 
 import java.math.BigDecimal;
@@ -20,4 +21,6 @@ public class OrderListItem {
     private BigDecimal totalPrice;
     private Integer orderItemsCount;
     private LocalDateTime orderedAt;
+    private BigDecimal price;
+    private DeliveryStatus deliveryStatus;
 }

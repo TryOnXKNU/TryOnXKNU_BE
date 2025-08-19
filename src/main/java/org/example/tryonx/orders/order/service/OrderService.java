@@ -274,6 +274,13 @@ public class OrderService {
                                     .map(ProductImage::getImageUrl))
                             .orElse(null);
 
+                    BigDecimal price = orderItems.stream()
+                            .findFirst()
+                            .map(OrderItem::getProductItem)
+                            .map(ProductItem::getProduct)
+                            .map(Product::getPrice)
+                            .orElse(BigDecimal.ZERO);
+
                     return new OrderListItem(
                             order.getOrderId(),
                             order.getMember().getMemberId(),
@@ -281,7 +288,9 @@ public class OrderService {
                             orderItemDtos,
                             order.getFinalAmount(),
                             orderItemCount,
-                            order.getOrderedAt()
+                            order.getOrderedAt(),
+                            price,
+                            order.getDeliveryStatus()
                     );
                 })
                 .toList();
