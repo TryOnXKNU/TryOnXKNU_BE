@@ -18,6 +18,7 @@ public class OrderInfoDto {
     private LocalDateTime orderAt;
     private String orderNum;
     private String name;
+    private String profileUrl;
     private String phoneNumber;
     private String email;
     private String address;
