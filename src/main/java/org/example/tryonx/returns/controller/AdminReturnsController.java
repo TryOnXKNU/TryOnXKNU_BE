@@ -42,11 +42,11 @@ public class AdminReturnsController {
     }
 
     //반품 상태별 조회
-    @GetMapping("/status")
-    public ResponseEntity<List<ReturnListDto>> getReturnsByStatus(
-            @RequestParam("status") ReturnStatus status
-    ) {
-        List<ReturnListDto> result = returnService.getReturnsByStatus(status);
-        return ResponseEntity.ok(result);
-    }
+//    @GetMapping("/status")
+//    public ResponseEntity<List<ReturnListDto>> getReturnsByStatus(
+//            @RequestParam("status") ReturnStatus status
+//    ) {
+//        List<ReturnListDto> result = returnService.getReturnsByStatus(status);
+//        return ResponseEntity.ok(result);
+//    }
 }

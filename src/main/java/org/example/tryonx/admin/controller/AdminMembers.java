@@ -51,13 +51,13 @@ public class AdminMembers {
     }
 
     //멤버 필터 검색
-    @GetMapping("/members/search")
-    public ResponseEntity<List<Member>> searchMembers(@RequestParam String searchKey,
-                                                      @RequestParam String searchValue) {
-        List<Member> result = memberListService.searchMembers(
-                new MemberSearchRequest(searchKey, searchValue));
-        return ResponseEntity.ok(result);
-    }
+//    @GetMapping("/members/search")
+//    public ResponseEntity<List<Member>> searchMembers(@RequestParam String searchKey,
+//                                                      @RequestParam String searchValue) {
+//        List<Member> result = memberListService.searchMembers(
+//                new MemberSearchRequest(searchKey, searchValue));
+//        return ResponseEntity.ok(result);
+//    }
 
     //멤버별 주문 내역 조회
     @GetMapping("/members/{memberId}/orders")
