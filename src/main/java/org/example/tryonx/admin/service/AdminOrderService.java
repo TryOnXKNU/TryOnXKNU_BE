@@ -55,6 +55,9 @@ public class AdminOrderService {
                 .collect(Collectors.toList());
     }
 
+    // null-safe
+    private static BigDecimal nz(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
+
     public OrderInfoDto getOrderDetail(Integer orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("주문이 존재하지 않습니다."));
@@ -69,6 +72,16 @@ public class AdminOrderService {
                     .map(img -> img.getImageUrl())
                     .orElse(null);
 
+            BigDecimal unitPrice = nz(orderItem.getPrice());
+            BigDecimal rate = nz(product.getDiscountRate());
+            BigDecimal qty = BigDecimal.valueOf(orderItem.getQuantity());
+
+            // 아이템별 할인 적용된 최종 금액 = 단가 * (1 - rate/100) * 수량
+            BigDecimal discountedFinal =
+                    unitPrice.multiply(BigDecimal.ONE.subtract(rate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)))
+                            .multiply(qty)
+                            .setScale(0, RoundingMode.DOWN);
+
             return OrderInfoItemDto.builder()
                     .orderItemId(orderItem.getOrderItemId())
                     .productName(product.getProductName())
@@ -76,6 +89,8 @@ public class AdminOrderService {
                     .size(productItem.getSize())
                     .quantity(orderItem.getQuantity())
                     .price(orderItem.getPrice())
+                    .discountRate(rate)
+                    .discountPrice(discountedFinal)
                     .build();
         }).toList();
 

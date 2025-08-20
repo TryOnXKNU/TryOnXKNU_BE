@@ -17,4 +17,6 @@ public class OrderInfoItemDto {
     private Size size;
     private Integer quantity;
     private BigDecimal price;
+    private BigDecimal discountRate;
+    private BigDecimal discountPrice;
 }
