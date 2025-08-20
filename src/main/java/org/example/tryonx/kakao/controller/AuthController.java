@@ -41,11 +41,11 @@ public class AuthController {
         return authService.getKakaoUserInfo(authorizeCode);
     }
 
-//    @PostMapping("/api/v1/auth/kakao")
-//    public ResponseEntity<?> kakaoLogin(@RequestBody Map<String, String> body) {
-//        String accessToken = body.get("accessToken");
-//        log.info("[Kakao SDK Login] AccessToken: {}", accessToken);
-//        return authService.kakaoLoginWithSDK(accessToken);
-//    }
+    @PostMapping("/api/v1/auth/kakao")
+    public ResponseEntity<?> kakaoLogin(@RequestBody Map<String, String> body) {
+        String accessToken = body.get("accessToken");
+        log.info("[Kakao SDK Login] AccessToken: {}", accessToken);
+        return authService.kakaoLoginWithSDK(accessToken);
+    }
 
 }
