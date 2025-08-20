@@ -25,7 +25,8 @@ public class OrderPreviewResponseDto {
         private BigDecimal price;
         private Integer quantity;
         private Size size;
-        private String discountRate;
+        private BigDecimal discountRate;
+        private BigDecimal finalAmount;
         private String imageUrl;
         private Long cartItemId;
     }

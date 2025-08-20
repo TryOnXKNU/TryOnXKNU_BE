@@ -64,12 +64,24 @@ public class OrderPreviewService {
                             .map(img -> img.getImageUrl())
                             .orElse(null);
 
+                    BigDecimal price = product.getPrice();                // 정가
+                    BigDecimal rate = product.getDiscountRate();          // 예: 10  (퍼센트 숫자)
+                    BigDecimal qty  = BigDecimal.valueOf(reqItem.getQuantity());
+
+                    // 아이템별 할인적용 총액 = (가격 * (1 - rate/100)) * 수량
+                    BigDecimal itemFinalAmount =
+                            price.multiply(BigDecimal.ONE.subtract(rate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)))
+                                    .multiply(qty)
+                                    .setScale(0, RoundingMode.DOWN); // 원 단위 버림(원하는 정책으로 조정)
+
+
                     return new OrderPreviewResponseDto.Item(
                             product.getProductName(),
                             product.getPrice(),
                             reqItem.getQuantity(),
                             productItem.getSize(),
-                            product.getDiscountRate().toPlainString() + "%",
+                            product.getDiscountRate(),
+                            itemFinalAmount,
                             imageUrl,
                             reqItem.getCartItemId()
                     );
