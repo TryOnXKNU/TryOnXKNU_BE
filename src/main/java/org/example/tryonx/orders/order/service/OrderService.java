@@ -139,14 +139,17 @@ public class OrderService {
 
         // 2) 금액 계산
         BigDecimal totalAmount = orderItems.stream()
-                .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                .map(i -> nz(i.getPrice()).multiply(BigDecimal.valueOf(i.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal discountAmount = orderItems.stream()
-                .map(i -> i.getPrice()
-                        .multiply(i.getDiscountRate().divide(BigDecimal.valueOf(100)))
-                        .multiply(BigDecimal.valueOf(i.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(i -> {
+                    BigDecimal price = nz(i.getPrice());
+                    BigDecimal rate = percentToRate(i.getDiscountRate()); // 10 -> 0.10
+                    return price.multiply(rate).multiply(BigDecimal.valueOf(i.getQuantity()));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(0, RoundingMode.HALF_UP); // 정책에 맞게 반올림(선택)
 
         BigDecimal finalAmount = totalAmount.subtract(discountAmount);
 
@@ -229,8 +232,6 @@ public class OrderService {
         return savedOrder.getOrderId();
     }
 
-
-
     //orderNum 자동 생성
     private String generateOrderNum(Order order) {
         LocalDateTime orderedAt = order.getOrderedAt();
@@ -256,30 +257,21 @@ public class OrderService {
                                 ProductImage productImage = productImageRepository.findByProductAndIsThumbnailTrue(product)
                                         .orElseThrow(() -> new EntityNotFoundException("상품 이미지가 없습니다."));
 
-                                // 원가(정가)
                                 BigDecimal originalPrice = nz(product.getPrice());
+                                BigDecimal percent = nz(product.getDiscountRate());
 
-                                // 할인율(%), null 방지
-                                BigDecimal ratePercent = nz(product.getDiscountRate()); // 예: 10 => 10%
+                                BigDecimal discountedByRate = calcDiscountPrice(originalPrice, percent);
+                                BigDecimal itemPrice = nz(item.getPrice());
 
-                                // 할인율로 계산한 할인가
-                                BigDecimal discountedByRate = originalPrice.multiply(
-                                        BigDecimal.ONE.subtract(
-                                                ratePercent.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)
-                                        )
-                                ).setScale(0, RoundingMode.HALF_UP); // 정책에 맞게 자리수 조정
-
-                                // OrderItem.price (있다면)와 할인율 계산값 중 더 낮은 값을 최종 단가로
-                                BigDecimal itemPrice = nz(item.getPrice()); // 일부 시스템에선 정가가 들어있을 수 있음
                                 BigDecimal finalDiscountedUnitPrice;
-                                if (itemPrice.signum() > 0 && ratePercent.signum() > 0) {
-                                    // 둘 다 있을 땐 더 낮은 값
+                                if (itemPrice.signum() > 0 && percent.signum() > 0) {
                                     finalDiscountedUnitPrice = itemPrice.min(discountedByRate);
                                 } else if (itemPrice.signum() > 0) {
                                     finalDiscountedUnitPrice = itemPrice;
                                 } else {
-                                    finalDiscountedUnitPrice = (ratePercent.signum() > 0) ? discountedByRate : originalPrice;
+                                    finalDiscountedUnitPrice = (percent.signum() > 0) ? discountedByRate : originalPrice;
                                 }
+
 
                                 return OrderItemDto.builder()
                                         .orderItemId(item.getOrderItemId())
@@ -289,7 +281,7 @@ public class OrderService {
                                         .quantity(item.getQuantity())
                                         .imageUrl(productImage.getImageUrl())
                                         .price(originalPrice)                 // 원가
-                                        .discountRate(ratePercent)            // %
+                                        .discountRate(percent)            // %
                                         .discountPrice(finalDiscountedUnitPrice) // 최종 할인가(적용가)
                                         .build();
                             })
@@ -331,6 +323,27 @@ public class OrderService {
         return v == null ? BigDecimal.ZERO : v;
     }
 
+    // 숫자 % (예: 10) → 소수 (0.10)
+    private static BigDecimal percentToRate(BigDecimal percent) {
+        percent = nz(percent);
+        if (percent.signum() <= 0) return BigDecimal.ZERO;
+        return percent.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+    }
+
+    // 할인가 = price * (1 - rate)
+    private static BigDecimal calcDiscountPrice(BigDecimal price, BigDecimal percent) {
+        price = nz(price);
+        BigDecimal rate = percentToRate(percent);
+        if (rate.signum() <= 0) return price; // 할인 없음
+        return price.multiply(BigDecimal.ONE.subtract(rate))
+                .setScale(0, RoundingMode.HALF_UP); // 원단위 반올림
+    }
+
+    // "10%" 같은 표시용 문자열
+    private static String toPercentString(BigDecimal percent) {
+        percent = nz(percent);
+        return percent.stripTrailingZeros().toPlainString() + "%";
+    }
 
     public OrderDetailResponseDto getOrderDetail(Integer orderId) {
         Order order = orderRepository.findById(orderId)
@@ -346,13 +359,26 @@ public class OrderService {
             ProductItem productItem = orderItem.getProductItem();
             Product product = productItem.getProduct();
 
+            BigDecimal price = nz(orderItem.getPrice());
+            BigDecimal percent = nz(orderItem.getDiscountRate()); // 10 = 10%
+            BigDecimal discountPrice = calcDiscountPrice(price, percent); // 최종 적용가
+            String discountRateStr = toPercentString(percent);            // "10%"
+
+            String imgUrl = productImageRepository.findByProductAndIsThumbnailTrue(product)
+                    .map(ProductImage::getImageUrl)
+                    .orElseGet(() -> product.getImages().isEmpty()
+                            ? null
+                            : product.getImages().get(0).getImageUrl());
+
+
             return new OrderDetailResponseDto.Item(
                     product.getProductId(),
                     product.getProductName(),
                     orderItem.getPrice(),
                     orderItem.getQuantity(),
                     productItem.getSize(),
-                    orderItem.getDiscountRate().toPlainString(),
+                    percent,
+                    discountPrice,
                     productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl()
             );
         }).toList();

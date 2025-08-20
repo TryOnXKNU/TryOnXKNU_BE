@@ -36,7 +36,8 @@ public class OrderDetailResponseDto {
         private BigDecimal price;
         private Integer quantity;
         private Size size;
-        private String discountRate;
+        private BigDecimal discountRate;
+        private BigDecimal discountPrice;
         private String imgUrl;
     }
 }
