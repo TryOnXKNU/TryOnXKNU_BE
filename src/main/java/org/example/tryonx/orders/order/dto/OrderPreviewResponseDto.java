@@ -12,6 +12,7 @@ import java.util.List;
 public class OrderPreviewResponseDto {
     private MemberInfoDto memberInfo;
     private BigDecimal totalAmount;
+    private BigDecimal discountRate;
     private BigDecimal discountAmount;
     private BigDecimal finalAmount;
     private Integer expectedPoint;

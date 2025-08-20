@@ -16,6 +16,7 @@ import org.example.tryonx.product.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -102,6 +103,9 @@ public class OrderPreviewService {
         return new OrderPreviewResponseDto(
                 new MemberInfoDto(member.getName(), member.getPhoneNumber(), member.getAddress(), member.getPoint()),
                 totalAmount,
+                totalAmount.compareTo(BigDecimal.ZERO) == 0
+                        ? BigDecimal.ZERO
+                        : discountAmount.multiply(BigDecimal.valueOf(100)).divide(totalAmount, 2, RoundingMode.HALF_UP),
                 discountAmount,
                 finalAmount,
                 expectedPoint,
