@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ProductListResponseDto {
     private Integer productId;
     private String productName;
@@ -14,8 +15,8 @@ public class ProductListResponseDto {
     private Long likeCount;
     private Integer categoryId;
     private String thumbnailUrl;
-
     private BigDecimal discountRate;
+    private BigDecimal discountPrice;
     private Double averageRating;
     private Integer reviewCount;
 }

@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -229,36 +230,29 @@ public class ProductService {
         }
     }
 
+    private BigDecimal calcDiscountPrice(BigDecimal price, BigDecimal discountRate) {
+        if (price == null) return null;
+        if (discountRate == null) return price;
+
+        // DB에 10(%)로 저장된 경우 0.10으로 변환
+        BigDecimal rate = discountRate.compareTo(BigDecimal.ONE) > 0
+                ? discountRate.divide(BigDecimal.valueOf(100))
+                : discountRate;
+
+        return price.multiply(BigDecimal.ONE.subtract(rate))
+                .setScale(0, RoundingMode.HALF_UP); // 원 단위 반올림
+    }
+
     private List<ProductListResponseDto> getProductListResponseDto(List<Product> products) {
         return products.stream()
                 .map(product -> {
                     ProductImage image = productImageRepository.findByProductAndIsThumbnailTrue(product)
                             .orElseThrow(() -> new IllegalStateException("썸네일 이미지 혹은 상품이 없습니다."));
-                    BigDecimal discountRate = product.getDiscountRate();
 
-                    Double avg = reviewService.getAverageRatingByProductId(product.getProductId());
-                    Integer cnt = reviewService.getReviewCountByProductId(product.getProductId()
-                    );
-
-                    return new ProductListResponseDto(
-                            product.getProductId(),
-                            product.getProductName(),
-                            product.getPrice(),
-                            likeRepository.countByProduct(product),
-                            product.getCategory().getCategoryId(),
-                            image.getImageUrl(),
-                            discountRate,
-                            avg,
-                            cnt
-                    );
-                }).toList();
-    }
-    private List<ProductListResponseDto> getProductListResponseAvailabeDto(List<Product> products) {
-        return products.stream()
-                .map(product -> {
-                    ProductImage image = productImageRepository.findByProductAndIsThumbnailTrue(product)
-                            .orElseThrow(() -> new IllegalStateException("썸네일 이미지 혹은 상품이 없습니다."));
+                    BigDecimal price = product.getPrice();
                     BigDecimal discountRate = product.getDiscountRate();
+                    BigDecimal discountPrice = calcDiscountPrice(price, discountRate);
+
                     Double avg = reviewService.getAverageRatingByProductId(product.getProductId());
                     Integer cnt = reviewService.getReviewCountByProductId(product.getProductId());
 
@@ -270,11 +264,39 @@ public class ProductService {
                             product.getCategory().getCategoryId(),
                             image.getImageUrl(),
                             discountRate,
+                            discountPrice,
                             avg,
                             cnt
                     );
                 }).toList();
     }
+    private List<ProductListResponseDto> getProductListResponseAvailabeDto(List<Product> products) {
+        return products.stream()
+                .map(product -> {
+                    ProductImage image = productImageRepository.findByProductAndIsThumbnailTrue(product)
+                            .orElseThrow(() -> new IllegalStateException("썸네일 이미지 혹은 상품이 없습니다."));
+                    BigDecimal price = product.getPrice();
+                    BigDecimal discountRate = product.getDiscountRate();
+                    BigDecimal discountPrice = calcDiscountPrice(price, discountRate);
+
+                    Double avg = reviewService.getAverageRatingByProductId(product.getProductId());
+                    Integer cnt = reviewService.getReviewCountByProductId(product.getProductId());
+
+                    return new ProductListResponseDto(
+                            product.getProductId(),
+                            product.getProductName(),
+                            product.getPrice(),
+                            likeRepository.countByProduct(product),
+                            product.getCategory().getCategoryId(),
+                            image.getImageUrl(),
+                            discountRate,
+                            discountPrice,
+                            avg,
+                            cnt
+                    );
+                }).toList();
+    }
+
     @Transactional(readOnly = true)
     public List<ProductDto> getTopLikedProducts(int size) {
         return productRepository.findAllWithAnyAvailableItem().stream()
