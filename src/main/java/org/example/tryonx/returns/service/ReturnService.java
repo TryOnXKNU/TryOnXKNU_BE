@@ -21,6 +21,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -116,6 +117,7 @@ public class ReturnService {
         String rejectReason = returns.getStatus() == ReturnStatus.REJECTED
                 ? returns.getRejectReason()
                 : null;
+        BigDecimal discount = product.getPrice().multiply(product.getDiscountRate().divide(BigDecimal.valueOf(100)));
 
         return new ReturnDetailDto(
                 returns.getReturnId(),
@@ -130,7 +132,9 @@ public class ReturnService {
                 returns.getStatus().name(),
                 productName,
                 imageUrl,
-                rejectReason
+                rejectReason,
+                product.getDiscountRate(),
+                product.getPrice().subtract(discount)
         );
     }
 
@@ -179,7 +183,7 @@ public class ReturnService {
         String rejectReason = returns.getStatus() == ReturnStatus.REJECTED
                 ? returns.getRejectReason()
                 : null;
-
+        BigDecimal discount = product.getPrice().multiply(product.getDiscountRate().divide(BigDecimal.valueOf(100)));
         return new ReturnDetailDto(
                 returns.getReturnId(),
                 returns.getMember().getMemberId(),
@@ -193,7 +197,9 @@ public class ReturnService {
                 returns.getStatus().name(),
                 productName,
                 imageUrl,
-                rejectReason
+                rejectReason,
+                product.getDiscountRate(),
+                product.getPrice().subtract(discount)
         );
     }
 

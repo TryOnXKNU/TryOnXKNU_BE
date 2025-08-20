@@ -22,6 +22,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -199,7 +200,7 @@ public class ExchangeService {
         String imageUrl = (product != null && !product.getImages().isEmpty())
                 ? product.getImages().get(0).getImageUrl()
                 : null;
-
+        BigDecimal discount = product.getPrice().multiply(product.getDiscountRate().divide(BigDecimal.valueOf(100)));
         // 상태가 REJECTED일 때만 반려 사유 세팅
         String rejectReason = exchange.getStatus() == ExchangeStatus.REJECTED
                 ? exchange.getRejectReason()
@@ -218,7 +219,9 @@ public class ExchangeService {
                 exchange.getStatus().name(),
                 productName,
                 imageUrl,
-                rejectReason
+                rejectReason,
+                product.getDiscountRate(),
+                product.getPrice().min(discount)
         );
     }
     //교환 상세조회 (관리자용)
@@ -231,7 +234,7 @@ public class ExchangeService {
         String imageUrl = (product != null && !product.getImages().isEmpty())
                 ? product.getImages().get(0).getImageUrl()
                 : null;
-
+        BigDecimal discount = product.getPrice().multiply(product.getDiscountRate().divide(BigDecimal.valueOf(100)));
         String rejectReason = exchange.getStatus() == ExchangeStatus.REJECTED
                 ? exchange.getRejectReason()
                 : null;
@@ -249,7 +252,9 @@ public class ExchangeService {
                 exchange.getStatus().name(),
                 productName,
                 imageUrl,
-                rejectReason
+                rejectReason,
+                product.getDiscountRate(),
+                product.getPrice().subtract(discount)
         );
     }
 
