@@ -23,6 +23,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,7 +117,6 @@ public class MemberListService {
         return memberRepository.findAll(spec);
     }
 
-    /* 멤버별 문의내역 조회 */
     public List<MemberOrderHistory> getOrderHistoryByMember(Long memberId) {
         Member member = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("멤버 없음"));
@@ -126,7 +127,18 @@ public class MemberListService {
         for (Order order : orders) {
             for (OrderItem item : order.getOrderItems()) {
                 ProductItem productItem = item.getProductItem();
-                Product product = productItem.getProduct(); // 여기 주의
+                Product product = productItem.getProduct();
+
+                BigDecimal unitPrice = nz(product.getPrice());       // 단가
+                BigDecimal rate = nz(product.getDiscountRate());     // 할인율 (%)
+                BigDecimal qty = BigDecimal.valueOf(item.getQuantity());
+
+                // 할인 적용 후 최종가 = 단가 * (1 - 할인율/100) * 수량
+                BigDecimal discountedPrice = unitPrice
+                        .multiply(BigDecimal.ONE.subtract(rate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)))
+                        .multiply(qty)
+                        .setScale(0, RoundingMode.DOWN);
+
                 result.add(new MemberOrderHistory(
                         member.getProfileUrl(),
                         member.getName(),
@@ -135,14 +147,21 @@ public class MemberListService {
                         order.getOrderedAt(),
                         product.getProductId(),
                         product.getProductName(),
+                        item.getQuantity(),
                         product.getPrice(),
                         order.getStatus(),
-                        order.getDeliveryStatus()
+                        order.getDeliveryStatus(),
+                        rate,
+                        discountedPrice
                 ));
             }
         }
 
         return result;
+    }
+    // null-safe 유틸
+    private static BigDecimal nz(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
     }
 
     public long countNewMembers() {

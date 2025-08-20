@@ -20,7 +20,10 @@ public class MemberOrderHistory {
     private LocalDateTime orderedAt;
     private Integer productId;
     private String productName;
+    private Integer quantity;
     private BigDecimal price;
     private OrderStatus orderStatus;
     private DeliveryStatus deliveryStatus;
+    private BigDecimal discountRate;
+    private BigDecimal discountPrice;
 }
