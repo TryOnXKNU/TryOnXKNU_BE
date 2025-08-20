@@ -17,8 +17,8 @@ import java.util.List;
 public class SearchController {
     private final SearchService searchService;
 
-//    @GetMapping
-//    public List<ProductResponse> search(@ModelAttribute SearchDto searchDto) {
-//        return searchService.searchProducts(searchDto);
-//    }
+    @GetMapping
+    public List<ProductResponse> search(@ModelAttribute SearchDto searchDto) {
+        return searchService.searchProducts(searchDto);
+    }
 }
