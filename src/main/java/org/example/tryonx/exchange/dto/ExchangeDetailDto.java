@@ -26,4 +26,6 @@ public class ExchangeDetailDto {
     private String productName;
     private String productImageUrl;
     private String rejectReason;
+    private BigDecimal discountRate;
+    private BigDecimal discountPrice;
 }
