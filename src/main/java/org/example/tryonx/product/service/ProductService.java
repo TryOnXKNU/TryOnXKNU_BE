@@ -32,6 +32,7 @@ import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -49,6 +50,7 @@ public class ProductService {
     private final ReviewService reviewService;
     private final MemberRepository memberRepository;
 
+    @Transactional
     public Product createProduct(ProductCreateRequestDto dto, List<MultipartFile> images) {
         String middleCode;
         if(dto.getCategoryId() == 1)
@@ -70,6 +72,7 @@ public class ProductService {
                 .discountRate(dto.getDiscountRate())
                 .price(dto.getPrice())
                 .bodyShape(dto.getBodyShape())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         productRepository.save(product); // 여기서 productId 생성됨
@@ -267,7 +270,8 @@ public class ProductService {
                             discountRate,
                             discountPrice,
                             avg,
-                            cnt
+                            cnt,
+                            product.getCreatedAt()
                     );
                 }).toList();
     }
@@ -293,7 +297,8 @@ public class ProductService {
                             discountRate,
                             discountPrice,
                             avg,
-                            cnt
+                            cnt,
+                            product.getCreatedAt()
                     );
                 }).toList();
     }

@@ -3,6 +3,7 @@ package org.example.tryonx.product.dto;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -19,4 +20,5 @@ public class ProductListResponseDto {
     private BigDecimal discountPrice;
     private Double averageRating;
     private Integer reviewCount;
+    private LocalDateTime createdAt;
 }
