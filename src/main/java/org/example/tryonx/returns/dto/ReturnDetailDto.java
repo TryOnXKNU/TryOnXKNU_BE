@@ -17,6 +17,7 @@ public class ReturnDetailDto {
     private Long memberId;
     private Integer orderId;
     private Integer orderItemId;
+    private String orderNum;
     private BigDecimal price;
     private Integer quantity;
     private String reason;
