@@ -402,7 +402,8 @@ public class OrderService {
                 items,
                 items.size(),
                 payment.getCardName(),
-                order.getOrderedAt()
+                order.getOrderedAt(),
+                order.getDeliveryRequest()
         );
     }
 
