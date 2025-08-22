@@ -15,6 +15,7 @@ public class ExchangeListDto {
     private Long memberId;
     private Integer orderId;
     private Integer orderItemId;
+    private String orderNum;
     private LocalDateTime requestedAt;
     private String status;
     private BigDecimal price;

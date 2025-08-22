@@ -18,6 +18,7 @@ public class ExchangeDetailDto {
     private Long memberId;
     private Integer orderId;
     private Integer orderItemId;
+    private String orderNum;
     private BigDecimal price;
     private Size size;
     private Integer quantity;
