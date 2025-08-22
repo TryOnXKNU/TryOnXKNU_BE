@@ -32,7 +32,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
@@ -415,15 +417,79 @@ public class OrderService {
     }
 
 
+//    public BigDecimal getTodaySalesAmount() {
+//        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+//        LocalDateTime endOfDay = startOfDay.plusDays(1);
+//
+//        List<Order> todayOrders = orderRepository.findByOrderedAtBetween(startOfDay, endOfDay);
+//
+//        return todayOrders.stream()
+//                .map(Order::getFinalAmount)
+//                .reduce(BigDecimal.ZERO, BigDecimal::add);
+//    }
+
+    /** 오늘 매출 */
     public BigDecimal getTodaySalesAmount() {
-        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
-        LocalDateTime endOfDay = startOfDay.plusDays(1);
+        return getDailySalesAmount(LocalDate.now(), true);
+    }
 
-        List<Order> todayOrders = orderRepository.findByOrderedAtBetween(startOfDay, endOfDay);
+    /** 특정 일 매출 */
+    public BigDecimal getDailySalesAmount(LocalDate date) {
+        return getDailySalesAmount(date, true);
+    }
 
-        return todayOrders.stream()
+    /** 특정 월 매출 */
+    public BigDecimal getMonthlySalesAmount(YearMonth month) {
+        LocalDateTime start = month.atDay(1).atStartOfDay();
+        LocalDateTime end   = month.plusMonths(1).atDay(1).atStartOfDay();
+
+        List<Order> orders = usePaidOnly()
+                ? orderRepository.findByStatusAndOrderedAtBetween(paid(), start, end)
+                : orderRepository.findByOrderedAtBetween(start, end);
+
+        return sumFinalAmount(orders);
+    }
+
+    /** 전체 매출 */
+    public BigDecimal getTotalSalesAmount() {
+        List<Order> orders = usePaidOnly()
+                ? orderRepository.findByStatus(paid())
+                : orderRepository.findAll();
+
+        return sumFinalAmount(orders);
+    }
+
+    // ---- 내부 유틸 ----
+
+    private BigDecimal getDailySalesAmount(LocalDate date, boolean paidOnly) {
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end   = start.plusDays(1);
+
+        List<Order> orders = paidOnly && hasStatusSupport()
+                ? orderRepository.findByStatusAndOrderedAtBetween(paid(), start, end)
+                : orderRepository.findByOrderedAtBetween(start, end);
+
+        return sumFinalAmount(orders);
+    }
+
+    private BigDecimal sumFinalAmount(List<Order> orders) {
+        return orders.stream()
                 .map(Order::getFinalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    // ---- 설정 ----
+
+    private boolean usePaidOnly() {
+        return true; // 결제완료만 집계하려면 true
+    }
+
+    private boolean hasStatusSupport() {
+        return true; // Order.status 필드가 enum으로 존재하니까 true
+    }
+
+    private OrderStatus paid() {
+        return OrderStatus.PAID; // enum 상수 사용
     }
 
 }
