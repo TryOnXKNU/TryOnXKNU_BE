@@ -1,6 +1,7 @@
 package org.example.tryonx.exchange.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.example.tryonx.enums.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ public class ExchangeDetailDto {
     private Integer orderId;
     private Integer orderItemId;
     private BigDecimal price;
+    private Size size;
     private Integer quantity;
     private String reason;
     private LocalDateTime requestedAt;
