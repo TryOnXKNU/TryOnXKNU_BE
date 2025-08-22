@@ -63,4 +63,16 @@ where exists (
 order by p.createdAt desc
 """)
     List<Product> findAllWithAnyAvailableItem(Pageable pageable);
+
+    @Query("""
+        select p
+        from Product p
+        where p.bodyShape = :shape
+          and exists (
+            select 1 from ProductItem i
+            where i.product = p
+              and i.status = org.example.tryonx.enums.ProductStatus.AVAILABLE
+          )
+        """)
+    List<Product> findByBodyShapeWithAnyAvailableItem(@Param("shape") BodyShape shape);
 }

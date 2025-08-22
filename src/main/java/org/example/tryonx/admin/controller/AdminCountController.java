@@ -37,9 +37,11 @@ public class AdminCountController {
         long totalMemberCount = memberListService.countTotalMembers();
         long orderCount = orderService.countAllOrders();
         BigDecimal todaySalesAmount = orderService.getTodaySalesAmount();
+        BigDecimal monthSalesAmount  = orderService.getMonthlySalesAmount(java.time.YearMonth.now());
+        BigDecimal totalSalesAmount  = orderService.getTotalSalesAmount();
 
 
-        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount, askCount, newMemberCount, totalMemberCount, orderCount, todaySalesAmount);
+        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount, askCount, newMemberCount, totalMemberCount, orderCount, todaySalesAmount, monthSalesAmount, totalSalesAmount);
         return ResponseEntity.ok(dto);
     }
 

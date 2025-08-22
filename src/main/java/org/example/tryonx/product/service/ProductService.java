@@ -32,6 +32,7 @@ import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -318,15 +319,21 @@ public class ProductService {
         var member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("회원 없음"));
 
-        var shape = member.getBodyShape(); // null 가능
-        var pageable = PageRequest.of(0, size);
+        var shape = member.getBodyShape();
 
+        // 전체 후보 불러오기 (Pageable X)
         List<Product> products = (shape != null)
-                ? productRepository.findByBodyShapeWithAnyAvailableItem(shape, pageable)
-                : productRepository.findAllWithAnyAvailableItem(pageable);
+                ? productRepository.findByBodyShapeWithAnyAvailableItem(shape)
+                : productRepository.findAllWithAnyAvailableItem();
+
+        // 랜덤 섞고 size개만 추출
+        Collections.shuffle(products);
 
         return products.stream()
+                .limit(size)
                 .map(p -> ProductDto.of(p, likeRepository.countByProduct(p)))
                 .toList();
     }
+
+
 }
