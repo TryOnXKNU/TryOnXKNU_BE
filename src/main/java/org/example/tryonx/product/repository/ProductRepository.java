@@ -75,4 +75,5 @@ order by p.createdAt desc
           )
         """)
     List<Product> findByBodyShapeWithAnyAvailableItem(@Param("shape") BodyShape shape);
+    boolean existsByProductName(String productName);
 }

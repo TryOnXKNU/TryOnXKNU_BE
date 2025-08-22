@@ -21,7 +21,6 @@ import org.example.tryonx.product.repository.ProductItemRepository;
 import org.example.tryonx.product.repository.ProductRepository;
 import org.example.tryonx.review.dto.ProductReviewDto;
 import org.example.tryonx.review.service.ReviewService;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -52,6 +51,11 @@ public class ProductService {
 
     @Transactional
     public Product createProduct(ProductCreateRequestDto dto, List<MultipartFile> images) {
+
+        if (productRepository.existsByProductName(dto.getName())) {
+            throw new IllegalArgumentException("이미 존재하는 상품명입니다: " + dto.getName());
+        }
+
         String middleCode;
         if(dto.getCategoryId() == 1)
             middleCode = "top";
