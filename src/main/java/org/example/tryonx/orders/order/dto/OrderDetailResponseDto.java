@@ -27,6 +27,7 @@ public class OrderDetailResponseDto {
     private Integer orderItemsCount;
     private String paymentMethod;
     private LocalDateTime orderedAt;
+    private String deliveryRequest;
 
     @Getter
     @AllArgsConstructor
