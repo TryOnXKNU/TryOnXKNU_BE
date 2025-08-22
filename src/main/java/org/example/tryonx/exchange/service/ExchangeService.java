@@ -1,6 +1,7 @@
 package org.example.tryonx.exchange.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.example.tryonx.enums.Size;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.AfterServiceStatus;
 import org.example.tryonx.enums.ExchangeStatus;
@@ -196,10 +197,17 @@ public class ExchangeService {
         }
 
         Product product = exchange.getProduct();
+        OrderItem orderItem = exchange.getOrderItem();
+
         String productName = (product != null) ? product.getProductName() : null;
         String imageUrl = (product != null && !product.getImages().isEmpty())
                 ? product.getImages().get(0).getImageUrl()
                 : null;
+
+        Size purchasedSize = (orderItem != null && orderItem.getProductItem() != null)
+                ? orderItem.getProductItem().getSize()
+                : null;
+
         BigDecimal discount = product.getPrice().multiply(product.getDiscountRate().divide(BigDecimal.valueOf(100)));
         // 상태가 REJECTED일 때만 반려 사유 세팅
         String rejectReason = exchange.getStatus() == ExchangeStatus.REJECTED
@@ -212,6 +220,7 @@ public class ExchangeService {
                 exchange.getOrder().getOrderId(),
                 exchange.getOrderItem().getOrderItemId(),
                 exchange.getPrice(),
+                purchasedSize,
                 exchange.getQuantity(),
                 exchange.getReason(),
                 exchange.getExchange_requestedAt(),
@@ -230,6 +239,12 @@ public class ExchangeService {
                 .orElseThrow(() -> new EntityNotFoundException("교환 내역을 찾을 수 없습니다."));
 
         Product product = exchange.getProduct();
+        OrderItem orderItem = exchange.getOrderItem();
+
+        Size purchasedSize = (orderItem != null && orderItem.getProductItem() != null)
+                ? orderItem.getProductItem().getSize()
+                : null;
+
         String productName = (product != null) ? product.getProductName() : null;
         String imageUrl = (product != null && !product.getImages().isEmpty())
                 ? product.getImages().get(0).getImageUrl()
@@ -245,6 +260,7 @@ public class ExchangeService {
                 exchange.getOrder().getOrderId(),
                 exchange.getOrderItem().getOrderItemId(),
                 exchange.getPrice(),
+                purchasedSize,
                 exchange.getQuantity(),
                 exchange.getReason(),
                 exchange.getExchange_requestedAt(),
