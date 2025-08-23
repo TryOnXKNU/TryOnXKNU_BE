@@ -28,6 +28,9 @@ public class SmsService {
     @Value("${coolsms.apiSecret}")
     private String apiSecret;
 
+    @Value("${coolsms.number}")
+    private String number;
+
     private static final long EXPIRE_TIME = 3 * 60;
 
     @PostConstruct
@@ -43,7 +46,7 @@ public class SmsService {
 
     private void sendSms(String to, String code) {
         Message message = new Message();
-        message.setFrom("01036110873");
+        message.setFrom(number);
         message.setTo(to);
         message.setText("[TryOnX] 인증번호는 " + code + "입니다.");
 

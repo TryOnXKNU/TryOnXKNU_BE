@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.tryonx.enums.DeliveryStatus;
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.enums.OrderStatus;
 
@@ -28,6 +29,7 @@ public class OrderDetailResponseDto {
     private String paymentMethod;
     private LocalDateTime orderedAt;
     private String deliveryRequest;
+    private DeliveryStatus deliveryStatus;
 
     @Getter
     @AllArgsConstructor
