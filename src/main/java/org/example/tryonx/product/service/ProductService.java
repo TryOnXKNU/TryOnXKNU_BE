@@ -96,7 +96,7 @@ public class ProductService {
         if (images != null && !images.isEmpty()) {
             boolean isFirst = true;
             for (MultipartFile image : images) {
-                String filename = UUID.randomUUID() + "_" + image.getOriginalFilename();
+                String filename = image.getOriginalFilename();
                 Path savePath = Paths.get("upload/product").resolve(filename);
 
                 try {
