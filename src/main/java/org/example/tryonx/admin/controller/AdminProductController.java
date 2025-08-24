@@ -71,4 +71,10 @@ public class AdminProductController {
         adminProductService.deleteProductImage(image.imageUrl());
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/name")
+    public ResponseEntity<?> checkAvailableProductName(@RequestParam String productName) {
+        boolean value = adminProductService.checkProductNameDuplicate(productName);
+        return ResponseEntity.ok(value);
+    }
 }

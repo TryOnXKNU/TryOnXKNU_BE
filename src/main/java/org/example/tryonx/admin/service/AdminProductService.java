@@ -257,4 +257,8 @@ public class AdminProductService {
                     );
                 }).toList();
     }
+
+    public boolean checkProductNameDuplicate(String productName) {
+        return !productRepository.existsByProductName(productName);
+    }
 }
