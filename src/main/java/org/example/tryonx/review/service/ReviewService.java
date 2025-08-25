@@ -111,17 +111,17 @@ public class ReviewService {
         return true;
     }
 
-    public boolean delete(String email, Long reviewId) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Member not found"));
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
-        if(review.getMember().equals(member)) {
-            reviewRepository.delete(review);
-            return true;
-        }
-        return false;
-    }
+//    public boolean delete(String email, Long reviewId) {
+//        Member member = memberRepository.findByEmail(email)
+//                .orElseThrow(() -> new RuntimeException("Member not found"));
+//        Review review = reviewRepository.findById(reviewId)
+//                .orElseThrow(() -> new RuntimeException("Review not found"));
+//        if(review.getMember().equals(member)) {
+//            reviewRepository.delete(review);
+//            return true;
+//        }
+//        return false;
+//    }
 
     public List<ReviewResponseDto> getMyReviews(String email) {
         Member member = memberRepository.findByEmail(email)
