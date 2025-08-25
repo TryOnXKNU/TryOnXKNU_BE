@@ -210,7 +210,7 @@ public class ProductService {
                 .product(product)
                 .size(dto.getSize())
                 .stock(dto.getStock())
-                .status(ProductStatus.AVAILABLE)
+                .status(dto.getStatus())
                 .build();
 
         productItemRepository.save(item);
