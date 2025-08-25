@@ -32,13 +32,13 @@ public class ReviewController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("리뷰 작성 권한이 없습니다.");
     }
 
-    @DeleteMapping
-    public ResponseEntity<String> deleteReview(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ReviewDeleteRequest reviewDeleteRequest){
-        String email = userDetails.getUsername();
-        if(reviewService.delete(email, reviewDeleteRequest.reviewId()))
-            return ResponseEntity.ok("리뷰가 삭제되었습니다.");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("리뷰 삭제 실패");
-    }
+//    @DeleteMapping
+//    public ResponseEntity<String> deleteReview(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ReviewDeleteRequest reviewDeleteRequest){
+//        String email = userDetails.getUsername();
+//        if(reviewService.delete(email, reviewDeleteRequest.reviewId()))
+//            return ResponseEntity.ok("리뷰가 삭제되었습니다.");
+//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("리뷰 삭제 실패");
+//    }
 
     @GetMapping
     public ResponseEntity<List<ReviewResponseDto>> getMyReviews(@AuthenticationPrincipal UserDetails userDetails) {
