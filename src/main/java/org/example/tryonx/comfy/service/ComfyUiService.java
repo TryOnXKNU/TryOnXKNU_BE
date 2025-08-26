@@ -1,6 +1,7 @@
 package org.example.tryonx.comfy.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.fitting.domain.ProductFitting;
 import org.example.tryonx.fitting.repository.ProductFittingRepository;
 import org.example.tryonx.image.repository.ProductImageRepository;
@@ -22,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,27 +61,37 @@ public class ComfyUiService {
     public String executeFittingFlow(String email, Integer productid) throws IOException, InterruptedException {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
+
+        BodyShape memberBodyShape = member.getBodyShape();
+
+        String model = switch (memberBodyShape) {
+            case STRAIGHT -> "straight.png";
+            case WAVE -> "wave.png";
+            case NATURAL -> "natural.png";
+        };
+
         Product product = productRepository.findById(productid)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        String prompt = switch (product.getCategory().getCategoryId()){
+            case 1 -> "black t-shirt";
+            case 2 -> "pants";
+            case 3 -> "dress";
+            case 4 -> "black ";
+            default -> "clothes";
+        };
+
         String imgName = productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl();
         String prefix = "/upload/product/";
         String fileNameOnly = imgName.startsWith(prefix)
                 ? imgName.substring(prefix.length())
                 : imgName;
 
-//        BodyShape bodyShape;
-//        if(member.getBodyType() == 0)
-//            bodyShape = BodyShape.STRAIGHT;
-//        else if(member.getBodyType() == 1)
-//            bodyShape = BodyShape.NATURAL;
-//        else if(member.getBodyType() == 2)
-//            bodyShape = BodyShape.WAVE;
-//        else
-//            throw new RuntimeException();
 
-
-        String workflowJson = loadWorkflowFromResource("tryon_flow.json")
-                .replace("{{imageName}}", fileNameOnly);
+        String workflowJson = loadWorkflowFromResource("v2_one_person_one_clothes.json")
+                .replace("{{imageName}}", fileNameOnly)
+                .replace("{{modelImage}}", model)
+                .replace("{{prompt}}", prompt);
 
         // 1. 워크플로우 실행
         String promptId = sendWorkflow(workflowJson);
@@ -94,6 +106,74 @@ public class ComfyUiService {
         downloadImage(filename);
 
         return filename;
+    }
+
+    public String executeFittingTwoClothesFlow(String email, Integer productId1, Integer productId2) throws IOException, InterruptedException {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+        BodyShape memberBodyShape = member.getBodyShape();
+        String model = switch (memberBodyShape) {
+            case STRAIGHT -> "straight.png";
+            case WAVE -> "wave.png";
+            case NATURAL -> "natural.png";
+        };
+
+        Product product1 = productRepository.findById(productId1)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        Product product2 = productRepository.findById(productId2)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        String imgName1 = productImageRepository.findByProductAndIsThumbnailTrue(product1)
+                .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
+                .getImageUrl();
+        String imgName2 = productImageRepository.findByProductAndIsThumbnailTrue(product2)
+                .orElseThrow(() -> new RuntimeException("Thumbnail not found for product2"))
+                .getImageUrl();
+
+        String fileNameOnly1 = stripPrefix(imgName1, "/upload/product/");
+        String fileNameOnly2 = stripPrefix(imgName2, "/upload/product/");
+
+        String imageName1 = null;
+        String imageName2 = null;
+
+
+        if (product1.getCategory().getCategoryId() == 1) {
+            imageName1 = fileNameOnly1;
+        } else if (product1.getCategory().getCategoryId() == 2) {
+            imageName2 = fileNameOnly1;
+        }
+
+        if (product2.getCategory().getCategoryId() == 1) {
+            imageName1 = fileNameOnly2;
+        } else if (product2.getCategory().getCategoryId() == 2) {
+            imageName2 = fileNameOnly2;
+        }
+
+        // 워크플로우 JSON 생성
+        String workflowJson = loadWorkflowFromResource("v2_one_person_two_clothes.json")
+                .replace("{{modelImage}}", model)
+                .replace("{{imageName1}}", imageName1 != null ? imageName1 : "")
+                .replace("{{imageName2}}", imageName2 != null ? imageName2 : "");
+
+        // 1. 워크플로우 실행
+        String promptId = sendWorkflow(workflowJson);
+
+        // 2. 완료 대기
+        waitUntilComplete(promptId);
+
+        // 3. 이미지명 추출
+        List<String> generatedOutputImageFilenameList = getGeneratedOutputImageFilenameList(promptId);
+
+        // 4. 이미지 다운로드
+        String fileName = generatedOutputImageFilenameList.get(0);
+        downloadImage(fileName);
+
+        return fileName;
+    }
+
+
+    private String stripPrefix(String fileName, String prefix) {
+        return fileName.startsWith(prefix) ? fileName.substring(prefix.length()) : fileName;
     }
 
     private String loadWorkflowFromResource(String filename) throws IOException {
@@ -182,6 +262,37 @@ public class ComfyUiService {
 
         throw new RuntimeException(" 출력용 이미지(type: output)가 없습니다.");
     }
+
+    private List<String> getGeneratedOutputImageFilenameList(String promptId) {
+        String url = baseUrl + "/history/" + promptId;
+        ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+        Map<?, ?> promptData = (Map<?, ?>) response.getBody().get(promptId);
+
+        if (promptData == null || !promptData.containsKey("outputs")) {
+            throw new RuntimeException("prompt_id에 대한 출력 결과가 존재하지 않습니다.");
+        }
+
+        Map<?, ?> outputs = (Map<?, ?>) promptData.get("outputs");
+        List<String> filenames = new ArrayList<>();
+
+        for (Object outputNode : outputs.values()) {
+            Map<?, ?> output = (Map<?, ?>) outputNode;
+            if (!output.containsKey("images")) continue;
+
+            List<?> images = (List<?>) output.get("images");
+            for (Object imgObj : images) {
+                Map<?, ?> image = (Map<?, ?>) imgObj;
+                String type = image.get("type").toString();
+                String filename = image.get("filename").toString();
+
+                if ("output".equalsIgnoreCase(type) && filename != null && !filename.isBlank()) {
+                    filenames.add(filename);
+                }
+            }
+        }
+        return filenames;
+    }
+
 
     private void downloadImage(String filename) throws IOException, InterruptedException {
         if (filename == null || filename.isBlank()) {
