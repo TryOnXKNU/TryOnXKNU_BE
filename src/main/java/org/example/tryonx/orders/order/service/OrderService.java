@@ -461,6 +461,18 @@ public class OrderService {
         return sumFinalAmount(orders);
     }
 
+    /** 특정 연 매출 */
+    public BigDecimal getYearlySalesAmount(int year) {
+        LocalDateTime start = LocalDate.of(year, 1, 1).atStartOfDay();
+        LocalDateTime end   = LocalDate.of(year + 1, 1, 1).atStartOfDay();
+
+        List<Order> orders = usePaidOnly()
+                ? orderRepository.findByStatusAndOrderedAtBetween(paid(), start, end)
+                : orderRepository.findByOrderedAtBetween(start, end);
+
+        return sumFinalAmount(orders);
+    }
+
     // ---- 내부 유틸 ----
 
     private BigDecimal getDailySalesAmount(LocalDate date, boolean paidOnly) {
