@@ -1,6 +1,7 @@
 package org.example.tryonx.admin.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.admin.dto.SalesDto;
 import org.example.tryonx.admin.dto.TotalCountsDto;
 import org.example.tryonx.admin.service.MemberListService;
 import org.example.tryonx.ask.service.AskService;
@@ -37,12 +38,26 @@ public class AdminCountController {
         long totalMemberCount = memberListService.countTotalMembers();
         long orderCount = orderService.countAllOrders();
         BigDecimal todaySalesAmount = orderService.getTodaySalesAmount();
-        BigDecimal monthSalesAmount  = orderService.getMonthlySalesAmount(java.time.YearMonth.now());
-        BigDecimal totalSalesAmount  = orderService.getTotalSalesAmount();
 
 
-        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount, askCount, newMemberCount, totalMemberCount, orderCount, todaySalesAmount, monthSalesAmount, totalSalesAmount);
+        TotalCountsDto dto = new TotalCountsDto(exchangeCount, returnCount, askCount, newMemberCount, totalMemberCount, orderCount, todaySalesAmount);
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping("/sales-counts")
+    public ResponseEntity<SalesDto> getSalesCounts() {
+        BigDecimal todaySalesAmount = orderService.getTodaySalesAmount();
+        BigDecimal monthSalesAmount  = orderService.getMonthlySalesAmount(java.time.YearMonth.now());
+        BigDecimal yearSalesAmount   = orderService.getYearlySalesAmount(java.time.Year.now().getValue());
+        BigDecimal totalSalesAmount  = orderService.getTotalSalesAmount();
+
+        SalesDto dto = new SalesDto(
+                todaySalesAmount,
+                monthSalesAmount,
+                yearSalesAmount,
+                totalSalesAmount
+        );
+
+        return ResponseEntity.ok(dto);
+    }
 }

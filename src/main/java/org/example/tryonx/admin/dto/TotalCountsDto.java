@@ -19,18 +19,4 @@ public class TotalCountsDto {
     private long totalMemberCount;
     private long orderTotalCount;
     private BigDecimal todaySalesAmount;
-    private BigDecimal monthSalesAmount;
-    private BigDecimal totalSalesAmount;
-
-    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-    public static class DailySalesDto {
-        private LocalDate date;
-        private BigDecimal amount;        // 일 매출
-    }
-
-    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-    public static class MonthlySalesDto {
-        private YearMonth month;
-        private BigDecimal amount;        // 월 매출
-    }
 }
