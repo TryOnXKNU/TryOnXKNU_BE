@@ -204,13 +204,20 @@ public class ProductService {
     }
 
     private void createProductItem(Product product, ProductItemInfoDto dto) {
-        if (dto.getStock() == null || dto.getStock() <= 0) return;
+        if (dto.getStock() == null) return;
+        ProductStatus productStatus = null;
+
+        if(dto.getStock() > 0) {
+            productStatus = ProductStatus.AVAILABLE;
+        }else if(dto.getStock() == 0){
+            productStatus = ProductStatus.HIDDEN;
+        }
 
         ProductItem item = ProductItem.builder()
                 .product(product)
                 .size(dto.getSize())
                 .stock(dto.getStock())
-                .status(ProductStatus.AVAILABLE)
+                .status(productStatus)
                 .build();
 
         productItemRepository.save(item);
@@ -343,6 +350,4 @@ public class ProductService {
                 .map(p -> ProductDto.of(p, likeRepository.countByProduct(p)))
                 .toList();
     }
-
-
 }

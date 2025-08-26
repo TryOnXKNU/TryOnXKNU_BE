@@ -19,6 +19,5 @@ public class ProductCreateRequestDto {
     private List<ProductItemInfoDto> productItemInfoDtos;
     private BigDecimal discountRate;
     private Integer categoryId;
-    private ProductStatus status;
     private BodyShape bodyShape;
 }
