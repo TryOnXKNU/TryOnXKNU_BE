@@ -7,6 +7,7 @@ import net.nurigo.sdk.message.model.Message;
 import net.nurigo.sdk.message.request.SingleMessageSendingRequest;
 import net.nurigo.sdk.message.response.SingleMessageSentResponse;
 import net.nurigo.sdk.message.service.DefaultMessageService;
+import org.example.tryonx.member.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class SmsService {
 
     private final StringRedisTemplate redisTemplate;
+    private final MemberRepository memberRepository;
 
     private DefaultMessageService messageService;
 
@@ -38,10 +40,15 @@ public class SmsService {
         this.messageService = NurigoApp.INSTANCE.initialize(apiKey, apiSecret, "https://api.coolsms.co.kr");
     }
 
-    public void sendAuthCode(String phoneNumber) {
-        String code = generateCode();
-        saveCodeToRedis(phoneNumber, code);
-        sendSms(phoneNumber, code);
+    public boolean sendAuthCode(String phoneNumber) {
+        if(memberRepository.findByPhoneNumber(phoneNumber).isPresent()) {
+            return false;
+        }else {
+            String code = generateCode();
+            saveCodeToRedis(phoneNumber, code);
+            sendSms(phoneNumber, code);
+            return true;
+        }
     }
 
     private void sendSms(String to, String code) {
