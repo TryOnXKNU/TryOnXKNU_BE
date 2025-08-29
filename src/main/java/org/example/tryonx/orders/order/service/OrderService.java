@@ -358,6 +358,12 @@ public class OrderService {
         BigDecimal finalAmount = order.getFinalAmount();
         List<OrderItem> orderedItems = orderItemRepository.findByOrder(order);
 
+        String paymentMethod = null;
+        if(payment.getPgProvider().equals("kakaopay"))
+            paymentMethod = "kakaopay";
+        else if(payment.getPgProvider().equals("nice_v2"))
+            paymentMethod = payment.getCardName();
+
         List<OrderDetailResponseDto.Item> items = orderedItems.stream().map(orderItem -> {
             ProductItem productItem = orderItem.getProductItem();
             Product product = productItem.getProduct();
@@ -402,7 +408,7 @@ public class OrderService {
                 order.getUsedPoints(),
                 items,
                 items.size(),
-                payment.getCardName(),
+                paymentMethod,
                 order.getOrderedAt(),
                 order.getDeliveryRequest(),
                 order.getDeliveryStatus()
