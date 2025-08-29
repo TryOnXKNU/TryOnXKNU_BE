@@ -260,7 +260,8 @@ public class OrderService {
                                         .orElseThrow(() -> new EntityNotFoundException("상품 이미지가 없습니다."));
 
                                 BigDecimal originalPrice = nz(product.getPrice());
-                                BigDecimal percent = nz(product.getDiscountRate());
+//                                BigDecimal percent = nz(product.getDiscountRate());
+                                BigDecimal percent = nz(item.getDiscountRate());
 
                                 BigDecimal discountedByRate = calcDiscountPrice(originalPrice, percent);
                                 BigDecimal itemPrice = nz(item.getPrice());
