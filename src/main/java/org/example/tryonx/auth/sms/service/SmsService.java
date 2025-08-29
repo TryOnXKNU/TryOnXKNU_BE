@@ -51,6 +51,16 @@ public class SmsService {
         }
     }
 
+    public boolean sendAuthCodeForFindId(String phoneNumber) {
+        if(memberRepository.findByPhoneNumber(phoneNumber).isPresent()) {
+            String code = generateCode();
+            saveCodeToRedis(phoneNumber, code);
+            sendSms(phoneNumber, code);
+            return true;
+        }else
+            return false;
+    }
+
     private void sendSms(String to, String code) {
         Message message = new Message();
         message.setFrom(number);

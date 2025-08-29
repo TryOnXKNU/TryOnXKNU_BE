@@ -46,6 +46,7 @@ public class SecurityConfigs {
                         "/api/v1/auth/email/send",
                         "/api/v1/auth/email/verify",
                         "/api/v1/auth/sms/send",
+                                "/api/v1/auth/sms/send/id",
                         "/api/v1/auth/sms/verify",
                         "/api/v1/auth/find-id",
                         "/api/v1/auth/duplicate-nickname",
