@@ -18,11 +18,23 @@ public class SmsAuthController {
      * 수신자 번호 (010xxxxxxxx 형식)
      */
     @PostMapping("/send")
-    public ResponseEntity<String> sendCode(@RequestParam String phoneNumber) {
+    public ResponseEntity<String> sendCodeForSignup(@RequestParam String phoneNumber) {
         try {
             if(smsService.sendAuthCode(phoneNumber))
                 return ResponseEntity.ok("문자 인증번호가 전송되었습니다.");
             return ResponseEntity.badRequest().body("중복된 휴대폰 번호입니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("인증번호 전송 실패: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/send/id")
+    public ResponseEntity<String> sendCodeForFindId(@RequestParam String phoneNumber) {
+        try {
+            if(smsService.sendAuthCodeForFindId(phoneNumber))
+                return ResponseEntity.ok("문자 인증번호가 전송되었습니다.");
+            return ResponseEntity.badRequest().body("해당 휴대폰 번호의 사용자가 없습니다.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("인증번호 전송 실패: " + e.getMessage());
