@@ -20,8 +20,9 @@ public class SmsAuthController {
     @PostMapping("/send")
     public ResponseEntity<String> sendCode(@RequestParam String phoneNumber) {
         try {
-            smsService.sendAuthCode(phoneNumber);
-            return ResponseEntity.ok("문자 인증번호가 전송되었습니다.");
+            if(smsService.sendAuthCode(phoneNumber))
+                return ResponseEntity.ok("문자 인증번호가 전송되었습니다.");
+            return ResponseEntity.badRequest().body("중복된 휴대폰 번호입니다.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("인증번호 전송 실패: " + e.getMessage());
