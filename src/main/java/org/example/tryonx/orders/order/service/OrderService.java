@@ -360,7 +360,7 @@ public class OrderService {
 
         String paymentMethod = null;
         if(payment.getPgProvider().equals("kakaopay"))
-            paymentMethod = "kakaopay";
+            paymentMethod = "카카오페이";
         else if(payment.getPgProvider().equals("nice_v2"))
             paymentMethod = payment.getCardName();
 
