@@ -1,0 +1,2176 @@
+{
+  "prompt": {
+    "1": {
+      "inputs": {
+        "images": [
+          "14",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "2": {
+      "inputs": {
+        "images": [
+          "4",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "3": {
+      "inputs": {
+        "images": [
+          "16",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "4": {
+      "inputs": {
+        "width": [
+          "16",
+          1
+        ],
+        "height": [
+          "16",
+          2
+        ],
+        "interpolation": "lanczos",
+        "method": "fill / crop",
+        "condition": "always",
+        "multiple_of": 0,
+        "image": [
+          "40",
+          0
+        ]
+      },
+      "class_type": "ImageResize+",
+      "_meta": {
+        "title": "🔧 Image Resize"
+      }
+    },
+    "5": {
+      "inputs": {
+        "mask": [
+          "26",
+          0
+        ]
+      },
+      "class_type": "MaskToImage",
+      "_meta": {
+        "title": "마스크를 이미지로 변환"
+      }
+    },
+    "6": {
+      "inputs": {
+        "width": [
+          "16",
+          1
+        ],
+        "height": [
+          "16",
+          2
+        ],
+        "red": 0,
+        "green": 0,
+        "blue": 0
+      },
+      "class_type": "Image Blank",
+      "_meta": {
+        "title": "Image Blank"
+      }
+    },
+    "7": {
+      "inputs": {
+        "direction": "right",
+        "match_image_size": true,
+        "image1": [
+          "6",
+          0
+        ],
+        "image2": [
+          "5",
+          0
+        ]
+      },
+      "class_type": "ImageConcanate",
+      "_meta": {
+        "title": "Image Concatenate"
+      }
+    },
+    "8": {
+      "inputs": {
+        "mask": [
+          "26",
+          0
+        ]
+      },
+      "class_type": "MaskPreview+",
+      "_meta": {
+        "title": "🔧 Mask Preview"
+      }
+    },
+    "9": {
+      "inputs": {
+        "guidance": 50,
+        "conditioning": [
+          "11",
+          0
+        ]
+      },
+      "class_type": "FluxGuidance",
+      "_meta": {
+        "title": "FLUX 가이드"
+      }
+    },
+    "10": {
+      "inputs": {
+        "crop": "center",
+        "clip_vision": [
+          "35",
+          0
+        ],
+        "image": [
+          "40",
+          0
+        ]
+      },
+      "class_type": "CLIPVisionEncode",
+      "_meta": {
+        "title": "CLIP_VISION 인코딩"
+      }
+    },
+    "11": {
+      "inputs": {
+        "strength": 1,
+        "strength_type": "multiply",
+        "conditioning": [
+          "15",
+          0
+        ],
+        "style_model": [
+          "39",
+          0
+        ],
+        "clip_vision_output": [
+          "10",
+          0
+        ]
+      },
+      "class_type": "StyleModelApply",
+      "_meta": {
+        "title": "스타일 모델 적용"
+      }
+    },
+    "12": {
+      "inputs": {
+        "channel": "red",
+        "image": [
+          "7",
+          0
+        ]
+      },
+      "class_type": "ImageToMask",
+      "_meta": {
+        "title": "이미지를 마스크로 변환"
+      }
+    },
+    "13": {
+      "inputs": {
+        "width": [
+          "26",
+          6
+        ],
+        "height": [
+          "26",
+          7
+        ],
+        "interpolation": "lanczos",
+        "method": "keep proportion",
+        "condition": "always",
+        "multiple_of": 0,
+        "image": [
+          "21",
+          0
+        ]
+      },
+      "class_type": "ImageResize+",
+      "_meta": {
+        "title": "🔧 Image Resize"
+      }
+    },
+    "14": {
+      "inputs": {
+        "width": [
+          "26",
+          6
+        ],
+        "height": [
+          "26",
+          7
+        ],
+        "position": "top-left",
+        "x_offset": [
+          "26",
+          3
+        ],
+        "y_offset": [
+          "26",
+          2
+        ],
+        "image": [
+          "44",
+          0
+        ]
+      },
+      "class_type": "ImageCrop+",
+      "_meta": {
+        "title": "🔧 Image Crop"
+      }
+    },
+    "15": {
+      "inputs": {
+        "noise_mask": true,
+        "positive": [
+          "18",
+          0
+        ],
+        "negative": [
+          "19",
+          0
+        ],
+        "vae": [
+          "36",
+          0
+        ],
+        "pixels": [
+          "17",
+          0
+        ],
+        "mask": [
+          "28",
+          0
+        ]
+      },
+      "class_type": "InpaintModelConditioning",
+      "_meta": {
+        "title": "인페인팅 모델 조건 설정"
+      }
+    },
+    "16": {
+      "inputs": {
+        "width": 768,
+        "height": 0,
+        "interpolation": "lanczos",
+        "method": "keep proportion",
+        "condition": "always",
+        "multiple_of": 0,
+        "image": [
+          "14",
+          0
+        ]
+      },
+      "class_type": "ImageResize+",
+      "_meta": {
+        "title": "🔧 Image Resize"
+      }
+    },
+    "17": {
+      "inputs": {
+        "direction": "right",
+        "match_image_size": true,
+        "image1": [
+          "4",
+          0
+        ],
+        "image2": [
+          "16",
+          0
+        ]
+      },
+      "class_type": "ImageConcanate",
+      "_meta": {
+        "title": "Image Concatenate"
+      }
+    },
+    "18": {
+      "inputs": {
+        "text": "",
+        "clip": [
+          "38",
+          0
+        ]
+      },
+      "class_type": "CLIPTextEncode",
+      "_meta": {
+        "title": "CLIP 텍스트 인코딩 (프롬프트)"
+      }
+    },
+    "19": {
+      "inputs": {
+        "conditioning": [
+          "18",
+          0
+        ]
+      },
+      "class_type": "ConditioningZeroOut",
+      "_meta": {
+        "title": "조건 (0으로 출력)"
+      }
+    },
+    "20": {
+      "inputs": {
+        "seed": [
+          "25",
+          0
+        ],
+        "steps": 20,
+        "cfg": 1,
+        "sampler_name": "euler",
+        "scheduler": "normal",
+        "denoise": 1,
+        "model": [
+          "37",
+          0
+        ],
+        "positive": [
+          "9",
+          0
+        ],
+        "negative": [
+          "15",
+          1
+        ],
+        "latent_image": [
+          "15",
+          2
+        ]
+      },
+      "class_type": "KSampler",
+      "_meta": {
+        "title": "KSampler"
+      }
+    },
+    "21": {
+      "inputs": {
+        "width": [
+          "16",
+          1
+        ],
+        "height": [
+          "16",
+          2
+        ],
+        "position": "top-right",
+        "x_offset": 0,
+        "y_offset": 0,
+        "image": [
+          "30",
+          0
+        ]
+      },
+      "class_type": "ImageCrop+",
+      "_meta": {
+        "title": "🔧 Image Crop"
+      }
+    },
+    "22": {
+      "inputs": {
+        "images": [
+          "17",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "23": {
+      "inputs": {
+        "mask": [
+          "28",
+          0
+        ]
+      },
+      "class_type": "MaskPreview+",
+      "_meta": {
+        "title": "🔧 Mask Preview"
+      }
+    },
+    "24": {
+      "inputs": {
+        "images": [
+          "21",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "25": {
+      "inputs": {
+        "seed": 989107267427890
+      },
+      "class_type": "Seed (rgthree)",
+      "_meta": {
+        "title": "Seed (rgthree)"
+      }
+    },
+    "26": {
+      "inputs": {
+        "padding": 80,
+        "region_type": "dominant",
+        "mask": [
+          "46",
+          1
+        ]
+      },
+      "class_type": "Mask Crop Region",
+      "_meta": {
+        "title": "Mask Crop Region"
+      }
+    },
+    "27": {
+      "inputs": {
+        "expand": 3,
+        "incremental_expandrate": 0,
+        "tapered_corners": true,
+        "flip_input": false,
+        "blur_radius": 3,
+        "lerp_alpha": 1,
+        "decay_factor": 1,
+        "fill_holes": false,
+        "mask": [
+          "26",
+          0
+        ]
+      },
+      "class_type": "GrowMaskWithBlur",
+      "_meta": {
+        "title": "Grow Mask With Blur"
+      }
+    },
+    "28": {
+      "inputs": {
+        "expand": 6,
+        "incremental_expandrate": 0,
+        "tapered_corners": true,
+        "flip_input": false,
+        "blur_radius": 3,
+        "lerp_alpha": 1,
+        "decay_factor": 1,
+        "fill_holes": false,
+        "mask": [
+          "12",
+          0
+        ]
+      },
+      "class_type": "GrowMaskWithBlur",
+      "_meta": {
+        "title": "Grow Mask With Blur"
+      }
+    },
+    "29": {
+      "inputs": {
+        "rgthree_comparer": {
+          "images": [
+            {
+              "name": "A",
+              "selected": true,
+              "url": "/api/view?filename=rgthree.compare._temp_hdukp_00001_.png&type=temp&subfolder=&rand=0.31165941803601427"
+            },
+            {
+              "name": "B",
+              "selected": true,
+              "url": "/api/view?filename=rgthree.compare._temp_hdukp_00002_.png&type=temp&subfolder=&rand=0.2408352056324412"
+            }
+          ]
+        },
+        "image_a": [
+          "44",
+          0
+        ],
+        "image_b": [
+          "32",
+          0
+        ]
+      },
+      "class_type": "Image Comparer (rgthree)",
+      "_meta": {
+        "title": "Image Comparer (rgthree)"
+      }
+    },
+    "30": {
+      "inputs": {
+        "samples": [
+          "20",
+          0
+        ],
+        "vae": [
+          "36",
+          0
+        ]
+      },
+      "class_type": "VAEDecode",
+      "_meta": {
+        "title": "VAE 디코드"
+      }
+    },
+    "31": {
+      "inputs": {
+        "images": [
+          "30",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "32": {
+      "inputs": {
+        "x": [
+          "26",
+          3
+        ],
+        "y": [
+          "26",
+          2
+        ],
+        "resize_source": false,
+        "destination": [
+          "44",
+          0
+        ],
+        "source": [
+          "13",
+          0
+        ],
+        "mask": [
+          "27",
+          0
+        ]
+      },
+      "class_type": "ImageCompositeMasked",
+      "_meta": {
+        "title": "마스크된 이미지 합성"
+      }
+    },
+    "33": {
+      "inputs": {
+        "images": [
+          "32",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "34": {
+      "inputs": {
+        "filename_prefix": "TRYONX_A",
+        "images": [
+          "32",
+          0
+        ]
+      },
+      "class_type": "SaveImage",
+      "_meta": {
+        "title": "이미지 저장"
+      }
+    },
+    "35": {
+      "inputs": {
+        "clip_name": "sigclip_vision_patch14_384.safetensors"
+      },
+      "class_type": "CLIPVisionLoader",
+      "_meta": {
+        "title": "CLIP_VISION 로드"
+      }
+    },
+    "36": {
+      "inputs": {
+        "vae_name": "vae_flux.safetensors"
+      },
+      "class_type": "VAELoader",
+      "_meta": {
+        "title": "VAE 로드"
+      }
+    },
+    "37": {
+      "inputs": {
+        "unet_name": "flux1-fill-dev-fp8.safetensors",
+        "weight_dtype": "default"
+      },
+      "class_type": "UNETLoader",
+      "_meta": {
+        "title": "확산 모델 로드"
+      }
+    },
+    "38": {
+      "inputs": {
+        "clip_name1": "ViT-L-14-TEXT-detail-improved-hiT-GmP-HF.safetensors",
+        "clip_name2": "t5xxl_fp8_e4m3fn.safetensors",
+        "type": "flux",
+        "device": "default"
+      },
+      "class_type": "DualCLIPLoader",
+      "_meta": {
+        "title": "이중 CLIP 로드"
+      }
+    },
+    "39": {
+      "inputs": {
+        "style_model_name": "flux1-redux-dev.safetensors"
+      },
+      "class_type": "StyleModelLoader",
+      "_meta": {
+        "title": "스타일 모델 로드"
+      }
+    },
+    "40": {
+      "inputs": {
+        "image": "{{imageName}}"
+      },
+      "class_type": "LoadImage",
+      "_meta": {
+        "title": "이미지 로드"
+      }
+    },
+    "41": {
+      "inputs": {
+        "model_name": "sam_vit_h (2.56GB)"
+      },
+      "class_type": "SAMModelLoader (segment anything)",
+      "_meta": {
+        "title": "SAMModelLoader (segment anything)"
+      }
+    },
+    "42": {
+      "inputs": {
+        "mask": [
+          "46",
+          1
+        ]
+      },
+      "class_type": "MaskPreview+",
+      "_meta": {
+        "title": "🔧 Mask Preview"
+      }
+    },
+    "43": {
+      "inputs": {
+        "model_name": "GroundingDINO_SwinT_OGC (694MB)"
+      },
+      "class_type": "GroundingDinoModelLoader (segment anything)",
+      "_meta": {
+        "title": "GroundingDinoModelLoader (segment anything)"
+      }
+    },
+    "44": {
+      "inputs": {
+        "image": "KakaoTalk_Photo_2025-08-31-21-16-09 001.png"
+      },
+      "class_type": "LoadImage",
+      "_meta": {
+        "title": "이미지 로드"
+      }
+    },
+    "45": {
+      "inputs": {
+        "images": [
+          "46",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "46": {
+      "inputs": {
+        "prompt": "t-shirts",
+        "threshold": 0.3,
+        "sam_model": [
+          "41",
+          0
+        ],
+        "grounding_dino_model": [
+          "43",
+          0
+        ],
+        "image": [
+          "44",
+          0
+        ]
+      },
+      "class_type": "GroundingDinoSAMSegment (segment anything)",
+      "_meta": {
+        "title": "GroundingDinoSAMSegment (segment anything)"
+      }
+    },
+    "47": {
+      "inputs": {
+        "images": [
+          "60",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "48": {
+      "inputs": {
+        "images": [
+          "50",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "49": {
+      "inputs": {
+        "images": [
+          "62",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "50": {
+      "inputs": {
+        "width": [
+          "62",
+          1
+        ],
+        "height": [
+          "62",
+          2
+        ],
+        "interpolation": "lanczos",
+        "method": "fill / crop",
+        "condition": "always",
+        "multiple_of": 0,
+        "image": [
+          "86",
+          0
+        ]
+      },
+      "class_type": "ImageResize+",
+      "_meta": {
+        "title": "🔧 Image Resize"
+      }
+    },
+    "51": {
+      "inputs": {
+        "mask": [
+          "72",
+          0
+        ]
+      },
+      "class_type": "MaskToImage",
+      "_meta": {
+        "title": "마스크를 이미지로 변환"
+      }
+    },
+    "52": {
+      "inputs": {
+        "width": [
+          "62",
+          1
+        ],
+        "height": [
+          "62",
+          2
+        ],
+        "red": 0,
+        "green": 0,
+        "blue": 0
+      },
+      "class_type": "Image Blank",
+      "_meta": {
+        "title": "Image Blank"
+      }
+    },
+    "53": {
+      "inputs": {
+        "direction": "right",
+        "match_image_size": true,
+        "image1": [
+          "52",
+          0
+        ],
+        "image2": [
+          "51",
+          0
+        ]
+      },
+      "class_type": "ImageConcanate",
+      "_meta": {
+        "title": "Image Concatenate"
+      }
+    },
+    "54": {
+      "inputs": {
+        "mask": [
+          "72",
+          0
+        ]
+      },
+      "class_type": "MaskPreview+",
+      "_meta": {
+        "title": "🔧 Mask Preview"
+      }
+    },
+    "55": {
+      "inputs": {
+        "guidance": 50,
+        "conditioning": [
+          "57",
+          0
+        ]
+      },
+      "class_type": "FluxGuidance",
+      "_meta": {
+        "title": "FLUX 가이드"
+      }
+    },
+    "56": {
+      "inputs": {
+        "crop": "center",
+        "clip_vision": [
+          "81",
+          0
+        ],
+        "image": [
+          "86",
+          0
+        ]
+      },
+      "class_type": "CLIPVisionEncode",
+      "_meta": {
+        "title": "CLIP_VISION 인코딩"
+      }
+    },
+    "57": {
+      "inputs": {
+        "strength": 1,
+        "strength_type": "multiply",
+        "conditioning": [
+          "61",
+          0
+        ],
+        "style_model": [
+          "85",
+          0
+        ],
+        "clip_vision_output": [
+          "56",
+          0
+        ]
+      },
+      "class_type": "StyleModelApply",
+      "_meta": {
+        "title": "스타일 모델 적용"
+      }
+    },
+    "58": {
+      "inputs": {
+        "channel": "red",
+        "image": [
+          "53",
+          0
+        ]
+      },
+      "class_type": "ImageToMask",
+      "_meta": {
+        "title": "이미지를 마스크로 변환"
+      }
+    },
+    "59": {
+      "inputs": {
+        "width": [
+          "72",
+          6
+        ],
+        "height": [
+          "72",
+          7
+        ],
+        "interpolation": "lanczos",
+        "method": "keep proportion",
+        "condition": "always",
+        "multiple_of": 0,
+        "image": [
+          "67",
+          0
+        ]
+      },
+      "class_type": "ImageResize+",
+      "_meta": {
+        "title": "🔧 Image Resize"
+      }
+    },
+    "60": {
+      "inputs": {
+        "width": [
+          "72",
+          6
+        ],
+        "height": [
+          "72",
+          7
+        ],
+        "position": "top-left",
+        "x_offset": [
+          "72",
+          3
+        ],
+        "y_offset": [
+          "72",
+          2
+        ],
+        "image": [
+          "90",
+          0
+        ]
+      },
+      "class_type": "ImageCrop+",
+      "_meta": {
+        "title": "🔧 Image Crop"
+      }
+    },
+    "61": {
+      "inputs": {
+        "noise_mask": true,
+        "positive": [
+          "64",
+          0
+        ],
+        "negative": [
+          "65",
+          0
+        ],
+        "vae": [
+          "82",
+          0
+        ],
+        "pixels": [
+          "63",
+          0
+        ],
+        "mask": [
+          "74",
+          0
+        ]
+      },
+      "class_type": "InpaintModelConditioning",
+      "_meta": {
+        "title": "인페인팅 모델 조건 설정"
+      }
+    },
+    "62": {
+      "inputs": {
+        "width": 768,
+        "height": 0,
+        "interpolation": "lanczos",
+        "method": "keep proportion",
+        "condition": "always",
+        "multiple_of": 0,
+        "image": [
+          "60",
+          0
+        ]
+      },
+      "class_type": "ImageResize+",
+      "_meta": {
+        "title": "🔧 Image Resize"
+      }
+    },
+    "63": {
+      "inputs": {
+        "direction": "right",
+        "match_image_size": true,
+        "image1": [
+          "50",
+          0
+        ],
+        "image2": [
+          "62",
+          0
+        ]
+      },
+      "class_type": "ImageConcanate",
+      "_meta": {
+        "title": "Image Concatenate"
+      }
+    },
+    "64": {
+      "inputs": {
+        "text": "",
+        "clip": [
+          "84",
+          0
+        ]
+      },
+      "class_type": "CLIPTextEncode",
+      "_meta": {
+        "title": "CLIP 텍스트 인코딩 (프롬프트)"
+      }
+    },
+    "65": {
+      "inputs": {
+        "conditioning": [
+          "64",
+          0
+        ]
+      },
+      "class_type": "ConditioningZeroOut",
+      "_meta": {
+        "title": "조건 (0으로 출력)"
+      }
+    },
+    "66": {
+      "inputs": {
+        "seed": [
+          "71",
+          0
+        ],
+        "steps": 20,
+        "cfg": 1,
+        "sampler_name": "euler",
+        "scheduler": "normal",
+        "denoise": 1,
+        "model": [
+          "83",
+          0
+        ],
+        "positive": [
+          "55",
+          0
+        ],
+        "negative": [
+          "61",
+          1
+        ],
+        "latent_image": [
+          "61",
+          2
+        ]
+      },
+      "class_type": "KSampler",
+      "_meta": {
+        "title": "KSampler"
+      }
+    },
+    "67": {
+      "inputs": {
+        "width": [
+          "62",
+          1
+        ],
+        "height": [
+          "62",
+          2
+        ],
+        "position": "top-right",
+        "x_offset": 0,
+        "y_offset": 0,
+        "image": [
+          "76",
+          0
+        ]
+      },
+      "class_type": "ImageCrop+",
+      "_meta": {
+        "title": "🔧 Image Crop"
+      }
+    },
+    "68": {
+      "inputs": {
+        "images": [
+          "63",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "69": {
+      "inputs": {
+        "mask": [
+          "74",
+          0
+        ]
+      },
+      "class_type": "MaskPreview+",
+      "_meta": {
+        "title": "🔧 Mask Preview"
+      }
+    },
+    "70": {
+      "inputs": {
+        "images": [
+          "67",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "71": {
+      "inputs": {
+        "seed": 989107267427890
+      },
+      "class_type": "Seed (rgthree)",
+      "_meta": {
+        "title": "Seed (rgthree)"
+      }
+    },
+    "72": {
+      "inputs": {
+        "padding": 80,
+        "region_type": "dominant",
+        "mask": [
+          "92",
+          1
+        ]
+      },
+      "class_type": "Mask Crop Region",
+      "_meta": {
+        "title": "Mask Crop Region"
+      }
+    },
+    "73": {
+      "inputs": {
+        "expand": 3,
+        "incremental_expandrate": 0,
+        "tapered_corners": true,
+        "flip_input": false,
+        "blur_radius": 3,
+        "lerp_alpha": 1,
+        "decay_factor": 1,
+        "fill_holes": false,
+        "mask": [
+          "72",
+          0
+        ]
+      },
+      "class_type": "GrowMaskWithBlur",
+      "_meta": {
+        "title": "Grow Mask With Blur"
+      }
+    },
+    "74": {
+      "inputs": {
+        "expand": 6,
+        "incremental_expandrate": 0,
+        "tapered_corners": true,
+        "flip_input": false,
+        "blur_radius": 3,
+        "lerp_alpha": 1,
+        "decay_factor": 1,
+        "fill_holes": false,
+        "mask": [
+          "58",
+          0
+        ]
+      },
+      "class_type": "GrowMaskWithBlur",
+      "_meta": {
+        "title": "Grow Mask With Blur"
+      }
+    },
+    "75": {
+      "inputs": {
+        "rgthree_comparer": {
+          "images": [
+            {
+              "name": "A",
+              "selected": true,
+              "url": "/api/view?filename=rgthree.compare._temp_vblat_00001_.png&type=temp&subfolder=&rand=0.655628470748937"
+            },
+            {
+              "name": "B",
+              "selected": true,
+              "url": "/api/view?filename=rgthree.compare._temp_vblat_00002_.png&type=temp&subfolder=&rand=0.32843185019708676"
+            }
+          ]
+        },
+        "image_a": [
+          "90",
+          0
+        ],
+        "image_b": [
+          "78",
+          0
+        ]
+      },
+      "class_type": "Image Comparer (rgthree)",
+      "_meta": {
+        "title": "Image Comparer (rgthree)"
+      }
+    },
+    "76": {
+      "inputs": {
+        "samples": [
+          "66",
+          0
+        ],
+        "vae": [
+          "82",
+          0
+        ]
+      },
+      "class_type": "VAEDecode",
+      "_meta": {
+        "title": "VAE 디코드"
+      }
+    },
+    "77": {
+      "inputs": {
+        "images": [
+          "76",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "78": {
+      "inputs": {
+        "x": [
+          "72",
+          3
+        ],
+        "y": [
+          "72",
+          2
+        ],
+        "resize_source": false,
+        "destination": [
+          "90",
+          0
+        ],
+        "source": [
+          "59",
+          0
+        ],
+        "mask": [
+          "73",
+          0
+        ]
+      },
+      "class_type": "ImageCompositeMasked",
+      "_meta": {
+        "title": "마스크된 이미지 합성"
+      }
+    },
+    "79": {
+      "inputs": {
+        "images": [
+          "78",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "80": {
+      "inputs": {
+        "filename_prefix": "TRYONX_B",
+        "images": [
+          "78",
+          0
+        ]
+      },
+      "class_type": "SaveImage",
+      "_meta": {
+        "title": "이미지 저장"
+      }
+    },
+    "81": {
+      "inputs": {
+        "clip_name": "sigclip_vision_patch14_384.safetensors"
+      },
+      "class_type": "CLIPVisionLoader",
+      "_meta": {
+        "title": "CLIP_VISION 로드"
+      }
+    },
+    "82": {
+      "inputs": {
+        "vae_name": "vae_flux.safetensors"
+      },
+      "class_type": "VAELoader",
+      "_meta": {
+        "title": "VAE 로드"
+      }
+    },
+    "83": {
+      "inputs": {
+        "unet_name": "flux1-fill-dev-fp8.safetensors",
+        "weight_dtype": "default"
+      },
+      "class_type": "UNETLoader",
+      "_meta": {
+        "title": "확산 모델 로드"
+      }
+    },
+    "84": {
+      "inputs": {
+        "clip_name1": "ViT-L-14-TEXT-detail-improved-hiT-GmP-HF.safetensors",
+        "clip_name2": "t5xxl_fp8_e4m3fn.safetensors",
+        "type": "flux",
+        "device": "default"
+      },
+      "class_type": "DualCLIPLoader",
+      "_meta": {
+        "title": "이중 CLIP 로드"
+      }
+    },
+    "85": {
+      "inputs": {
+        "style_model_name": "flux1-redux-dev.safetensors"
+      },
+      "class_type": "StyleModelLoader",
+      "_meta": {
+        "title": "스타일 모델 로드"
+      }
+    },
+    "86": {
+      "inputs": {
+        "image": "{{imageName}}"
+      },
+      "class_type": "LoadImage",
+      "_meta": {
+        "title": "이미지 로드"
+      }
+    },
+    "87": {
+      "inputs": {
+        "model_name": "sam_vit_h (2.56GB)"
+      },
+      "class_type": "SAMModelLoader (segment anything)",
+      "_meta": {
+        "title": "SAMModelLoader (segment anything)"
+      }
+    },
+    "88": {
+      "inputs": {
+        "mask": [
+          "92",
+          1
+        ]
+      },
+      "class_type": "MaskPreview+",
+      "_meta": {
+        "title": "🔧 Mask Preview"
+      }
+    },
+    "89": {
+      "inputs": {
+        "model_name": "GroundingDINO_SwinT_OGC (694MB)"
+      },
+      "class_type": "GroundingDinoModelLoader (segment anything)",
+      "_meta": {
+        "title": "GroundingDinoModelLoader (segment anything)"
+      }
+    },
+    "90": {
+      "inputs": {
+        "image": "KakaoTalk_Photo_2025-08-31-21-16-10 002.png"
+      },
+      "class_type": "LoadImage",
+      "_meta": {
+        "title": "이미지 로드"
+      }
+    },
+    "91": {
+      "inputs": {
+        "images": [
+          "92",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "92": {
+      "inputs": {
+        "prompt": "t-shirts",
+        "threshold": 0.3,
+        "sam_model": [
+          "87",
+          0
+        ],
+        "grounding_dino_model": [
+          "89",
+          0
+        ],
+        "image": [
+          "90",
+          0
+        ]
+      },
+      "class_type": "GroundingDinoSAMSegment (segment anything)",
+      "_meta": {
+        "title": "GroundingDinoSAMSegment (segment anything)"
+      }
+    },
+    "93": {
+      "inputs": {
+        "images": [
+          "132",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "94": {
+      "inputs": {
+        "images": [
+          "96",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "95": {
+      "inputs": {
+        "images": [
+          "107",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "96": {
+      "inputs": {
+        "width": [
+          "107",
+          1
+        ],
+        "height": [
+          "107",
+          2
+        ],
+        "interpolation": "lanczos",
+        "method": "fill / crop",
+        "condition": "always",
+        "multiple_of": 0,
+        "image": [
+          "40",
+          0
+        ]
+      },
+      "class_type": "ImageResize+",
+      "_meta": {
+        "title": "🔧 Image Resize"
+      }
+    },
+    "97": {
+      "inputs": {
+        "mask": [
+          "133",
+          0
+        ]
+      },
+      "class_type": "MaskToImage",
+      "_meta": {
+        "title": "마스크를 이미지로 변환"
+      }
+    },
+    "98": {
+      "inputs": {
+        "width": [
+          "107",
+          1
+        ],
+        "height": [
+          "107",
+          2
+        ],
+        "red": 0,
+        "green": 0,
+        "blue": 0
+      },
+      "class_type": "Image Blank",
+      "_meta": {
+        "title": "Image Blank"
+      }
+    },
+    "99": {
+      "inputs": {
+        "direction": "right",
+        "match_image_size": true,
+        "image1": [
+          "98",
+          0
+        ],
+        "image2": [
+          "97",
+          0
+        ]
+      },
+      "class_type": "ImageConcanate",
+      "_meta": {
+        "title": "Image Concatenate"
+      }
+    },
+    "100": {
+      "inputs": {
+        "mask": [
+          "133",
+          0
+        ]
+      },
+      "class_type": "MaskPreview+",
+      "_meta": {
+        "title": "🔧 Mask Preview"
+      }
+    },
+    "101": {
+      "inputs": {
+        "guidance": 50,
+        "conditioning": [
+          "103",
+          0
+        ]
+      },
+      "class_type": "FluxGuidance",
+      "_meta": {
+        "title": "FLUX 가이드"
+      }
+    },
+    "102": {
+      "inputs": {
+        "crop": "center",
+        "clip_vision": [
+          "125",
+          0
+        ],
+        "image": [
+          "40",
+          0
+        ]
+      },
+      "class_type": "CLIPVisionEncode",
+      "_meta": {
+        "title": "CLIP_VISION 인코딩"
+      }
+    },
+    "103": {
+      "inputs": {
+        "strength": 1,
+        "strength_type": "multiply",
+        "conditioning": [
+          "106",
+          0
+        ],
+        "style_model": [
+          "129",
+          0
+        ],
+        "clip_vision_output": [
+          "102",
+          0
+        ]
+      },
+      "class_type": "StyleModelApply",
+      "_meta": {
+        "title": "스타일 모델 적용"
+      }
+    },
+    "104": {
+      "inputs": {
+        "channel": "red",
+        "image": [
+          "99",
+          0
+        ]
+      },
+      "class_type": "ImageToMask",
+      "_meta": {
+        "title": "이미지를 마스크로 변환"
+      }
+    },
+    "105": {
+      "inputs": {
+        "width": [
+          "133",
+          6
+        ],
+        "height": [
+          "133",
+          7
+        ],
+        "interpolation": "lanczos",
+        "method": "keep proportion",
+        "condition": "always",
+        "multiple_of": 0,
+        "image": [
+          "112",
+          0
+        ]
+      },
+      "class_type": "ImageResize+",
+      "_meta": {
+        "title": "🔧 Image Resize"
+      }
+    },
+    "106": {
+      "inputs": {
+        "noise_mask": true,
+        "positive": [
+          "109",
+          0
+        ],
+        "negative": [
+          "110",
+          0
+        ],
+        "vae": [
+          "126",
+          0
+        ],
+        "pixels": [
+          "108",
+          0
+        ],
+        "mask": [
+          "118",
+          0
+        ]
+      },
+      "class_type": "InpaintModelConditioning",
+      "_meta": {
+        "title": "인페인팅 모델 조건 설정"
+      }
+    },
+    "107": {
+      "inputs": {
+        "width": 768,
+        "height": 0,
+        "interpolation": "lanczos",
+        "method": "keep proportion",
+        "condition": "always",
+        "multiple_of": 0,
+        "image": [
+          "132",
+          0
+        ]
+      },
+      "class_type": "ImageResize+",
+      "_meta": {
+        "title": "🔧 Image Resize"
+      }
+    },
+    "108": {
+      "inputs": {
+        "direction": "right",
+        "match_image_size": true,
+        "image1": [
+          "96",
+          0
+        ],
+        "image2": [
+          "107",
+          0
+        ]
+      },
+      "class_type": "ImageConcanate",
+      "_meta": {
+        "title": "Image Concatenate"
+      }
+    },
+    "109": {
+      "inputs": {
+        "text": "",
+        "clip": [
+          "128",
+          0
+        ]
+      },
+      "class_type": "CLIPTextEncode",
+      "_meta": {
+        "title": "CLIP 텍스트 인코딩 (프롬프트)"
+      }
+    },
+    "110": {
+      "inputs": {
+        "conditioning": [
+          "109",
+          0
+        ]
+      },
+      "class_type": "ConditioningZeroOut",
+      "_meta": {
+        "title": "조건 (0으로 출력)"
+      }
+    },
+    "111": {
+      "inputs": {
+        "seed": [
+          "116",
+          0
+        ],
+        "steps": 20,
+        "cfg": 1,
+        "sampler_name": "euler",
+        "scheduler": "normal",
+        "denoise": 1,
+        "model": [
+          "127",
+          0
+        ],
+        "positive": [
+          "101",
+          0
+        ],
+        "negative": [
+          "106",
+          1
+        ],
+        "latent_image": [
+          "106",
+          2
+        ]
+      },
+      "class_type": "KSampler",
+      "_meta": {
+        "title": "KSampler"
+      }
+    },
+    "112": {
+      "inputs": {
+        "width": [
+          "107",
+          1
+        ],
+        "height": [
+          "107",
+          2
+        ],
+        "position": "top-right",
+        "x_offset": 0,
+        "y_offset": 0,
+        "image": [
+          "120",
+          0
+        ]
+      },
+      "class_type": "ImageCrop+",
+      "_meta": {
+        "title": "🔧 Image Crop"
+      }
+    },
+    "113": {
+      "inputs": {
+        "images": [
+          "108",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "114": {
+      "inputs": {
+        "mask": [
+          "118",
+          0
+        ]
+      },
+      "class_type": "MaskPreview+",
+      "_meta": {
+        "title": "🔧 Mask Preview"
+      }
+    },
+    "115": {
+      "inputs": {
+        "images": [
+          "112",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "116": {
+      "inputs": {
+        "seed": 989107267427890
+      },
+      "class_type": "Seed (rgthree)",
+      "_meta": {
+        "title": "Seed (rgthree)"
+      }
+    },
+    "117": {
+      "inputs": {
+        "expand": 3,
+        "incremental_expandrate": 0,
+        "tapered_corners": true,
+        "flip_input": false,
+        "blur_radius": 3,
+        "lerp_alpha": 1,
+        "decay_factor": 1,
+        "fill_holes": false,
+        "mask": [
+          "133",
+          0
+        ]
+      },
+      "class_type": "GrowMaskWithBlur",
+      "_meta": {
+        "title": "Grow Mask With Blur"
+      }
+    },
+    "118": {
+      "inputs": {
+        "expand": 6,
+        "incremental_expandrate": 0,
+        "tapered_corners": true,
+        "flip_input": false,
+        "blur_radius": 3,
+        "lerp_alpha": 1,
+        "decay_factor": 1,
+        "fill_holes": false,
+        "mask": [
+          "104",
+          0
+        ]
+      },
+      "class_type": "GrowMaskWithBlur",
+      "_meta": {
+        "title": "Grow Mask With Blur"
+      }
+    },
+    "119": {
+      "inputs": {
+        "rgthree_comparer": {
+          "images": [
+            {
+              "name": "A",
+              "selected": true,
+              "url": "/api/view?filename=rgthree.compare._temp_pypse_00001_.png&type=temp&subfolder=&rand=0.4327193701336297"
+            },
+            {
+              "name": "B",
+              "selected": true,
+              "url": "/api/view?filename=rgthree.compare._temp_pypse_00002_.png&type=temp&subfolder=&rand=0.47451127695649886"
+            }
+          ]
+        },
+        "image_a": [
+          "131",
+          0
+        ],
+        "image_b": [
+          "122",
+          0
+        ]
+      },
+      "class_type": "Image Comparer (rgthree)",
+      "_meta": {
+        "title": "Image Comparer (rgthree)"
+      }
+    },
+    "120": {
+      "inputs": {
+        "samples": [
+          "111",
+          0
+        ],
+        "vae": [
+          "126",
+          0
+        ]
+      },
+      "class_type": "VAEDecode",
+      "_meta": {
+        "title": "VAE 디코드"
+      }
+    },
+    "121": {
+      "inputs": {
+        "images": [
+          "120",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "122": {
+      "inputs": {
+        "x": [
+          "133",
+          3
+        ],
+        "y": [
+          "133",
+          2
+        ],
+        "resize_source": false,
+        "destination": [
+          "131",
+          0
+        ],
+        "source": [
+          "105",
+          0
+        ],
+        "mask": [
+          "117",
+          0
+        ]
+      },
+      "class_type": "ImageCompositeMasked",
+      "_meta": {
+        "title": "마스크된 이미지 합성"
+      }
+    },
+    "123": {
+      "inputs": {
+        "images": [
+          "122",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "124": {
+      "inputs": {
+        "filename_prefix": "TRYONX_C",
+        "images": [
+          "122",
+          0
+        ]
+      },
+      "class_type": "SaveImage",
+      "_meta": {
+        "title": "이미지 저장"
+      }
+    },
+    "125": {
+      "inputs": {
+        "clip_name": "sigclip_vision_patch14_384.safetensors"
+      },
+      "class_type": "CLIPVisionLoader",
+      "_meta": {
+        "title": "CLIP_VISION 로드"
+      }
+    },
+    "126": {
+      "inputs": {
+        "vae_name": "vae_flux.safetensors"
+      },
+      "class_type": "VAELoader",
+      "_meta": {
+        "title": "VAE 로드"
+      }
+    },
+    "127": {
+      "inputs": {
+        "unet_name": "flux1-fill-dev-fp8.safetensors",
+        "weight_dtype": "default"
+      },
+      "class_type": "UNETLoader",
+      "_meta": {
+        "title": "확산 모델 로드"
+      }
+    },
+    "128": {
+      "inputs": {
+        "clip_name1": "ViT-L-14-TEXT-detail-improved-hiT-GmP-HF.safetensors",
+        "clip_name2": "t5xxl_fp8_e4m3fn.safetensors",
+        "type": "flux",
+        "device": "default"
+      },
+      "class_type": "DualCLIPLoader",
+      "_meta": {
+        "title": "이중 CLIP 로드"
+      }
+    },
+    "129": {
+      "inputs": {
+        "style_model_name": "flux1-redux-dev.safetensors"
+      },
+      "class_type": "StyleModelLoader",
+      "_meta": {
+        "title": "스타일 모델 로드"
+      }
+    },
+    "131": {
+      "inputs": {
+        "image": "ChatGPT Image 2025년 8월 31일 오후 09_35_35.png"
+      },
+      "class_type": "LoadImage",
+      "_meta": {
+        "title": "이미지 로드"
+      }
+    },
+    "132": {
+      "inputs": {
+        "width": [
+          "133",
+          6
+        ],
+        "height": [
+          "133",
+          7
+        ],
+        "position": "top-left",
+        "x_offset": [
+          "133",
+          3
+        ],
+        "y_offset": [
+          "133",
+          2
+        ],
+        "image": [
+          "131",
+          0
+        ]
+      },
+      "class_type": "ImageCrop+",
+      "_meta": {
+        "title": "🔧 Image Crop"
+      }
+    },
+    "133": {
+      "inputs": {
+        "padding": 80,
+        "region_type": "dominant",
+        "mask": [
+          "135",
+          1
+        ]
+      },
+      "class_type": "Mask Crop Region",
+      "_meta": {
+        "title": "Mask Crop Region"
+      }
+    },
+    "134": {
+      "inputs": {
+        "model_name": "GroundingDINO_SwinT_OGC (694MB)"
+      },
+      "class_type": "GroundingDinoModelLoader (segment anything)",
+      "_meta": {
+        "title": "GroundingDinoModelLoader (segment anything)"
+      }
+    },
+    "135": {
+      "inputs": {
+        "prompt": "t-shirts",
+        "threshold": 0.3,
+        "sam_model": [
+          "138",
+          0
+        ],
+        "grounding_dino_model": [
+          "134",
+          0
+        ],
+        "image": [
+          "131",
+          0
+        ]
+      },
+      "class_type": "GroundingDinoSAMSegment (segment anything)",
+      "_meta": {
+        "title": "GroundingDinoSAMSegment (segment anything)"
+      }
+    },
+    "136": {
+      "inputs": {
+        "mask": [
+          "135",
+          1
+        ]
+      },
+      "class_type": "MaskPreview+",
+      "_meta": {
+        "title": "🔧 Mask Preview"
+      }
+    },
+    "137": {
+      "inputs": {
+        "images": [
+          "135",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "이미지 미리보기"
+      }
+    },
+    "138": {
+      "inputs": {
+        "model_name": "sam_vit_h (2.56GB)"
+      },
+      "class_type": "SAMModelLoader (segment anything)",
+      "_meta": {
+        "title": "SAMModelLoader (segment anything)"
+      }
+    }
+  }
+}
