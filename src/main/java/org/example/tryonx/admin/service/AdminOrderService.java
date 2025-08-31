@@ -67,20 +67,27 @@ public class AdminOrderService {
         List<OrderInfoItemDto> itemDtos = orderItems.stream().map(orderItem -> {
             var productItem = orderItem.getProductItem();
             var product = productItem.getProduct();
+
+            // 썸네일 이미지(없으면 첫 번째 이미지, 그것도 없으면 null)
             String imageUrl = product.getImages().stream()
                     .findFirst()
                     .map(img -> img.getImageUrl())
                     .orElse(null);
 
-            BigDecimal unitPrice = nz(orderItem.getPrice());
-            BigDecimal rate = nz(product.getDiscountRate());
+            // 주문 시점 스냅샷 필드만 사용
+            BigDecimal unitPrice = nz(orderItem.getPrice());          // 주문 당시 단가
+            BigDecimal rate = nz(orderItem.getDiscountRate());        // 주문 당시 할인율(예: 10 -> 10%)
             BigDecimal qty = BigDecimal.valueOf(orderItem.getQuantity());
 
-            // 아이템별 할인 적용된 최종 금액 = 단가 * (1 - rate/100) * 수량
-            BigDecimal discountedFinal =
-                    unitPrice.multiply(BigDecimal.ONE.subtract(rate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)))
-                            .multiply(qty)
-                            .setScale(0, RoundingMode.DOWN);
+            // 최종단가(단품) = 단가 * (1 - rate/100)   → 금액 라운딩
+            BigDecimal finalUnitPrice = unitPrice.multiply(
+                    BigDecimal.ONE.subtract(
+                            rate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)
+                    )
+            ).setScale(0, RoundingMode.DOWN);
+
+            // 아이템별 최종 금액 = 최종단가 * 수량
+            BigDecimal discountedFinal = finalUnitPrice.multiply(qty).setScale(0, RoundingMode.DOWN);
 
             return OrderInfoItemDto.builder()
                     .orderItemId(orderItem.getOrderItemId())
@@ -88,8 +95,8 @@ public class AdminOrderService {
                     .imageUrl(imageUrl)
                     .size(productItem.getSize())
                     .quantity(orderItem.getQuantity())
-                    .price(orderItem.getPrice())
-                    .discountRate(rate)
+                    .price(unitPrice)            // 스냅샷 단가
+                    .discountRate(rate)          // 스냅샷 할인율(%)
                     .discountPrice(discountedFinal)
                     .build();
         }).toList();
@@ -97,6 +104,7 @@ public class AdminOrderService {
         Member member = order.getMember();
         Payment payment = paymentRepository.findByOrder_OrderId(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("주문에 대한 결제내역이 없습니다.."));
+
         return OrderInfoDto.builder()
                 .orderId(order.getOrderId())
                 .orderStatus(order.getStatus())
@@ -106,7 +114,7 @@ public class AdminOrderService {
                 .profileUrl(member.getProfileUrl())
                 .phoneNumber(member.getPhoneNumber())
                 .email(member.getEmail())
-                .address(order.getMember().getAddress())
+                .address(member.getAddress())
                 .totalPrice(order.getTotalAmount())
                 .discountAmount(order.getDiscountAmount())
                 .usedPoints(order.getUsedPoints())
