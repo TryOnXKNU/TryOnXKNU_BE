@@ -154,8 +154,8 @@ public class AdminProductService {
             if(itemDto.getStatus().equals(productItem.getStatus())){
                 if(itemDto.getStock() > 0)
                     productItem.setStatus(ProductStatus.AVAILABLE);
-                else
-                    productItem.setStatus(ProductStatus.SOLDOUT);
+//                else
+//                    productItem.setStatus(ProductStatus.SOLDOUT);
             }else
                 productItem.setStatus(itemDto.getStatus());
 
