@@ -14,6 +14,7 @@ import org.example.tryonx.like.repository.LikeRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.product.repository.ProductRepository;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,12 +33,7 @@ public class FittingService {
     public FittingResponse getFittingPageData(String email){
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
-        FittingMemberInfo memberInfo = new FittingMemberInfo(
-                member.getMemberId(),
-                member.getWeight(),
-                member.getHeight(),
-                member.getBodyShape()
-        );
+        FittingMemberInfo memberInfo = getFittingMemberInfo(member);
         List<FittingProductInfo> productInfos = likeRepository.findByMember(member)
                 .stream()
                 .map(Like::getProduct)
@@ -60,6 +56,27 @@ public class FittingService {
                 memberInfo,
                 productInfos
         );
+    }
+
+    @NotNull
+    private static FittingMemberInfo getFittingMemberInfo(Member member) {
+        BodyShape bodyShape = member.getBodyShape();
+        String modelImage = null;
+        if(bodyShape.equals(BodyShape.STRAIGHT))
+            modelImage = "upload/model/straight.png";
+        if(bodyShape.equals(BodyShape.WAVE))
+            modelImage = "upload/model/wave.png";
+        if(bodyShape.equals(BodyShape.NATURAL))
+            modelImage = "upload/model/natural.png";
+
+        FittingMemberInfo memberInfo = new FittingMemberInfo(
+                member.getMemberId(),
+                member.getWeight(),
+                member.getHeight(),
+                member.getBodyShape(),
+                modelImage
+        );
+        return memberInfo;
     }
 
 //    public FittingResponse getFittingPageData(String email, Integer categoryId) {

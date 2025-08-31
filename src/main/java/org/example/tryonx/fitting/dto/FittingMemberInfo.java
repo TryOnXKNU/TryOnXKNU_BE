@@ -13,5 +13,5 @@ public class FittingMemberInfo {
     private Integer height;
     private Integer weight;
     private BodyShape bodyShape;
-
+    private String myModelImage;
 }

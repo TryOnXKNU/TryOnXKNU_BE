@@ -74,7 +74,7 @@ public class ComfyUiService {
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         String prompt = switch (product.getCategory().getCategoryId()){
-            case 1 -> "black t-shirt";
+            case 1 -> "black tshirt";
             case 2 -> "pants";
             case 3 -> "dress";
             case 4 -> "black ";
