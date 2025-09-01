@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MemberOrderHistory {
+    private String orderNum;
     private String profileUrl;
     private String name;
     private Long memberId;

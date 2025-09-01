@@ -140,6 +140,7 @@ public class MemberListService {
                         .setScale(0, RoundingMode.DOWN);
 
                 result.add(new MemberOrderHistory(
+                        order.getOrderNum(),
                         member.getProfileUrl(),
                         member.getName(),
                         member.getMemberId(),
