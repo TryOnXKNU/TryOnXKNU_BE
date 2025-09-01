@@ -22,9 +22,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -104,11 +106,17 @@ public class ReturnService {
                 .toList();
     }
 
+    private static BigDecimal nz(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
+    }
+
     public ReturnDetailDto findByReturnIdForAdmin(Integer returnId) {
         Returns returns = returnRepository.findById(returnId)
                 .orElseThrow(() -> new EntityNotFoundException("반품 내역을 찾을 수 없습니다."));
 
         Product product = returns.getProduct();
+        OrderItem orderItem = returns.getOrderItem();
+
         String productName = product != null ? product.getProductName() : null;
         String imageUrl = (product != null && !product.getImages().isEmpty())
                 ? product.getImages().get(0).getImageUrl()
@@ -119,13 +127,29 @@ public class ReturnService {
                 : null;
         BigDecimal discount = product.getPrice().multiply(product.getDiscountRate().divide(BigDecimal.valueOf(100)));
 
+        // 주문 시점 스냅샷 값 사용
+        BigDecimal unitPrice = nz(orderItem.getPrice());
+        BigDecimal rate = nz(orderItem.getDiscountRate());
+        BigDecimal qty = BigDecimal.valueOf(returns.getQuantity());
+
+        // 최종 단가 = 단가 * (1 - rate/100)
+        BigDecimal finalUnitPrice = unitPrice.multiply(
+                BigDecimal.ONE.subtract(
+                        rate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)
+                )
+        ).setScale(0, RoundingMode.DOWN);
+
+        // 반품 금액 = 최종 단가 × 반품 수량
+        BigDecimal discountedFinal = finalUnitPrice.multiply(qty).setScale(0, RoundingMode.DOWN);
+
+
         return new ReturnDetailDto(
                 returns.getReturnId(),
                 returns.getMember().getMemberId(),
                 returns.getOrder().getOrderId(),
                 returns.getOrderItem().getOrderItemId(),
                 returns.getOrder().getOrderNum(),
-                returns.getPrice(),
+                unitPrice,
                 returns.getQuantity(),
                 returns.getReason(),
                 returns.getReturnRequestedAt(),
@@ -134,8 +158,8 @@ public class ReturnService {
                 productName,
                 imageUrl,
                 rejectReason,
-                product.getDiscountRate(),
-                product.getPrice().subtract(discount)
+                rate,
+                discountedFinal
         );
     }
 

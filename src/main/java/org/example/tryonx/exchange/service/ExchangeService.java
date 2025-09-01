@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -235,6 +236,11 @@ public class ExchangeService {
                 product.getPrice().min(discount)
         );
     }
+
+    private static BigDecimal nz(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
+    }
+    
     //교환 상세조회 (관리자용)
     public ExchangeDetailDto findByExchangeIdForAdmin(Integer exchangeId) {
         Exchange exchange = exchangeRepository.findById(exchangeId)
@@ -256,13 +262,28 @@ public class ExchangeService {
                 ? exchange.getRejectReason()
                 : null;
 
+        // 주문 시점 스냅샷 값 사용
+        BigDecimal unitPrice = nz(orderItem.getPrice());       // 주문 당시 단가
+        BigDecimal rate = nz(orderItem.getDiscountRate());     // 주문 당시 할인율(%)
+        BigDecimal qty = BigDecimal.valueOf(exchange.getQuantity());
+
+        // 최종 단가 = 단가 × (1 - rate/100)
+        BigDecimal finalUnitPrice = unitPrice.multiply(
+                BigDecimal.ONE.subtract(
+                        rate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)
+                )
+        ).setScale(0, RoundingMode.DOWN);
+
+        // 교환 수량 기준 최종 금액
+        BigDecimal discountedFinal = finalUnitPrice.multiply(qty).setScale(0, RoundingMode.DOWN);
+
         return new ExchangeDetailDto(
                 exchange.getExchangeId(),
                 exchange.getMember().getMemberId(),
                 exchange.getOrder().getOrderId(),
                 exchange.getOrderItem().getOrderItemId(),
                 exchange.getOrder().getOrderNum(),
-                exchange.getPrice(),
+                unitPrice,
                 purchasedSize,
                 exchange.getQuantity(),
                 exchange.getReason(),
@@ -272,8 +293,8 @@ public class ExchangeService {
                 productName,
                 imageUrl,
                 rejectReason,
-                product.getDiscountRate(),
-                product.getPrice().subtract(discount)
+                rate,
+                discountedFinal
         );
     }
 
