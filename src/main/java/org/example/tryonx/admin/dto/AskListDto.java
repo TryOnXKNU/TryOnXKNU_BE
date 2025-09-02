@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.tryonx.enums.Size;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -12,10 +13,13 @@ import java.util.List;
 @NoArgsConstructor
 public class AskListDto {
     private Long askId;
+    private String nickname;
     private String title;
     private String content;
     private String productName;
     private Size size;
     private String imgUrl;
     private List<String> askImageUrls;
+    private LocalDateTime createdAt;
+    private LocalDateTime answeredAt;
 }
