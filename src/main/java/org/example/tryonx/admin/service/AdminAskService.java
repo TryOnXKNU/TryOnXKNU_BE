@@ -34,12 +34,15 @@ public class AdminAskService {
 
                     return new AskListDto(
                             ask.getAskId(),
+                            ask.getMember().getNickname(),
                             ask.getTitle(),
                             ask.getContent(),
                             product.getProductName(),
                             productItem.getSize(),
                             product.getImages().isEmpty() ? null : product.getImages().get(0).getImageUrl(),
-                            askImageUrls
+                            askImageUrls,
+                            ask.getCreatedAt(),
+                            ask.getAnsweredAt()
                     );
                 })
                 .collect(Collectors.toList());
@@ -57,12 +60,15 @@ public class AdminAskService {
 
                     return new AskListDto(
                             ask.getAskId(),
+                            ask.getMember().getNickname(),
                             ask.getTitle(),
                             ask.getContent(),
                             product.getProductName(),
                             productItem.getSize(),
                             product.getImages().isEmpty() ? null : product.getImages().get(0).getImageUrl(),
-                            askImageUrls
+                            askImageUrls,
+                            ask.getCreatedAt(),
+                            ask.getAnsweredAt()
                     );
                 })
                 .collect(Collectors.toList());
