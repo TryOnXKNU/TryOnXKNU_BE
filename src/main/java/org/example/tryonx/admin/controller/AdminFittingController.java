@@ -214,5 +214,11 @@ public class AdminFittingController {
         return ResponseEntity.ok("피팅 이미지 3장 생성 및 저장 완료");
     }
 
+    @PostMapping("/clothing/result")
+    public ResponseEntity<List<String>> getGeneratedImageUrls(@RequestParam Integer productId){
+        List<String> fittingImageUrls = comfyUiFittingService.getFittingImageUrls(productId);
+        return ResponseEntity.ok(fittingImageUrls);
+    }
+
 
 }
