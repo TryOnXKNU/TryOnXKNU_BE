@@ -15,6 +15,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
@@ -42,6 +43,20 @@ public class ComfyUiFittingService {
     @Value("${app.upload.dir:upload}")
     private String uploadRoot;
 
+    private void refreshGoogleDrive() {
+        String url = baseUrl + "/pysssss/drive/sync";
+        System.out.println("구글드라이브 새로고침중");
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+            System.out.println("googledrive새로고침.");
+        } catch (RestClientException e) {
+            // 실패하더라도 워크플로우는 계속 진행하도록 오류만 로그에 남깁니다.
+            System.err.println("구글드라이브 새로고침 실패 :  " + e.getMessage());
+        }
+    }
+
     public void executeFittingFlowWithClothingNameThreeImages(
             String email, String clothingImageName, Product product
     ) throws IOException, InterruptedException {
@@ -49,6 +64,7 @@ public class ComfyUiFittingService {
         memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
 
+        refreshGoogleDrive();
         // '/upload/product/' 접두어 제거
         String prefix = "/upload/product/";
         String fileNameOnly = clothingImageName.startsWith(prefix)
