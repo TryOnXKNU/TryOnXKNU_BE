@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.tryonx.category.Category;
 import org.example.tryonx.category.CategoryRepository;
 import org.example.tryonx.enums.ProductStatus;
+import org.example.tryonx.fitting.domain.ProductFitting;
+import org.example.tryonx.fitting.repository.ProductFittingRepository;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.like.dto.ProductDto;
@@ -48,6 +50,7 @@ public class ProductService {
     private final MeasurementRepository measurementRepository;
     private final ReviewService reviewService;
     private final MemberRepository memberRepository;
+    private final ProductFittingRepository productFittingRepository;
 
     @Transactional
     public Product createProduct(ProductCreateRequestDto dto, List<MultipartFile> images) {
@@ -184,6 +187,12 @@ public class ProductService {
                 .multiply(BigDecimal.valueOf(0.05))
                 .intValue();
 
+        // 피팅 이미지 여러 장 가져오기
+        List<String> fittingImageUrls = productFittingRepository.findByProductOrderBySequenceAsc(product)
+                .stream()
+                .map(ProductFitting::getFittingImageUrl)
+                .toList();
+
         return new ProductResponseDto(
                 product.getProductId(),
                 product.getProductName(),
@@ -199,7 +208,8 @@ public class ProductService {
                 avg,
                 cnt,
                 pointForOrder,
-                pointForReview
+                pointForReview,
+                fittingImageUrls
         );
     }
 

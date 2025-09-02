@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface ProductFittingRepository extends JpaRepository<ProductFitting, Long> {
     List<ProductFitting> findByProductOrderByUpdatedAtAsc(Product product);
     Optional<ProductFitting> findByProductAndSequence(Product product, int sequence);
+    List<ProductFitting> findByProductOrderBySequenceAsc(Product product);
 }
