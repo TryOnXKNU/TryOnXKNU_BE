@@ -130,69 +130,69 @@ public class AdminFittingController {
 //        return ResponseEntity.ok(result);
 //    }
 
-    @PostMapping("/drive/refresh")
-    public ResponseEntity<?> refreshDriveMount(
-            @AuthenticationPrincipal UserDetails user,
-            @RequestParam(required = false) Integer productId
-    ) {
-        try {
-            // 1) productId가 주어지면 서버에 저장된 썸네일 파일을 comfy input 폴더로 복사 시도
-            if (productId != null) {
-                Product product = productRepository.findById(productId)
-                        .orElseThrow(() -> new RuntimeException("Product not found"));
-
-                ProductImage thumbnail = productImageRepository
-                        .findFirstByProductAndIsThumbnailTrue(product)
-                        .orElseThrow(() -> new RuntimeException("Thumbnail image not found"));
-
-                String imageUrl = thumbnail.getImageUrl(); // 예: /upload/product/5/xxx.png 또는 저장된 상대경로/파일명
-
-                try {
-                    Path src;
-                    if (imageUrl.startsWith("/")) {
-                        // 예: /upload/fitting/xxx.png -> 프로젝트 루트 기준으로 resolve
-                        src = Paths.get(System.getProperty("user.dir")).resolve(imageUrl.substring(1));
-                    } else {
-                        // imageUrl이 상대경로 또는 파일명일 경우 업로드 루트에서 찾음
-                        src = Paths.get(System.getProperty("user.dir")).resolve("upload").resolve("fitting").resolve(imageUrl);
-                    }
-
-                    Path destDir = Paths.get(comfyInputDir);
-                    Files.createDirectories(destDir);
-                    Path dest = destDir.resolve(src.getFileName().toString());
-                    Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING);
-                    System.out.println("Copied thumbnail to comfy input: " + dest.toString());
-                } catch (Exception e) {
-                    // 복사 실패해도 아래 스크립트 실행은 시도하도록 계속 진행
-                    System.err.println("Unable to copy thumbnail to comfy input: " + e.getMessage());
-                }
-            }
-
-            // 2) 외부 스크립트로 드라이브 재마운트/새로고침을 수행하도록 구성되어 있다면 실행
-            if (StringUtils.hasText(driveRefreshScript)) {
-                ProcessBuilder pb = new ProcessBuilder(driveRefreshScript);
-                pb.redirectErrorStream(true);
-                Process p = pb.start();
-                int exitCode = p.waitFor(); // 동기적으로 대기
-                System.out.println("drive refresh script exitCode=" + exitCode);
-                if (exitCode != 0) {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(Map.of("ok", false, "message", "drive refresh script failed", "exitCode", exitCode));
-                }
-            }
-
-            // 3) 성공 응답
-            Map<String, Object> resp = new HashMap<>();
-            resp.put("ok", true);
-            resp.put("message", "drive refresh triggered (copied files and/or ran script)");
-            return ResponseEntity.ok(resp);
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("ok", false, "message", ex.getMessage()));
-        }
-    }
+//    @PostMapping("/drive/refresh")
+//    public ResponseEntity<?> refreshDriveMount(
+//            @AuthenticationPrincipal UserDetails user,
+//            @RequestParam(required = false) Integer productId
+//    ) {
+//        try {
+//            // 1) productId가 주어지면 서버에 저장된 썸네일 파일을 comfy input 폴더로 복사 시도
+//            if (productId != null) {
+//                Product product = productRepository.findById(productId)
+//                        .orElseThrow(() -> new RuntimeException("Product not found"));
+//
+//                ProductImage thumbnail = productImageRepository
+//                        .findFirstByProductAndIsThumbnailTrue(product)
+//                        .orElseThrow(() -> new RuntimeException("Thumbnail image not found"));
+//
+//                String imageUrl = thumbnail.getImageUrl(); // 예: /upload/product/5/xxx.png 또는 저장된 상대경로/파일명
+//
+//                try {
+//                    Path src;
+//                    if (imageUrl.startsWith("/")) {
+//                        // 예: /upload/fitting/xxx.png -> 프로젝트 루트 기준으로 resolve
+//                        src = Paths.get(System.getProperty("user.dir")).resolve(imageUrl.substring(1));
+//                    } else {
+//                        // imageUrl이 상대경로 또는 파일명일 경우 업로드 루트에서 찾음
+//                        src = Paths.get(System.getProperty("user.dir")).resolve("upload").resolve("fitting").resolve(imageUrl);
+//                    }
+//
+//                    Path destDir = Paths.get(comfyInputDir);
+//                    Files.createDirectories(destDir);
+//                    Path dest = destDir.resolve(src.getFileName().toString());
+//                    Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING);
+//                    System.out.println("Copied thumbnail to comfy input: " + dest.toString());
+//                } catch (Exception e) {
+//                    // 복사 실패해도 아래 스크립트 실행은 시도하도록 계속 진행
+//                    System.err.println("Unable to copy thumbnail to comfy input: " + e.getMessage());
+//                }
+//            }
+//
+//            // 2) 외부 스크립트로 드라이브 재마운트/새로고침을 수행하도록 구성되어 있다면 실행
+//            if (StringUtils.hasText(driveRefreshScript)) {
+//                ProcessBuilder pb = new ProcessBuilder(driveRefreshScript);
+//                pb.redirectErrorStream(true);
+//                Process p = pb.start();
+//                int exitCode = p.waitFor(); // 동기적으로 대기
+//                System.out.println("drive refresh script exitCode=" + exitCode);
+//                if (exitCode != 0) {
+//                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                            .body(Map.of("ok", false, "message", "drive refresh script failed", "exitCode", exitCode));
+//                }
+//            }
+//
+//            // 3) 성공 응답
+//            Map<String, Object> resp = new HashMap<>();
+//            resp.put("ok", true);
+//            resp.put("message", "drive refresh triggered (copied files and/or ran script)");
+//            return ResponseEntity.ok(resp);
+//
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(Map.of("ok", false, "message", ex.getMessage()));
+//        }
+//    }
 
     @PostMapping("/clothing/triple")
     public ResponseEntity<String> generateTriple(
