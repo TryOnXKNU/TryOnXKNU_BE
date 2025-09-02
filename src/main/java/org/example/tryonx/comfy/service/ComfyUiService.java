@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClientException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -40,8 +41,24 @@ public class ComfyUiService {
     @Value("${ngrok.url}")
     private String baseUrl;
 
+    private void refreshGoogleDrive() {
+        String url = baseUrl + "/pysssss/drive/sync";
+        System.out.println("구글드라이브 새로고침중");
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+            System.out.println("googledrive새로고침.");
+        } catch (RestClientException e) {
+            // 실패하더라도 워크플로우는 계속 진행하도록 오류만 로그에 남깁니다.
+            System.err.println("구글드라이브 새로고침 실패 :  " + e.getMessage());
+        }
+    }
+
     public String executeInternalWorkflow() throws IOException, InterruptedException {
         String workflowJson = loadWorkflowFromResource("tryon_flow.json");
+        // Google Drive 새로고침
+        refreshGoogleDrive();
 
         // 1. 워크플로우 실행
         String promptId = sendWorkflow(workflowJson);
@@ -92,6 +109,9 @@ public class ComfyUiService {
                 .replace("{{imageName}}", fileNameOnly)
                 .replace("{{modelImage}}", model)
                 .replace("{{prompt}}", prompt);
+
+        // Google Drive 새로고침
+        refreshGoogleDrive();
 
         // 1. 워크플로우 실행
         String promptId = sendWorkflow(workflowJson);
@@ -154,6 +174,9 @@ public class ComfyUiService {
                 .replace("{{modelImage}}", model)
                 .replace("{{imageName1}}", imageName1 != null ? imageName1 : "")
                 .replace("{{imageName2}}", imageName2 != null ? imageName2 : "");
+
+        // Google Drive 새로고침
+        refreshGoogleDrive();
 
         // 1. 워크플로우 실행
         String promptId = sendWorkflow(workflowJson);
@@ -368,6 +391,9 @@ public class ComfyUiService {
         // 3. 워크플로우 JSON 설정
         String workflowJson = loadWorkflowFromResource("tryon_flow.json")
                 .replace("{{imageName}}", fileNameOnly);
+
+        // Google Drive 새로고침
+        refreshGoogleDrive();
 
         // 4. ComfyUI 실행
         String promptId = sendWorkflow(workflowJson);
