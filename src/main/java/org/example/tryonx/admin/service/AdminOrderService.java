@@ -62,6 +62,26 @@ public class AdminOrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("주문이 존재하지 않습니다."));
 
+        boolean hasPayment = paymentRepository.existsByOrder_OrderId(orderId);
+        String paymentMethod;
+
+        if (!hasPayment) {
+            paymentMethod = "전액 적립금 사용";
+        }else {
+            // 일반 결제 주문
+            Payment payment = paymentRepository.findByOrder_OrderId(orderId)
+                    .orElseThrow(() -> new EntityNotFoundException("해당 주문에 대한 결제 내역이 없습니다."));
+
+            String pg = payment.getPgProvider();
+            if ("kakaopay".equalsIgnoreCase(pg)) {
+                paymentMethod = "카카오페이";
+            } else if ("nice_v2".equalsIgnoreCase(pg)) {
+                paymentMethod = payment.getCardName();
+            } else {
+                paymentMethod = pg;
+            }
+        }
+
         List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
 
         List<OrderInfoItemDto> itemDtos = orderItems.stream().map(orderItem -> {
@@ -102,9 +122,6 @@ public class AdminOrderService {
         }).toList();
 
         Member member = order.getMember();
-        Payment payment = paymentRepository.findByOrder_OrderId(orderId)
-                .orElseThrow(() -> new EntityNotFoundException("주문에 대한 결제내역이 없습니다.."));
-
         return OrderInfoDto.builder()
                 .orderId(order.getOrderId())
                 .orderStatus(order.getStatus())
@@ -127,7 +144,7 @@ public class AdminOrderService {
                                 .multiply(BigDecimal.valueOf(100))
                                 : BigDecimal.ZERO
                 )
-                .paymentMethod(payment.getCardName())
+                .paymentMethod(paymentMethod)
                 .items(itemDtos)
                 .deliveryStatus(order.getDeliveryStatus())
                 .build();
