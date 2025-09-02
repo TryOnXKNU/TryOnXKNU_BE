@@ -30,4 +30,5 @@ public class ProductResponseDto {
 
     private Integer expectedPointByOrder;
     private Integer expectedPointByReview;
-}
+
+    private List<String> fittingImageUrls;}

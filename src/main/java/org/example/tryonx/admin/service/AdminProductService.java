@@ -10,6 +10,8 @@ import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.category.Category;
 import org.example.tryonx.category.CategoryRepository;
 import org.example.tryonx.enums.ProductStatus;
+import org.example.tryonx.fitting.domain.ProductFitting;
+import org.example.tryonx.fitting.repository.ProductFittingRepository;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.like.repository.LikeRepository;
@@ -41,6 +43,7 @@ public class AdminProductService {
     private final OrderItemRepository orderItemRepository;
     private final LikeRepository likeRepository;
     private final ReviewService reviewService;
+    private final ProductFittingRepository productFittingRepository;
 
 
     public List<ProductListDto> getAllProducts() {
@@ -93,6 +96,12 @@ public class AdminProductService {
         Double avg = reviewService.getAverageRatingByProductId(productId);
         Integer cnt = reviewService.getReviewCountByProductId(productId);
 
+        // 피팅 이미지 여러 장 가져오기
+        List<String> fittingImageUrls = productFittingRepository.findByProductOrderBySequenceAsc(product)
+                .stream()
+                .map(ProductFitting::getFittingImageUrl)
+                .toList();
+
         return new ProductResponseDto(
                 product.getProductId(),
                 product.getProductName(),
@@ -108,7 +117,8 @@ public class AdminProductService {
                 avg,
                 cnt,
                 pointForOrder,
-                pointForReview
+                pointForReview,
+                fittingImageUrls
         );
     }
 
