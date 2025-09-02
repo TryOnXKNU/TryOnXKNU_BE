@@ -40,34 +40,50 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody OrderRequestDto req,
                                          @AuthenticationPrincipal UserDetails user) {
-        if (user == null) return ResponseEntity.status(401).body("Unauthorized");
-
-        // 1) 결제 존재/상태 확인
-        Payment pay = paymentRepository.findByMerchantUid(req.getMerchantUid())
-                .orElseThrow(() -> new IllegalStateException("결제 정보가 없습니다. merchantUid=" + req.getMerchantUid()));
-        if (pay.getStatus() != PaymentStatus.PAID) {
-            return ResponseEntity.badRequest().body("결제가 완료되지 않았습니다.");
+        if (user == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
         }
 
-        // 2) 멱등 처리: 이미 주문에 연결돼 있으면 그 주문 ID 그대로 반환
-        if (pay.getOrder() != null) {
-            return ResponseEntity.ok(new OrderCreateResponse(pay.getOrder().getOrderId()));
+        final boolean isFree = Boolean.TRUE.equals(req.getFree());
+
+        Payment pay = null;
+        // 1) 결제 존재/상태 확인 — FREE가 아닐 때만
+        if (!isFree) {
+            if (req.getMerchantUid() == null || req.getMerchantUid().isBlank()) {
+                return ResponseEntity.badRequest().body("merchantUid가 없습니다.");
+            }
+
+            pay = paymentRepository.findByMerchantUid(req.getMerchantUid())
+                    .orElseThrow(() -> new IllegalStateException("결제 정보가 없습니다. merchantUid=" + req.getMerchantUid()));
+
+            if (pay.getStatus() != PaymentStatus.PAID) {
+                return ResponseEntity.badRequest().body("결제가 완료되지 않았습니다.");
+            }
+
+            // 2) 멱등 처리 — 이미 주문 연결돼 있으면 그 주문 ID 반환
+            if (pay.getOrder() != null) {
+                return ResponseEntity.ok(new OrderCreateResponse(pay.getOrder().getOrderId()));
+            }
         }
 
-        // 3) 주문 생성
+        // 3) 주문 생성 — FREE 여부와 무관
         Integer orderId = orderService.createOrder(user.getUsername(), req);
-        Order order = orderRepository.findById(orderId).orElseThrow();
 
-        // 4) 결제-주문 연결
-        pay.setOrder(order);
-        paymentRepository.save(pay);
+        // 4) 결제-주문 연결 및 상태 갱신 — FREE가 아닐 때만
+        if (!isFree) {
+            Order order = orderRepository.findById(orderId).orElseThrow();
+            // 결제-주문 연결
+            pay.setOrder(order);
+            paymentRepository.save(pay);
 
-        // 정책에 따라 주문 상태 갱신
-        order.setStatus(OrderStatus.PAID);
-        orderRepository.save(order);
+            // 정책에 따라 주문 상태 갱신 (서비스에서 이미 처리한다면 이 부분은 생략 가능)
+            order.setStatus(OrderStatus.PAID);
+            orderRepository.save(order);
+        }
 
         return ResponseEntity.ok(new OrderCreateResponse(orderId));
     }
+
 
     record OrderCreateResponse(Integer orderId) {}
 

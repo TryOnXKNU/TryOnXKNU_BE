@@ -22,8 +22,9 @@ public class OrderRequestDto {
 
     private String deliveryRequest;
 
-    @NotBlank
     private String merchantUid;
+
+    private Boolean free;
 
     @Getter @Setter
     @NoArgsConstructor

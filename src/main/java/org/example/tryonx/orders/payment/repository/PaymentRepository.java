@@ -13,4 +13,5 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     // 주문별 결제 조회가 필요할 때
     Optional<Payment> findByOrder_OrderId(Integer orderId);
+    boolean existsByOrder_OrderId(Integer orderId);
 }

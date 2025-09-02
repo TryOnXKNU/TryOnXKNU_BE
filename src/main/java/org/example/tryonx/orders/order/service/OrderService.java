@@ -55,24 +55,208 @@ public class OrderService {
     private final PaymentRepository paymentRepository;
 
 
+//    @Transactional
+//    public Integer createOrder(String email, OrderRequestDto requestDto) {
+//        Member member = memberRepository.findByEmail(email)
+//                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 찾을 수 없습니다."));
+//
+//        // 0) 결제 존재/상태 확인 및 멱등 처리
+//        if (requestDto.getMerchantUid() == null || requestDto.getMerchantUid().isBlank()) {
+//            throw new IllegalArgumentException("merchantUid가 없습니다.");
+//        }
+//        Payment pay = paymentRepository.findByMerchantUid(requestDto.getMerchantUid())
+//                .orElseThrow(() -> new IllegalStateException("결제 정보가 없습니다. merchantUid=" + requestDto.getMerchantUid()));
+//
+//        if (pay.getStatus() != PaymentStatus.PAID) {
+//            throw new IllegalStateException("결제가 완료되지 않았습니다.");
+//        }
+//        if (pay.getOrder() != null) {
+//            // 멱등: 이미 주문이 연결되어 있으면 그 주문 반환
+//            return pay.getOrder().getOrderId();
+//        }
+//
+//        // 1) 아이템 검증/재고 차감
+//        List<OrderItem> orderItems = requestDto.getItems().stream()
+//                .map(item -> {
+//                    Product product = productRepository.findById(item.getProductId())
+//                            .orElseThrow(() -> new EntityNotFoundException("상품 정보 없음"));
+//
+//                    ProductItem productItem = productItemRepository.findByProductAndSize(product, item.getSize())
+//                            .orElseThrow(() -> new EntityNotFoundException("사이즈 정보 없음"));
+//
+//                    if (item.getCartItemId() != null) {
+//                        CartItem cartItem = cartItemRepository.findById(item.getCartItemId())
+//                                .orElseThrow(() -> new EntityNotFoundException("장바구니 항목이 존재하지 않습니다."));
+//                        if (!cartItem.getMember().equals(member)) {
+//                            throw new IllegalArgumentException("본인의 장바구니 항목만 주문할 수 있습니다.");
+//                        }
+//                        if (!cartItem.getProductItem().equals(productItem)) {
+//                            throw new IllegalArgumentException("장바구니 항목의 상품 정보가 일치하지 않습니다.");
+//                        }
+//                        if (!Objects.equals(cartItem.getQuantity(), item.getQuantity())) {
+//                            throw new IllegalArgumentException("장바구니 항목의 수량과 요청 수량이 일치하지 않습니다.");
+//                        }
+//                    }
+//
+//                    if (productItem.getStock() < item.getQuantity()) {
+//                        throw new IllegalStateException("재고가 부족합니다.");
+//                    }
+//
+//                    int newStock = productItem.getStock() - item.getQuantity();
+//                    productItem.setStock(newStock);
+//
+//                    if (newStock == 3) {
+//                        List<CartItem> cartItems = cartItemRepository.findAll(); // TODO: findByProductItem(productItem)로 최적화
+//                        for (CartItem cartItem : cartItems) {
+//                            if (cartItem.getProductItem().equals(productItem)) {
+//                                Member target = cartItem.getMember();
+//                                String productName = productItem.getProduct().getProductName();
+//                                String size = productItem.getSize().name();
+//                                String content = "[재고 알림] " + productName + " (" + size + ") 상품의 재고가 " + newStock + "개 남았습니다. 서두르세요!";
+//
+//                                Notification notification = Notification.builder()
+//                                        .member(target)
+//                                        .title("재고 알림")
+//                                        .content(content)
+//                                        .build();
+//                                notificationRepository.save(notification);
+//                            }
+//                        }
+//                    }
+//
+//                    if (newStock == 0) {
+//                        productItem.setStatus(ProductStatus.SOLDOUT);
+//                    }
+//                    productItemRepository.save(productItem);
+//
+//                    return OrderItem.builder()
+//                            .member(member)
+//                            .productItem(productItem)
+//                            .quantity(item.getQuantity())
+//                            .price(product.getPrice())
+//                            .discountRate(product.getDiscountRate())
+//                            .build();
+//                })
+//                .collect(Collectors.toList());
+//
+//        // 2) 금액 계산
+//        BigDecimal totalAmount = orderItems.stream()
+//                .map(i -> nz(i.getPrice()).multiply(BigDecimal.valueOf(i.getQuantity())))
+//                .reduce(BigDecimal.ZERO, BigDecimal::add);
+//
+//        BigDecimal discountAmount = orderItems.stream()
+//                .map(i -> {
+//                    BigDecimal price = nz(i.getPrice());
+//                    BigDecimal rate = percentToRate(i.getDiscountRate()); // 10 -> 0.10
+//                    return price.multiply(rate).multiply(BigDecimal.valueOf(i.getQuantity()));
+//                })
+//                .reduce(BigDecimal.ZERO, BigDecimal::add)
+//                .setScale(0, RoundingMode.HALF_UP); // 정책에 맞게 반올림(선택)
+//
+//        BigDecimal finalAmount = totalAmount.subtract(discountAmount);
+//
+//        int usedPoints = requestDto.getPoint();
+//        if (usedPoints > member.getPoint()) {
+//            throw new IllegalArgumentException("사용 가능한 포인트를 초과했습니다.");
+//        }
+//
+//        finalAmount = finalAmount.subtract(BigDecimal.valueOf(usedPoints));
+//        member.usePoint(usedPoints);
+//
+//        // (선택) 결제 금액과 주문 금액 일치 검증 — 준비검증을 안 쓰므로 UI 조작 방지용
+//        Integer paidAmountKrw = pay.getAmount(); // INT KRW
+//        System.out.println("결제 금액 : " + pay.getAmount());
+//        System.out.println("주문 금액 : " + finalAmount.setScale(0,RoundingMode.DOWN).intValue());
+//        if (paidAmountKrw != null && paidAmountKrw.intValue() != finalAmount.setScale(0, RoundingMode.DOWN).intValue()) {
+//            // 엄격 모드: 불일치 시 실패 처리
+//            throw new IllegalStateException("결제 금액과 주문 금액이 일치하지 않습니다.");
+//            // 느슨하게 운영하려면 위를 주석 처리하고 로그만 남기세요.
+//        }
+//
+//        String deliveryRequest = requestDto.getDeliveryRequest();
+//        // 3) 주문 생성
+//        Order order = Order.builder()
+//                .member(member)
+//                .totalAmount(totalAmount)
+//                .discountAmount(discountAmount)
+//                .finalAmount(finalAmount)
+//                .usedPoints(usedPoints)
+//                .orderedAt(LocalDateTime.now())
+//                .status(OrderStatus.PENDING)
+//                .deliveryRequest(deliveryRequest)
+//                .build();
+//
+//        orderItems.forEach(item -> item.setOrder(order));
+//        order.setOrderItems(orderItems);
+//
+//        Order savedOrder = orderRepository.save(order);
+//
+//        // 주문번호 생성 후 저장
+//        String orderNum = generateOrderNum(savedOrder);
+//        savedOrder.setOrderNum(orderNum);
+//        orderRepository.save(savedOrder);
+//
+//        // 4) 결제-주문 연결 및 상태 전환
+//        pay.setOrder(savedOrder);
+//        paymentRepository.save(pay);
+//
+//        savedOrder.setStatus(OrderStatus.PAID); // 주문 상태 전환
+//        savedOrder.setDeliveryStatus(DeliveryStatus.ORDERED); // 배송 상태 초기화 (주문 완료)
+//        orderRepository.save(savedOrder);
+//
+//        // 5) 포인트 이력 처리
+//        String mainProductName = orderItems.get(0).getProductItem().getProduct().getProductName();
+//        int itemCount = orderItems.size();
+//        String productSummary = itemCount > 1 ? mainProductName + " 외 " + (itemCount - 1) + "건" : mainProductName;
+//
+//        if (usedPoints > 0) {
+//            pointHistoryRepository.save(PointHistory.use(member, usedPoints, "[" + productSummary + "] 주문 결제 중 포인트 사용으로 인한 차감"));
+//        }
+//
+//        int savePoints = finalAmount.multiply(BigDecimal.valueOf(0.01))
+//                .setScale(0, RoundingMode.DOWN)
+//                .intValue();
+//
+//        member.savePoint(savePoints);
+//        memberRepository.save(member);
+//
+//        if (savePoints > 0) {
+//            pointHistoryRepository.save(PointHistory.earn(member, savePoints, "[" + productSummary + "] 주문 적립 포인트 지급"));
+//        }
+//
+//        Notification notification = Notification.builder()
+//                .member(member)
+//                .title("리뷰 작성 시 포인트 제공")
+//                .content("구매 상품 리뷰 작성 시 상품 구매 금액의 5% 포인트를 드려요!")
+//                .build();
+//        notificationRepository.save(notification);
+//
+//        return savedOrder.getOrderId();
+//    }
+
     @Transactional
     public Integer createOrder(String email, OrderRequestDto requestDto) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 찾을 수 없습니다."));
 
-        // 0) 결제 존재/상태 확인 및 멱등 처리
-        if (requestDto.getMerchantUid() == null || requestDto.getMerchantUid().isBlank()) {
-            throw new IllegalArgumentException("merchantUid가 없습니다.");
-        }
-        Payment pay = paymentRepository.findByMerchantUid(requestDto.getMerchantUid())
-                .orElseThrow(() -> new IllegalStateException("결제 정보가 없습니다. merchantUid=" + requestDto.getMerchantUid()));
+        final boolean isFree = Boolean.TRUE.equals(requestDto.getFree());
 
-        if (pay.getStatus() != PaymentStatus.PAID) {
-            throw new IllegalStateException("결제가 완료되지 않았습니다.");
-        }
-        if (pay.getOrder() != null) {
-            // 멱등: 이미 주문이 연결되어 있으면 그 주문 반환
-            return pay.getOrder().getOrderId();
+        // 0) 결제 존재/상태 확인 및 멱등 처리 (FREE 아닐 때만)
+        Payment pay = null;
+        if (!isFree) {
+            if (requestDto.getMerchantUid() == null || requestDto.getMerchantUid().isBlank()) {
+                throw new IllegalArgumentException("merchantUid가 없습니다.");
+            }
+            pay = paymentRepository.findByMerchantUid(requestDto.getMerchantUid())
+                    .orElseThrow(() -> new IllegalStateException("결제 정보가 없습니다. merchantUid=" + requestDto.getMerchantUid()));
+
+            if (pay.getStatus() != PaymentStatus.PAID) {
+                throw new IllegalStateException("결제가 완료되지 않았습니다.");
+            }
+            if (pay.getOrder() != null) {
+                // 멱등: 이미 주문 연결되어 있으면 그 주문 반환
+                return pay.getOrder().getOrderId();
+            }
         }
 
         // 1) 아이템 검증/재고 차감
@@ -151,7 +335,7 @@ public class OrderService {
                     return price.multiply(rate).multiply(BigDecimal.valueOf(i.getQuantity()));
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .setScale(0, RoundingMode.HALF_UP); // 정책에 맞게 반올림(선택)
+                .setScale(0, RoundingMode.HALF_UP);
 
         BigDecimal finalAmount = totalAmount.subtract(discountAmount);
 
@@ -163,23 +347,24 @@ public class OrderService {
         finalAmount = finalAmount.subtract(BigDecimal.valueOf(usedPoints));
         member.usePoint(usedPoints);
 
-        // (선택) 결제 금액과 주문 금액 일치 검증 — 준비검증을 안 쓰므로 UI 조작 방지용
-        Integer paidAmountKrw = pay.getAmount(); // INT KRW
-        System.out.println("결제 금액 : " + pay.getAmount());
-        System.out.println("주문 금액 : " + finalAmount.setScale(0,RoundingMode.DOWN).intValue());
-        if (paidAmountKrw != null && paidAmountKrw.intValue() != finalAmount.setScale(0, RoundingMode.DOWN).intValue()) {
-            // 엄격 모드: 불일치 시 실패 처리
-            throw new IllegalStateException("결제 금액과 주문 금액이 일치하지 않습니다.");
-            // 느슨하게 운영하려면 위를 주석 처리하고 로그만 남기세요.
+        //FREE가 아닐 때만 수행
+        if (!isFree) {
+            Integer paidAmountKrw = pay.getAmount(); // INT KRW
+            System.out.println("결제 금액 : " + paidAmountKrw);
+            System.out.println("주문 금액 : " + finalAmount.setScale(0, RoundingMode.DOWN).intValue());
+            if (paidAmountKrw != null && paidAmountKrw.intValue() != finalAmount.setScale(0, RoundingMode.DOWN).intValue()) {
+                throw new IllegalStateException("결제 금액과 주문 금액이 일치하지 않습니다.");
+            }
         }
 
         String deliveryRequest = requestDto.getDeliveryRequest();
+
         // 3) 주문 생성
         Order order = Order.builder()
                 .member(member)
                 .totalAmount(totalAmount)
                 .discountAmount(discountAmount)
-                .finalAmount(finalAmount)
+                .finalAmount(finalAmount.max(BigDecimal.ZERO)) // 음수 방지
                 .usedPoints(usedPoints)
                 .orderedAt(LocalDateTime.now())
                 .status(OrderStatus.PENDING)
@@ -197,11 +382,14 @@ public class OrderService {
         orderRepository.save(savedOrder);
 
         // 4) 결제-주문 연결 및 상태 전환
-        pay.setOrder(savedOrder);
-        paymentRepository.save(pay);
-
-        savedOrder.setStatus(OrderStatus.PAID); // 주문 상태 전환
-        savedOrder.setDeliveryStatus(DeliveryStatus.ORDERED); // 배송 상태 초기화 (주문 완료)
+        if (!isFree) {
+            // 결제 주문 연결
+            pay.setOrder(savedOrder);
+            paymentRepository.save(pay);
+        }
+        // FREE 여부와 상관없이 결제 완료 상태로 간주(요구사항에 맞춰 바로 생성/완료)
+        savedOrder.setStatus(OrderStatus.PAID);
+        savedOrder.setDeliveryStatus(DeliveryStatus.ORDERED);
         orderRepository.save(savedOrder);
 
         // 5) 포인트 이력 처리
@@ -210,10 +398,12 @@ public class OrderService {
         String productSummary = itemCount > 1 ? mainProductName + " 외 " + (itemCount - 1) + "건" : mainProductName;
 
         if (usedPoints > 0) {
-            pointHistoryRepository.save(PointHistory.use(member, usedPoints, "[" + productSummary + "] 주문 결제 중 포인트 사용으로 인한 차감"));
+            pointHistoryRepository.save(
+                    PointHistory.use(member, usedPoints, "[" + productSummary + "] 주문 결제 중 포인트 사용으로 인한 차감"));
         }
 
-        int savePoints = finalAmount.multiply(BigDecimal.valueOf(0.01))
+        int savePoints = savedOrder.getFinalAmount()
+                .multiply(BigDecimal.valueOf(0.01))
                 .setScale(0, RoundingMode.DOWN)
                 .intValue();
 
@@ -221,7 +411,8 @@ public class OrderService {
         memberRepository.save(member);
 
         if (savePoints > 0) {
-            pointHistoryRepository.save(PointHistory.earn(member, savePoints, "[" + productSummary + "] 주문 적립 포인트 지급"));
+            pointHistoryRepository.save(
+                    PointHistory.earn(member, savePoints, "[" + productSummary + "] 주문 적립 포인트 지급"));
         }
 
         Notification notification = Notification.builder()
@@ -233,6 +424,7 @@ public class OrderService {
 
         return savedOrder.getOrderId();
     }
+
 
     //orderNum 자동 생성
     private String generateOrderNum(Order order) {
@@ -348,72 +540,154 @@ public class OrderService {
         return percent.stripTrailingZeros().toPlainString() + "%";
     }
 
-    public OrderDetailResponseDto getOrderDetail(Integer orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 주문 정보가 존재하지 않습니다."));
-        Payment payment = paymentRepository.findByOrder_OrderId(orderId)
+//    public OrderDetailResponseDto getOrderDetail(Integer orderId) {
+//        Order order = orderRepository.findById(orderId)
+//                .orElseThrow(() -> new EntityNotFoundException("해당 주문 정보가 존재하지 않습니다."));
+//        Payment payment = paymentRepository.findByOrder_OrderId(orderId)
+//                .orElseThrow(() -> new EntityNotFoundException("해당 주문에 대한 결제 내역이 없습니다."));
+//        Member member = order.getMember();
+//        BigDecimal totalAmount = order.getTotalAmount();
+//        BigDecimal finalAmount = order.getFinalAmount();
+//        List<OrderItem> orderedItems = orderItemRepository.findByOrder(order);
+//
+//        String paymentMethod = null;
+//        if(payment.getPgProvider().equals("kakaopay"))
+//            paymentMethod = "카카오페이";
+//        else if(payment.getPgProvider().equals("nice_v2"))
+//            paymentMethod = payment.getCardName();
+//
+//        List<OrderDetailResponseDto.Item> items = orderedItems.stream().map(orderItem -> {
+//            ProductItem productItem = orderItem.getProductItem();
+//            Product product = productItem.getProduct();
+//
+//            BigDecimal price = nz(orderItem.getPrice());
+//            BigDecimal percent = nz(orderItem.getDiscountRate()); // 10 = 10%
+//            BigDecimal discountPrice = calcDiscountPrice(price, percent); // 최종 적용가
+//            String discountRateStr = toPercentString(percent);            // "10%"
+//
+//            String imgUrl = productImageRepository.findByProductAndIsThumbnailTrue(product)
+//                    .map(ProductImage::getImageUrl)
+//                    .orElseGet(() -> product.getImages().isEmpty()
+//                            ? null
+//                            : product.getImages().get(0).getImageUrl());
+//
+//
+//            return new OrderDetailResponseDto.Item(
+//                    product.getProductId(),
+//                    product.getProductName(),
+//                    orderItem.getPrice(),
+//                    orderItem.getQuantity(),
+//                    productItem.getSize(),
+//                    percent,
+//                    discountPrice,
+//                    productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl()
+//            );
+//        }).toList();
+//
+//        return new OrderDetailResponseDto(
+//                order.getOrderId(),
+//                order.getOrderNum(),
+//                new MemberInfoDto(
+//                        member.getName(),
+//                        member.getPhoneNumber(),
+//                        member.getAddress(),
+//                        member.getPoint()
+//                ),
+//                totalAmount,
+//                totalAmount.subtract(finalAmount),
+//                finalAmount,
+//                order.getStatus(),
+//                order.getUsedPoints(),
+//                items,
+//                items.size(),
+//                paymentMethod,
+//                order.getOrderedAt(),
+//                order.getDeliveryRequest(),
+//                order.getDeliveryStatus()
+//        );
+//    }
+
+public OrderDetailResponseDto getOrderDetail(Integer orderId) {
+    Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new EntityNotFoundException("해당 주문 정보가 존재하지 않습니다."));
+
+    Member member = order.getMember();
+    BigDecimal totalAmount = order.getTotalAmount();
+    BigDecimal finalAmount = order.getFinalAmount();
+    List<OrderItem> orderedItems = orderItemRepository.findByOrder(order);
+
+    // 결제 존재 여부로 FREE 주문 판단
+    boolean hasPayment = paymentRepository.existsByOrder_OrderId(orderId);
+
+    String paymentMethod;
+    Payment payment = null;
+    if (!hasPayment) {
+        // FREE 주문: 결제 레코드 없음
+        paymentMethod = "전액 적립금 사용";
+    } else {
+        // 일반 결제 주문
+        payment = paymentRepository.findByOrder_OrderId(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 주문에 대한 결제 내역이 없습니다."));
-        Member member = order.getMember();
-        BigDecimal totalAmount = order.getTotalAmount();
-        BigDecimal finalAmount = order.getFinalAmount();
-        List<OrderItem> orderedItems = orderItemRepository.findByOrder(order);
 
-        String paymentMethod = null;
-        if(payment.getPgProvider().equals("kakaopay"))
+        String pg = payment.getPgProvider();
+        if ("kakaopay".equalsIgnoreCase(pg)) {
             paymentMethod = "카카오페이";
-        else if(payment.getPgProvider().equals("nice_v2"))
+        } else if ("nice_v2".equalsIgnoreCase(pg)) {
             paymentMethod = payment.getCardName();
-
-        List<OrderDetailResponseDto.Item> items = orderedItems.stream().map(orderItem -> {
-            ProductItem productItem = orderItem.getProductItem();
-            Product product = productItem.getProduct();
-
-            BigDecimal price = nz(orderItem.getPrice());
-            BigDecimal percent = nz(orderItem.getDiscountRate()); // 10 = 10%
-            BigDecimal discountPrice = calcDiscountPrice(price, percent); // 최종 적용가
-            String discountRateStr = toPercentString(percent);            // "10%"
-
-            String imgUrl = productImageRepository.findByProductAndIsThumbnailTrue(product)
-                    .map(ProductImage::getImageUrl)
-                    .orElseGet(() -> product.getImages().isEmpty()
-                            ? null
-                            : product.getImages().get(0).getImageUrl());
-
-
-            return new OrderDetailResponseDto.Item(
-                    product.getProductId(),
-                    product.getProductName(),
-                    orderItem.getPrice(),
-                    orderItem.getQuantity(),
-                    productItem.getSize(),
-                    percent,
-                    discountPrice,
-                    productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl()
-            );
-        }).toList();
-
-        return new OrderDetailResponseDto(
-                order.getOrderId(),
-                order.getOrderNum(),
-                new MemberInfoDto(
-                        member.getName(),
-                        member.getPhoneNumber(),
-                        member.getAddress(),
-                        member.getPoint()
-                ),
-                totalAmount,
-                totalAmount.subtract(finalAmount),
-                finalAmount,
-                order.getStatus(),
-                order.getUsedPoints(),
-                items,
-                items.size(),
-                paymentMethod,
-                order.getOrderedAt(),
-                order.getDeliveryRequest(),
-                order.getDeliveryStatus()
-        );
+        } else {
+            paymentMethod = pg;
+        }
     }
+
+    List<OrderDetailResponseDto.Item> items = orderedItems.stream().map(orderItem -> {
+        ProductItem productItem = orderItem.getProductItem();
+        Product product = productItem.getProduct();
+
+        BigDecimal price = nz(orderItem.getPrice());
+        BigDecimal percent = nz(orderItem.getDiscountRate()); // 10 = 10%
+        BigDecimal discountPrice = calcDiscountPrice(price, percent); // 최종 적용가
+
+        String imgUrl = productImageRepository.findByProductAndIsThumbnailTrue(product)
+                .map(ProductImage::getImageUrl)
+                .orElseGet(() -> product.getImages().isEmpty()
+                        ? null
+                        : product.getImages().get(0).getImageUrl());
+
+        return new OrderDetailResponseDto.Item(
+                product.getProductId(),
+                product.getProductName(),
+                orderItem.getPrice(),
+                orderItem.getQuantity(),
+                productItem.getSize(),
+                percent,
+                discountPrice,
+                imgUrl
+        );
+    }).toList();
+
+    return new OrderDetailResponseDto(
+            order.getOrderId(),
+            order.getOrderNum(),
+            new MemberInfoDto(
+                    member.getName(),
+                    member.getPhoneNumber(),
+                    member.getAddress(),
+                    member.getPoint()
+            ),
+            totalAmount,
+            totalAmount.subtract(finalAmount), // 할인액
+            finalAmount,
+            order.getStatus(),
+            order.getUsedPoints(),
+            items,
+            items.size(),
+            paymentMethod,
+            order.getOrderedAt(),
+            order.getDeliveryRequest(),
+            order.getDeliveryStatus()
+    );
+}
+
 
     public Integer countMyOrders(String email) {
         Member member = memberRepository.findByEmail(email)
