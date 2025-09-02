@@ -7,6 +7,7 @@ import org.example.tryonx.fitting.domain.ProductFitting;
 import org.example.tryonx.fitting.repository.ProductFittingRepository;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.product.domain.Product;
+import org.example.tryonx.product.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -32,6 +33,7 @@ public class ComfyUiFittingService {
     private final RestTemplate restTemplate;
     private final MemberRepository memberRepository;
     private final ProductFittingRepository productFittingRepository;
+    private final ProductRepository productRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${ngrok.url}")
@@ -260,5 +262,15 @@ public class ComfyUiFittingService {
         pf.setSequence(seq);
         pf.setFittingImageUrl(url);
         productFittingRepository.save(pf);
+    }
+
+    public List<String> getFittingImageUrls(Integer productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("해당 상품이 없습니다 : " + productId));
+        List<String> fittingImageUrls = productFittingRepository.findByProductOrderBySequenceAsc(product)
+                .stream()
+                .map(ProductFitting::getFittingImageUrl)
+                .toList();
+        return fittingImageUrls;
     }
 }
