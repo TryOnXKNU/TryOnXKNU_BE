@@ -153,7 +153,8 @@ public class MemberListService {
                         order.getStatus(),
                         order.getDeliveryStatus(),
                         rate,
-                        discountedPrice
+                        discountedPrice,
+                        order.getFinalAmount()
                 ));
             }
         }

@@ -27,4 +27,5 @@ public class MemberOrderHistory {
     private DeliveryStatus deliveryStatus;
     private BigDecimal discountRate;
     private BigDecimal discountPrice;
+    private BigDecimal finalAmount;
 }
