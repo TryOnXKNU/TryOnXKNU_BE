@@ -168,7 +168,7 @@ public class ComfyUiService {
                     (categoryId1 == 1 && categoryId2 == 3) ||
                     (categoryId1 == 3 && categoryId2 == 1) ||
                     (categoryId1 == 4) || (categoryId2 == 4)) {
-                throw new RuntimeException("Invalid category combination: "
+                throw new RuntimeException("선택한 상품 카테고리 조합이 옳바르지 않습니다."
                         + categoryId1 + " & " + categoryId2);
             }
 
