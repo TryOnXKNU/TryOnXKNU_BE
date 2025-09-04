@@ -103,6 +103,7 @@ public class MemberService {
                 .bodyShape(member.getBodyShape())
                 .height(member.getHeight())
                 .weight(member.getWeight())
+                .memberNum(member.getMemberNum())
                 .build();
     }
 
