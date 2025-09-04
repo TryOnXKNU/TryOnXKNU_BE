@@ -88,6 +88,11 @@ public class ExchangeService {
                             ? e.getProduct().getImages().get(0).getImageUrl()
                             : null;
 
+                    OrderItem orderItem = e.getOrderItem();
+                    Size purchasedSize = (orderItem != null && orderItem.getProductItem() != null)
+                            ? orderItem.getProductItem().getSize()
+                            : null;
+
                     return new ExchangeResponseDto(
                             e.getExchangeId(),
                             member.getMemberId(),
@@ -99,6 +104,7 @@ public class ExchangeService {
                             e.getStatus().name(),
                             e.getPrice(),
                             e.getQuantity(),
+                            purchasedSize,
                             productName,
                             imageUrl
                     );
@@ -115,9 +121,15 @@ public class ExchangeService {
         }
 
         Product product = exchange.getProduct();
+        OrderItem orderItem = exchange.getOrderItem();
+
         String productName = product != null ? product.getProductName() : null;
         String imageUrl = (product != null && !product.getImages().isEmpty())
                 ? product.getImages().get(0).getImageUrl()
+                : null;
+
+        Size purchasedSize = (orderItem != null && orderItem.getProductItem() != null)
+                ? orderItem.getProductItem().getSize()
                 : null;
 
         return new ExchangeResponseDto(
@@ -131,6 +143,7 @@ public class ExchangeService {
                 exchange.getStatus().name(),
                 exchange.getPrice(),
                 exchange.getQuantity(),
+                purchasedSize,
                 productName,
                 imageUrl
         );

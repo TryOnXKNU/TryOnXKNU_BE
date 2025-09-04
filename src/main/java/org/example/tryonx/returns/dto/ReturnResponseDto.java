@@ -2,6 +2,7 @@ package org.example.tryonx.returns.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.example.tryonx.enums.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ public class ReturnResponseDto {
     private Integer orderItemId;
     private BigDecimal price;
     private Integer quantity;
+    private Size size;
     private String reason;
     private String status;
     private LocalDateTime returnRequestedAt;
