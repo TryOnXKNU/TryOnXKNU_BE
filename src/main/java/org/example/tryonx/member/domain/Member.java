@@ -123,4 +123,7 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
     private List<Returns> returns;
 
+    @Column(nullable = true, unique = true, length = 20)
+    private String memberNum;
+
 }
