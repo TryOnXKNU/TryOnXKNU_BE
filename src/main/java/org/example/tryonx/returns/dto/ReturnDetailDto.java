@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.tryonx.enums.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ public class ReturnDetailDto {
     private String orderNum;
     private BigDecimal price;
     private Integer quantity;
+    private Size size;
     private String reason;
     private LocalDateTime requestedAt;
     private LocalDateTime processedAt;

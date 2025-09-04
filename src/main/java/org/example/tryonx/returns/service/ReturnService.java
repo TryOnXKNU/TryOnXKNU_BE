@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.AfterServiceStatus;
 import org.example.tryonx.enums.ReturnStatus;
+import org.example.tryonx.enums.Size;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.orders.order.domain.Order;
@@ -88,6 +89,11 @@ public class ReturnService {
                             ? product.getImages().get(0).getImageUrl()
                             : null;
 
+                    OrderItem orderItem = returns.getOrderItem();
+                    Size purchasedSize = (orderItem != null && orderItem.getProductItem() != null)
+                            ? orderItem.getProductItem().getSize()
+                            : null;
+
                     return new ReturnResponseDto(
                             returns.getReturnId(),
                             member.getMemberId(),
@@ -95,6 +101,7 @@ public class ReturnService {
                             returns.getOrderItem().getOrderItemId(),
                             returns.getPrice(),
                             returns.getQuantity(),
+                            purchasedSize,
                             returns.getReason(),
                             returns.getStatus().name(),
                             returns.getReturnRequestedAt(),
@@ -143,6 +150,10 @@ public class ReturnService {
         BigDecimal discountedFinal = finalUnitPrice.multiply(qty).setScale(0, RoundingMode.DOWN);
 
 
+        Size purchasedSize = (orderItem != null && orderItem.getProductItem() != null)
+                ? orderItem.getProductItem().getSize()
+                : null;
+
         return new ReturnDetailDto(
                 returns.getReturnId(),
                 returns.getMember().getMemberId(),
@@ -151,6 +162,7 @@ public class ReturnService {
                 returns.getOrder().getOrderNum(),
                 unitPrice,
                 returns.getQuantity(),
+                purchasedSize,
                 returns.getReason(),
                 returns.getReturnRequestedAt(),
                 returns.getReturnApprovedAt(),
@@ -200,6 +212,8 @@ public class ReturnService {
         }
 
         Product product = returns.getProduct();
+        OrderItem orderItem = returns.getOrderItem();
+
         String productName = product != null ? product.getProductName() : null;
         String imageUrl = (product != null && !product.getImages().isEmpty())
                 ? product.getImages().get(0).getImageUrl()
@@ -209,6 +223,11 @@ public class ReturnService {
         String rejectReason = returns.getStatus() == ReturnStatus.REJECTED
                 ? returns.getRejectReason()
                 : null;
+
+        Size purchasedSize = (orderItem != null && orderItem.getProductItem() != null)
+                ? orderItem.getProductItem().getSize()
+                : null;
+
         BigDecimal discount = product.getPrice().multiply(product.getDiscountRate().divide(BigDecimal.valueOf(100)));
         return new ReturnDetailDto(
                 returns.getReturnId(),
@@ -218,6 +237,7 @@ public class ReturnService {
                 returns.getOrder().getOrderNum(),
                 returns.getPrice(),
                 returns.getQuantity(),
+                purchasedSize,
                 returns.getReason(),
                 returns.getReturnRequestedAt(),
                 returns.getReturnApprovedAt(),
