@@ -11,6 +11,7 @@ import org.example.tryonx.member.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +55,16 @@ public class LocalAuthService {
                 .birthDate(dto.getBirthDate())
                 .point(0)
                 .build();
-        return memberRepository.save(member);
+
+        Member saved = memberRepository.saveAndFlush(member);
+
+        // memberNum 생성
+        String yearPrefix = String.valueOf(LocalDate.now().getYear()).substring(2);
+        String newMemberNum = String.format("TX%s%04d", yearPrefix, saved.getMemberId());
+
+        saved.setMemberNum(newMemberNum);
+
+        return memberRepository.save(saved);
     }
 
     public Member login(LoginRequestDto loginRequestDto) {
