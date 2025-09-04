@@ -138,42 +138,154 @@ public class ComfyUiService {
             case NATURAL -> "natural.png";
         };
 
-        Product product1 = productRepository.findById(productId1)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-        Product product2 = productRepository.findById(productId2)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        String imgName1 = productImageRepository.findByProductAndIsThumbnailTrue(product1)
-                .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
-                .getImageUrl();
-        String imgName2 = productImageRepository.findByProductAndIsThumbnailTrue(product2)
-                .orElseThrow(() -> new RuntimeException("Thumbnail not found for product2"))
-                .getImageUrl();
-
-        String fileNameOnly1 = stripPrefix(imgName1, "/upload/product/");
-        String fileNameOnly2 = stripPrefix(imgName2, "/upload/product/");
+        String prompt1 = null;
+        String prompt2 = null;
 
         String imageName1 = null;
         String imageName2 = null;
 
+        String defaultPrompt = null;
+        String requestPrompt = null;
 
-        if (product1.getCategory().getCategoryId() == 1) {
-            imageName1 = fileNameOnly1;
-        } else if (product1.getCategory().getCategoryId() == 2) {
-            imageName2 = fileNameOnly1;
-        }
+        String defaultImageName = null;
+        String requestImageName = null;
 
-        if (product2.getCategory().getCategoryId() == 1) {
-            imageName1 = fileNameOnly2;
-        } else if (product2.getCategory().getCategoryId() == 2) {
-            imageName2 = fileNameOnly2;
-        }
+        String fileNameOnly1 = null;
+        String fileNameOnly2 = null;
 
-        // 워크플로우 JSON 생성
-        String workflowJson = loadWorkflowFromResource("v2_one_person_two_clothes.json")
+        String workflowJson = null;
+
+        if (productId1 != null && productId2 != null) {
+            Product product1 = productRepository.findById(productId1)
+                    .orElseThrow(() -> new RuntimeException("Product not found - id : " + productId1));
+            Product product2 = productRepository.findById(productId2)
+                    .orElseThrow(() -> new RuntimeException("Product not found - id : " + productId2));
+
+            Integer categoryId1 = product1.getCategory().getCategoryId();
+            Integer categoryId2 = product2.getCategory().getCategoryId();
+
+            if (categoryId1.equals(categoryId2) ||
+                    (categoryId1 == 1 && categoryId2 == 3) ||
+                    (categoryId1 == 3 && categoryId2 == 1) ||
+                    (categoryId1 == 4) || (categoryId2 == 4)) {
+                throw new RuntimeException("선택한 상품 카테고리 조합이 옳바르지 않습니다."
+                        + categoryId1 + " & " + categoryId2);
+            }
+
+            prompt1 = switch (product1.getCategory().getCategoryId()){
+                case 1,3 -> "black tshirt";
+                case 2 -> "pants";
+                default -> "clothes";
+            };
+            prompt2 = switch (product2.getCategory().getCategoryId()){
+                case 1,3 -> "black tshirt";
+                case 2 -> "pants";
+                default -> "clothes";
+            };
+            System.out.println("--------------------------------------------");
+            System.out.println("prompt1: " + prompt1);
+            System.out.println("prompt2: " + prompt2);
+            System.out.println("--------------------------------------------");
+
+            imageName1 = productImageRepository.findByProductAndIsThumbnailTrue(product1)
+                    .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
+                    .getImageUrl();
+            imageName2 = productImageRepository.findByProductAndIsThumbnailTrue(product2)
+                    .orElseThrow(() -> new RuntimeException("Thumbnail not found for product2"))
+                    .getImageUrl();
+
+            fileNameOnly1 = stripPrefix(imageName1, "/upload/product/");
+            fileNameOnly2 = stripPrefix(imageName2, "/upload/product/");
+
+            // 워크플로우 JSON 생성
+            workflowJson = loadWorkflowFromResource("v2_one_person_two_clothes.json")
+                    .replace("{{modelImage}}", model)
+                    .replace("{{imageName1}}", fileNameOnly1 != null ? fileNameOnly1 : "")
+                    .replace("{{imageName2}}", fileNameOnly2 != null ? fileNameOnly2 : "")
+                    .replace("{{prompt1}}", prompt1)
+                    .replace("{{prompt2}}", prompt2);
+
+        }else if((productId1 == null) && (productId2 != null)){
+            Product product2 = productRepository.findById(productId2)
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
+
+            switch (product2.getCategory().getCategoryId()){
+                case 1 : case 3 :
+                    requestPrompt = "black tshirt";
+                    defaultPrompt = "pants";
+                    defaultImageName = "/upload/product/basic-pants.png";
+                    requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product2)
+                            .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
+                            .getImageUrl();
+                    break;
+                case 2 :
+                    requestPrompt = "pants";
+                    defaultPrompt = "black tshirt";
+                    defaultImageName = "/upload/product/basic-tshirt.png";
+                    requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product2)
+                            .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
+                            .getImageUrl();
+                    break;
+                case 4 :
+                    requestPrompt = "dress";
+                    defaultPrompt = "pants";
+                    defaultImageName = "/upload/product/basic-pants.png";
+                    requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product2)
+                            .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
+                            .getImageUrl();
+                    break;
+            };
+            fileNameOnly1 = stripPrefix(defaultImageName, "/upload/product/");
+            fileNameOnly2 = stripPrefix(requestImageName, "/upload/product/");
+
+            workflowJson = loadWorkflowFromResource("v2_one_person_two_clothes.json")
+                    .replace("{{modelImage}}", model)
+                    .replace("{{imageName1}}", fileNameOnly1 != null ? fileNameOnly1 : "")
+                    .replace("{{imageName2}}", fileNameOnly2 != null ? fileNameOnly2 : "")
+                    .replace("{{prompt1}}", defaultPrompt != null ? defaultPrompt : "")
+                    .replace("{{prompt2}}", requestPrompt != null ? requestPrompt : "");
+
+        }else if((productId2 == null) && (productId1 != null)){
+        Product product1 = productRepository.findById(productId1)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        switch (product1.getCategory().getCategoryId()){
+            case 1 : case 3 :
+                requestPrompt = "black tshirt";
+                defaultPrompt = "pants";
+                defaultImageName = "/upload/product/basic-pants.png";
+                requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product1)
+                        .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
+                        .getImageUrl();
+                break;
+            case 2 :
+                requestPrompt = "pants";
+                defaultPrompt = "black tshirt";
+                defaultImageName = "/upload/product/basic-tshirt.png";
+                requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product1)
+                        .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
+                        .getImageUrl();
+                break;
+            case 4 :
+                requestPrompt = "dress";
+                defaultPrompt = "pants";
+                defaultImageName = "/upload/product/basic-pants.png";
+                requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product1)
+                        .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
+                        .getImageUrl();
+                break;
+        };
+        fileNameOnly1 = stripPrefix(defaultImageName, "/upload/product/");
+        fileNameOnly2 = stripPrefix(requestImageName, "/upload/product/");
+
+
+        workflowJson = loadWorkflowFromResource("v2_one_person_two_clothes.json")
                 .replace("{{modelImage}}", model)
-                .replace("{{imageName1}}", imageName1 != null ? imageName1 : "")
-                .replace("{{imageName2}}", imageName2 != null ? imageName2 : "");
+                .replace("{{imageName1}}", fileNameOnly1 != null ? fileNameOnly1 : "")
+                .replace("{{imageName2}}", fileNameOnly2 != null ? fileNameOnly2 : "")
+                .replace("{{prompt1}}", defaultPrompt != null ? defaultPrompt : "")
+                .replace("{{prompt2}}", requestPrompt != null ? requestPrompt : "");
+    }
 
         // Google Drive 새로고침
         refreshGoogleDrive();

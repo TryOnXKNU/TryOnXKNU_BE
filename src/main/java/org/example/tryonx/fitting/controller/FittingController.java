@@ -46,10 +46,10 @@ public class FittingController {
         return ResponseEntity.ok("/upload/fitting/downloaded_"+ filename);
     }
 
-//    @PostMapping("/try-on/dual")
-//    public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId1, @RequestParam Integer productId2) throws Exception {
-//        String email = userDetails.getUsername();
-//        String filename = comfyUiService.executeFittingTwoClothesFlow(email, productId1, productId2);
-//        return ResponseEntity.ok(" 생성된 이미지 파일: " + filename);
-//    }
+    @PostMapping("/try-on/dual")
+    public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(required = false) Integer productId1, @RequestParam(required = false) Integer productId2) throws Exception {
+        String email = userDetails.getUsername();
+        String filename = comfyUiService.executeFittingTwoClothesFlow(email, productId1, productId2);
+        return ResponseEntity.ok(" upload/fitting/downloaded_" + filename);
+    }
 }
