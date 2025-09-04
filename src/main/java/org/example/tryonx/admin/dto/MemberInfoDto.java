@@ -22,4 +22,5 @@ public class MemberInfoDto {
     private BodyShape bodyShape;
     private Integer height;
     private Integer weight;
+    private String memberNum;
 }

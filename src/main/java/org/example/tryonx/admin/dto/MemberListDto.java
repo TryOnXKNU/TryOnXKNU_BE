@@ -11,4 +11,5 @@ public class MemberListDto {
     private String profileUrl;
     private Long memberId;
     private String name;
+    private String memberNum;
 }

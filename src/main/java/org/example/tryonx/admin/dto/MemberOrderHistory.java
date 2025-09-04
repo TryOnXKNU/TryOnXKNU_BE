@@ -28,4 +28,5 @@ public class MemberOrderHistory {
     private BigDecimal discountRate;
     private BigDecimal discountPrice;
     private BigDecimal finalAmount;
+    private String memberNum;
 }

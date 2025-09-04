@@ -48,7 +48,8 @@ public class MemberListService {
                 .map(member -> new MemberListDto(
                         member.getProfileUrl(),
                         member.getMemberId(),
-                        member.getName()
+                        member.getName(),
+                        member.getMemberNum()
                 ))
                 .collect(Collectors.toList());
     }
@@ -70,6 +71,7 @@ public class MemberListService {
                 .bodyShape(member.getBodyShape())
                 .height(member.getHeight())
                 .weight(member.getWeight())
+                .memberNum(member.getMemberNum())
                 .build();
     }
 
@@ -80,7 +82,8 @@ public class MemberListService {
                 .map(member -> new MemberListDto(
                         member.getProfileUrl(),
                         member.getMemberId(),
-                        member.getName()
+                        member.getName(),
+                        member.getMemberNum()
                 ))
                 .collect(Collectors.toList());
     }
@@ -154,7 +157,8 @@ public class MemberListService {
                         order.getDeliveryStatus(),
                         rate,
                         discountedPrice,
-                        order.getFinalAmount()
+                        order.getFinalAmount(),
+                        member.getMemberNum()
                 ));
             }
         }
