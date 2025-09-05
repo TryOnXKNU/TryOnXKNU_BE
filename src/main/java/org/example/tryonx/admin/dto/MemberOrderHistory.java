@@ -15,7 +15,8 @@ import java.time.LocalDateTime;
 public class MemberOrderHistory {
     private String orderNum;
     private String profileUrl;
-    private String name;
+//    private String name;
+    private String nickname;
     private Long memberId;
     private Integer orderId;
     private LocalDateTime orderedAt;
