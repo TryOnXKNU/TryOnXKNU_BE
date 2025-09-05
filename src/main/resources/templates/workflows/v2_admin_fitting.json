@@ -686,7 +686,7 @@
     },
     "44": {
       "inputs": {
-        "image": "KakaoTalk_Photo_2025-08-31-21-16-09 001.png"
+        "image": "{{model1}}"
       },
       "class_type": "LoadImage",
       "_meta": {
@@ -707,7 +707,7 @@
     },
     "46": {
       "inputs": {
-        "prompt": "t-shirts",
+        "prompt": "{{clothingPrompt}}",
         "threshold": 0.3,
         "sam_model": [
           "41",
@@ -1413,7 +1413,7 @@
     },
     "90": {
       "inputs": {
-        "image": "KakaoTalk_Photo_2025-08-31-21-16-10 002.png"
+        "image": "{{model2}}"
       },
       "class_type": "LoadImage",
       "_meta": {
@@ -1434,7 +1434,7 @@
     },
     "92": {
       "inputs": {
-        "prompt": "t-shirts",
+        "prompt": "{{clothingPrompt}}",
         "threshold": 0.3,
         "sam_model": [
           "87",
@@ -2058,7 +2058,7 @@
     },
     "131": {
       "inputs": {
-        "image": "ChatGPT Image 2025년 8월 31일 오후 09_35_35.png"
+        "image": "{{model3}}"
       },
       "class_type": "LoadImage",
       "_meta": {
@@ -2119,7 +2119,7 @@
     },
     "135": {
       "inputs": {
-        "prompt": "t-shirts",
+        "prompt": "{{clothingPrompt}}",
         "threshold": 0.3,
         "sam_model": [
           "138",
