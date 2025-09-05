@@ -28,7 +28,11 @@ import org.example.tryonx.review.dto.ProductReviewDto;
 import org.example.tryonx.review.service.ReviewService;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -213,6 +217,8 @@ public class AdminProductService {
             }
         }
 
+        deleteFileFromDisk(byImageUrl.getImageUrl());
+
         productImageRepository.delete(byImageUrl);
     }
 
@@ -232,8 +238,25 @@ public class AdminProductService {
             if (!productItems.isEmpty()) {
                 cartItemRepository.deleteByProductItemIn(productItems);
             }
+            product.getImages().forEach(img -> deleteFileFromDisk(img.getImageUrl()));
+            product.getFittings().forEach(fit -> deleteFileFromDisk(fit.getFittingImageUrl()));
+
             productRepository.delete(product);
             return "[상품 삭제 성공]";
+        }
+    }
+
+    private void deleteFileFromDisk(String fileUrl) {
+        try {
+            // "/upload/product/xxx.png" → 실제 경로 변환
+            String uploadRoot = "/home/ec2-user/app/upload"; // ← application.yml 값 @Value로 주입 가능
+            String relativePath = fileUrl.startsWith("/") ? fileUrl.substring(1) : fileUrl;
+            Path path = Paths.get(uploadRoot).resolve(relativePath.replace("upload/", ""));
+
+            Files.deleteIfExists(path);
+            System.out.println("파일 삭제됨: " + path);
+        } catch (IOException e) {
+            System.err.println("파일 삭제 실패: " + fileUrl + " - " + e.getMessage());
         }
     }
 

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.tryonx.category.Category;
 import org.example.tryonx.enums.BodyShape;
+import org.example.tryonx.fitting.domain.ProductFitting;
 import org.example.tryonx.image.domain.ProductImage;
 
 import java.math.BigDecimal;
@@ -56,6 +57,9 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductFitting> fittings;
 
     public void updateProduct(
             BigDecimal price,
