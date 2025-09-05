@@ -10,6 +10,7 @@ import lombok.*;
 public class MemberListDto {
     private String profileUrl;
     private Long memberId;
-    private String name;
+//    private String name;
+    private String nickname;
     private String memberNum;
 }

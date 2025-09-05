@@ -48,7 +48,8 @@ public class MemberListService {
                 .map(member -> new MemberListDto(
                         member.getProfileUrl(),
                         member.getMemberId(),
-                        member.getName(),
+//                        member.getName(),
+                        member.getNickname(),
                         member.getMemberNum()
                 ))
                 .collect(Collectors.toList());
@@ -82,7 +83,8 @@ public class MemberListService {
                 .map(member -> new MemberListDto(
                         member.getProfileUrl(),
                         member.getMemberId(),
-                        member.getName(),
+//                        member.getName(),
+                        member.getNickname(),
                         member.getMemberNum()
                 ))
                 .collect(Collectors.toList());
@@ -145,7 +147,8 @@ public class MemberListService {
                 result.add(new MemberOrderHistory(
                         order.getOrderNum(),
                         member.getProfileUrl(),
-                        member.getName(),
+//                        member.getName(),
+                        member.getNickname(),
                         member.getMemberId(),
                         order.getOrderId(),
                         order.getOrderedAt(),
