@@ -36,6 +36,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -259,69 +260,79 @@ public class OrderService {
             }
         }
 
+
         // 1) 아이템 검증/재고 차감
-        List<OrderItem> orderItems = requestDto.getItems().stream()
-                .map(item -> {
-                    Product product = productRepository.findById(item.getProductId())
-                            .orElseThrow(() -> new EntityNotFoundException("상품 정보 없음"));
+        List<OrderItem> orderItems = new ArrayList<>();
 
-                    ProductItem productItem = productItemRepository.findByProductAndSize(product, item.getSize())
-                            .orElseThrow(() -> new EntityNotFoundException("사이즈 정보 없음"));
+        for (OrderRequestDto.Item item : requestDto.getItems()) {
+            Product product = productRepository.findById(item.getProductId())
+                    .orElseThrow(() -> new EntityNotFoundException("상품 정보 없음"));
 
-                    if (item.getCartItemId() != null) {
-                        CartItem cartItem = cartItemRepository.findById(item.getCartItemId())
-                                .orElseThrow(() -> new EntityNotFoundException("장바구니 항목이 존재하지 않습니다."));
-                        if (!cartItem.getMember().equals(member)) {
-                            throw new IllegalArgumentException("본인의 장바구니 항목만 주문할 수 있습니다.");
-                        }
-                        if (!cartItem.getProductItem().equals(productItem)) {
-                            throw new IllegalArgumentException("장바구니 항목의 상품 정보가 일치하지 않습니다.");
-                        }
-                        if (!Objects.equals(cartItem.getQuantity(), item.getQuantity())) {
-                            throw new IllegalArgumentException("장바구니 항목의 수량과 요청 수량이 일치하지 않습니다.");
-                        }
+            ProductItem productItem = productItemRepository.findByProductAndSize(product, item.getSize())
+                    .orElseThrow(() -> new EntityNotFoundException("사이즈 정보 없음"));
+
+            if (item.getCartItemId() != null) {
+                CartItem cartItem = cartItemRepository.findById(item.getCartItemId())
+                        .orElseThrow(() -> new EntityNotFoundException("장바구니 항목이 존재하지 않습니다."));
+                if (!cartItem.getMember().equals(member)) {
+                    throw new IllegalArgumentException("본인의 장바구니 항목만 주문할 수 있습니다.");
+                }
+                if (!cartItem.getProductItem().equals(productItem)) {
+                    throw new IllegalArgumentException("장바구니 항목의 상품 정보가 일치하지 않습니다.");
+                }
+                if (!Objects.equals(cartItem.getQuantity(), item.getQuantity())) {
+                    throw new IllegalArgumentException("장바구니 항목의 수량과 요청 수량이 일치하지 않습니다.");
+                }
+            }
+
+            int reqQty = item.getQuantity();
+            if (productItem.getStock() < reqQty) {
+                throw new IllegalStateException("재고가 부족합니다.");
+            }
+
+            // 재고는 한 번에 차감
+            int newStock = productItem.getStock() - reqQty;
+            productItem.setStock(newStock);
+
+            // 재고 임계 알림 (필요시 로직 유지)
+            if (newStock == 3) {
+                List<CartItem> cartItems = cartItemRepository.findAll();
+                for (CartItem cartItem : cartItems) {
+                    if (cartItem.getProductItem().equals(productItem)) {
+                        Member target = cartItem.getMember();
+                        String productName = productItem.getProduct().getProductName();
+                        String size = productItem.getSize().name();
+                        String content = "[재고 알림] " + productName + " (" + size + ") 상품의 재고가 " + newStock + "개 남았습니다. 서두르세요!";
+
+                        Notification notification = Notification.builder()
+                                .member(target)
+                                .title("재고 알림")
+                                .content(content)
+                                .build();
+                        notificationRepository.save(notification);
                     }
+                }
+            }
 
-                    if (productItem.getStock() < item.getQuantity()) {
-                        throw new IllegalStateException("재고가 부족합니다.");
-                    }
+            if (newStock == 0) {
+                productItem.setStatus(ProductStatus.SOLDOUT);
+            }
+            productItemRepository.save(productItem);
 
-                    int newStock = productItem.getStock() - item.getQuantity();
-                    productItem.setStock(newStock);
+            // 수량만큼 OrderItem(수량=1) 생성
+            for (int k = 0; k < reqQty; k++) {
+                orderItems.add(
+                        OrderItem.builder()
+                                .member(member)
+                                .productItem(productItem)
+                                .quantity(1) // 항상 1
+                                .price(product.getPrice())
+                                .discountRate(product.getDiscountRate())
+                                .build()
+                );
+            }
+        }
 
-                    if (newStock == 3) {
-                        List<CartItem> cartItems = cartItemRepository.findAll(); // TODO: findByProductItem(productItem)로 최적화
-                        for (CartItem cartItem : cartItems) {
-                            if (cartItem.getProductItem().equals(productItem)) {
-                                Member target = cartItem.getMember();
-                                String productName = productItem.getProduct().getProductName();
-                                String size = productItem.getSize().name();
-                                String content = "[재고 알림] " + productName + " (" + size + ") 상품의 재고가 " + newStock + "개 남았습니다. 서두르세요!";
-
-                                Notification notification = Notification.builder()
-                                        .member(target)
-                                        .title("재고 알림")
-                                        .content(content)
-                                        .build();
-                                notificationRepository.save(notification);
-                            }
-                        }
-                    }
-
-                    if (newStock == 0) {
-                        productItem.setStatus(ProductStatus.SOLDOUT);
-                    }
-                    productItemRepository.save(productItem);
-
-                    return OrderItem.builder()
-                            .member(member)
-                            .productItem(productItem)
-                            .quantity(item.getQuantity())
-                            .price(product.getPrice())
-                            .discountRate(product.getDiscountRate())
-                            .build();
-                })
-                .collect(Collectors.toList());
 
         // 2) 금액 계산
         BigDecimal totalAmount = orderItems.stream()
