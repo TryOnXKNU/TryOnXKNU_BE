@@ -57,6 +57,67 @@ public class ComfyUiFittingService {
         }
     }
 
+//    public void executeFittingFlowWithClothingNameThreeImages(
+//            String email, String clothingImageName, Product product
+//    ) throws IOException, InterruptedException {
+//
+//        memberRepository.findByEmail(email)
+//                .orElseThrow(() -> new RuntimeException("Member not found"));
+//
+//        refreshGoogleDrive();
+//        // '/upload/product/' 접두어 제거
+//        String prefix = "/upload/product/";
+//        String fileNameOnly = clothingImageName.startsWith(prefix)
+//                ? clothingImageName.substring(prefix.length())
+//                : clothingImageName;
+//
+//        // 워크플로 로드 및 치환
+//        String workflowJson = loadWorkflowFromResource("templates/workflows/v2_admin_fitting.json")
+//                .replace("{{imageName}}", fileNameOnly);
+//
+//        String promptId = sendWorkflow(workflowJson);
+//        waitUntilComplete(promptId);
+//
+//        // 출력 prefix 3개
+//        List<String> prefixes = List.of("TRYONX_A", "TRYONX_B", "TRYONX_C");
+//        Map<String, List<String>> imagesByPrefix = getGeneratedOutputImageFilenamesByPrefix(promptId, prefixes);
+//
+//        // 각 프리픽스에서 1장씩 꺼내기
+//        List<String> originals = new ArrayList<>(3);
+//        for (String pfx : prefixes) {
+//            List<String> list = imagesByPrefix.getOrDefault(pfx, Collections.emptyList());
+//            if (list.isEmpty()) {
+//                throw new RuntimeException("SaveImage 출력이 없습니다. prefix=" + pfx + " | 전체=" + imagesByPrefix);
+//            }
+//            originals.add(list.get(0));
+//            System.out.println("탐지된 출력(" + pfx + "): " + list.get(0));
+//        }
+//
+//        // 중복 방지 체크
+//        if (new HashSet<>(originals).size() != originals.size()) {
+//            throw new RuntimeException("세 출력 이미지 중 중복 발생: " + originals);
+//        }
+//
+//        // 저장 파일명
+//        List<String> finals = List.of(
+//                "A_" + originals.get(0),
+//                "B_" + originals.get(1),
+//                "C_" + originals.get(2)
+//        );
+//
+//        for (int i = 0; i < 3; i++) {
+//            downloadImageAs(originals.get(i), finals.get(i));
+//        }
+//
+//        // DB 저장
+//        saveFixedSequences3(product,
+//                "/upload/fitting/" + finals.get(0),
+//                "/upload/fitting/" + finals.get(1),
+//                "/upload/fitting/" + finals.get(2));
+//
+//        System.out.println("저장 완료: " + finals);
+//    }
+
     public void executeFittingFlowWithClothingNameThreeImages(
             String email, String clothingImageName, Product product
     ) throws IOException, InterruptedException {
@@ -65,15 +126,41 @@ public class ComfyUiFittingService {
                 .orElseThrow(() -> new RuntimeException("Member not found"));
 
         refreshGoogleDrive();
+
         // '/upload/product/' 접두어 제거
         String prefix = "/upload/product/";
         String fileNameOnly = clothingImageName.startsWith(prefix)
                 ? clothingImageName.substring(prefix.length())
                 : clothingImageName;
 
+        // 카테고리에 따라 모델 이미지와 프롬프트 결정
+        Integer categoryId = product.getCategory().getCategoryId(); // ex) 1=TOP, 2=BOTTOM
+        String clothingPrompt;
+        String model1;
+        String model2;
+        String model3;
+
+        if (categoryId == 1) { // TOP
+            clothingPrompt = "t-shirts";
+            model1 = "top_model1.png";
+            model2 = "top_model2.png";
+            model3 = "top_model3.png";
+        } else if (categoryId == 2) { // BOTTOM
+            clothingPrompt = "pants";
+            model1 = "bottom_model1.png";
+            model2 = "bottom_model2.png";
+            model3 = "bottom_model3.png";
+        } else {
+            throw new RuntimeException("지원하지 않는 카테고리: " + categoryId);
+        }
+
         // 워크플로 로드 및 치환
         String workflowJson = loadWorkflowFromResource("templates/workflows/v2_admin_fitting.json")
-                .replace("{{imageName}}", fileNameOnly);
+                .replace("{{imageName}}", fileNameOnly)
+                .replace("{{clothingPrompt}}", clothingPrompt)
+                .replace("{{model1}}", model1)
+                .replace("{{model2}}", model2)
+                .replace("{{model3}}", model3);
 
         String promptId = sendWorkflow(workflowJson);
         waitUntilComplete(promptId);
@@ -117,6 +204,7 @@ public class ComfyUiFittingService {
 
         System.out.println("저장 완료: " + finals);
     }
+
 
     private String loadWorkflowFromResource(String path) throws IOException {
         Resource resource = new ClassPathResource(path);
