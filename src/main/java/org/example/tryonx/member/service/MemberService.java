@@ -111,6 +111,7 @@ public class MemberService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
         MyInfoResponseDto myInfoResponseDto = new MyInfoResponseDto(
+                member.getName(),
                 member.getNickname(),
                 member.getProfileUrl(),
                 member.getPhoneNumber(),

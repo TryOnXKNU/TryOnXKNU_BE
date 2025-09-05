@@ -11,6 +11,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MyInfoResponseDto {
+    private String name;
+
     private String nickname;
 
     private String profileImage;
