@@ -64,7 +64,7 @@ public class MemberListService {
                 .profileUrl(member.getProfileUrl())
                 .name(member.getName())
                 .memberId(member.getMemberId())
-                .nickName(member.getNickname())
+                .nickname(member.getNickname())
                 .phoneNumber(member.getPhoneNumber())
                 .birthday(member.getBirthDate())
                 .address(member.getAddress())

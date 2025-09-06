@@ -14,7 +14,7 @@ public class MemberInfoDto {
     private String profileUrl;
     private String name;
     private Long memberId;
-    private String nickName;
+    private String nickname;
     private String phoneNumber;
     private LocalDate birthday;
     private String address;
