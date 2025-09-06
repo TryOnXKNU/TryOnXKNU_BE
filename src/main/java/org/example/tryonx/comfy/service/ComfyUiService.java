@@ -155,7 +155,10 @@ public class ComfyUiService {
 
         String workflowJson = null;
 
-        if (productId1 != null && productId2 != null) {
+        if (productId1 == null && productId2 == null){
+            throw new RuntimeException("최소 1개 이상의 상품을 선택해야 합니다.");
+        }
+        else if (productId1 != null && productId2 != null) {
             Product product1 = productRepository.findById(productId1)
                     .orElseThrow(() -> new RuntimeException("Product not found - id : " + productId1));
             Product product2 = productRepository.findById(productId2)
