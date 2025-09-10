@@ -36,7 +36,7 @@ public class AdminReturnsController {
             @PathVariable Integer returnId,
             @PathVariable ReturnStatus status,
             @RequestParam(required = false) String reason
-    ) {
+    ) throws Exception {
         returnService.updateReturnStatus(returnId, status, reason);
         return ResponseEntity.ok().build();
     }
