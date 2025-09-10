@@ -9,6 +9,7 @@ import org.example.tryonx.orders.order.dto.OrderPreviewRequestDto;
 import org.example.tryonx.orders.payment.dto.PaymentCompleteReqDto;
 import org.example.tryonx.orders.payment.dto.PaymentCompleteResDto;
 import org.example.tryonx.orders.payment.dto.PrecheckRequstDto;
+import org.example.tryonx.orders.payment.service.PaymentRefundService;
 import org.example.tryonx.orders.payment.service.PaymentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PaymentController {
     private final PaymentService paymentService;
+    private final PaymentRefundService refundService;
 
     @PostMapping("/precheck")
     public ResponseEntity<?> precheck(@RequestBody @Valid PrecheckRequstDto req) {
@@ -45,6 +47,14 @@ public class PaymentController {
         PaymentCompleteResDto res = paymentService.verifyPaymentComplete(email, req);
         System.out.println("[DONE] /payment/complete verified=" + res.isVerified());
         return ResponseEntity.ok(res);
-
     }
+
+//    @PostMapping("/{orderId}/refund")
+//    public ResponseEntity<String> refundPayment(
+//            @PathVariable Integer orderId,
+//            @RequestParam(defaultValue = "사용자 요청 환불") String reason) throws Exception {
+//
+//        refundService.refundPayment(orderId, reason);
+//        return ResponseEntity.ok("환불이 완료되었습니다.");
+//    }
 }

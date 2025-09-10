@@ -3,6 +3,7 @@ package org.example.tryonx.returns.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.AfterServiceStatus;
+import org.example.tryonx.enums.OrderStatus;
 import org.example.tryonx.enums.ReturnStatus;
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.member.domain.Member;
@@ -11,6 +12,7 @@ import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
+import org.example.tryonx.orders.payment.service.PaymentRefundService;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.returns.domain.Returns;
 import org.example.tryonx.returns.dto.ReturnDetailDto;
@@ -36,6 +38,7 @@ public class ReturnService {
     private final MemberRepository memberRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
+    private final PaymentRefundService paymentRefundService;
 
     @Transactional
     public void requestReturn(String email, ReturnRequestDto dto) {
@@ -252,9 +255,16 @@ public class ReturnService {
 
     /* 반품 상태 변경 */
     @Transactional
-    public void updateReturnStatus(Integer returnId, ReturnStatus status, String reason) {
+    public void updateReturnStatus(Integer returnId, ReturnStatus status, String reason) throws Exception {
         Returns returns = returnRepository.findById(returnId)
                 .orElseThrow(() -> new EntityNotFoundException("반품 내역이 존재하지 않습니다."));
+        Order order = returns.getOrder();
+        Integer orderId = order.getOrderId();
+
+        if (order.getStatus() == OrderStatus.CANCELLED
+                && (status == ReturnStatus.REQUESTED || status == ReturnStatus.ACCEPTED || status == ReturnStatus.REJECTED)) {
+            throw new IllegalStateException("취소완료된 주문은 상품 회수중 또는 반품 완료 상태로만 변경할 수 있습니다.");
+        }
 
         if (status == ReturnStatus.REJECTED && (reason == null || reason.isBlank())) {
             throw new IllegalArgumentException("REJECTED 상태일 때는 반려 사유가 필요합니다.");
@@ -265,6 +275,11 @@ public class ReturnService {
         if (status == ReturnStatus.ACCEPTED) {
             returns.setReturnApprovedAt(LocalDateTime.now());
             returns.setRejectReason(null); // 반려 사유 초기화
+            if (order.getFinalAmount().compareTo(BigDecimal.ZERO) == 0) {
+                order.setStatus(OrderStatus.CANCELLED);
+            }else {
+                paymentRefundService.refundPayment(orderId, "사용자 요청 환불");
+            }
         } else if (status == ReturnStatus.REJECTED) {
             returns.setRejectReason(reason);
             returns.getOrderItem().setAfterServiceStatus(AfterServiceStatus.NONE);
