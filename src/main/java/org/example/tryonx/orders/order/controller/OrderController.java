@@ -6,6 +6,7 @@ import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.enums.OrderStatus;
 import org.example.tryonx.orders.order.dto.*;
 import org.example.tryonx.orders.order.repository.OrderRepository;
+import org.example.tryonx.orders.order.service.DeliveryService;
 import org.example.tryonx.orders.order.service.OrderPreviewService;
 import org.example.tryonx.orders.order.service.OrderService;
 import org.example.tryonx.orders.payment.domain.Payment;
@@ -26,6 +27,7 @@ public class OrderController {
     private final OrderService orderService;
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final DeliveryService deliveryService;
 
     @PostMapping("/preview")
     public ResponseEntity<OrderPreviewResponseDto> previewOrder(
@@ -106,5 +108,14 @@ public class OrderController {
         String email = userDetails.getUsername();
         Integer countMyOrders = orderService.countMyOrders(email);
         return ResponseEntity.ok(countMyOrders);
+    }
+
+    @GetMapping("/delivery/{orderId}")
+    public DeliveryResponseDto getDelivery(
+            @PathVariable Integer orderId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        String email = userDetails.getUsername();
+        return deliveryService.getDeliveryInfo(orderId, email);
     }
 }
