@@ -262,8 +262,8 @@ public class ReturnService {
         Integer orderId = order.getOrderId();
 
         if (order.getStatus() == OrderStatus.CANCELLED
-                && (status == ReturnStatus.REQUESTED || status == ReturnStatus.ACCEPTED || status == ReturnStatus.REJECTED)) {
-            throw new IllegalStateException("취소완료된 주문은 상품 회수중 또는 반품 완료 상태로만 변경할 수 있습니다.");
+                && (status == ReturnStatus.REQUESTED || status == ReturnStatus.ACCEPTED || status == ReturnStatus.REJECTED || status == ReturnStatus.COLLECTING)) {
+            throw new IllegalStateException("취소완료된 주문은 상태를 변경할 수 없습니다.");
         }
 
         if (status == ReturnStatus.REJECTED && (reason == null || reason.isBlank())) {
@@ -275,17 +275,21 @@ public class ReturnService {
         if (status == ReturnStatus.ACCEPTED) {
             returns.setReturnApprovedAt(LocalDateTime.now());
             returns.setRejectReason(null); // 반려 사유 초기화
-            if (order.getFinalAmount().compareTo(BigDecimal.ZERO) == 0) {
-                order.setStatus(OrderStatus.CANCELLED);
-            }else {
-                paymentRefundService.refundPayment(orderId, "사용자 요청 환불");
-            }
         } else if (status == ReturnStatus.REJECTED) {
             returns.setRejectReason(reason);
             returns.getOrderItem().setAfterServiceStatus(AfterServiceStatus.NONE);
             orderItemRepository.save(returns.getOrderItem());
             returns.setReturnApprovedAt(null); // 승인일시 제거
-        } else {
+        } else if (status == ReturnStatus.COMPLETED){
+            if (order.getFinalAmount().compareTo(BigDecimal.ZERO) == 0) {
+                order.setStatus(OrderStatus.CANCELLED);
+            }else {
+                paymentRefundService.refundPayment(orderId, "사용자 요청 환불");
+            }
+            returns.setRejectReason(null);
+            returns.setReturnApprovedAt(null);
+        }
+        else {
             // 다른 상태일 경우 초기화
             returns.setRejectReason(null);
             returns.setReturnApprovedAt(null);
