@@ -9,8 +9,10 @@ import org.example.tryonx.admin.dto.OrderListDto;
 import org.example.tryonx.enums.DeliveryStatus;
 import org.example.tryonx.enums.OrderStatus;
 import org.example.tryonx.member.domain.Member;
+import org.example.tryonx.orders.order.domain.DeliveryHistory;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
+import org.example.tryonx.orders.order.repository.DeliveryHistoryRepository;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.example.tryonx.orders.payment.domain.Payment;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +32,7 @@ public class AdminOrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final PaymentRepository paymentRepository;
+    private final DeliveryHistoryRepository deliveryHistoryRepository;
 
 
     public List<OrderListDto> getAllOrders() {
@@ -160,5 +164,13 @@ public class AdminOrderService {
         }
 
         order.setDeliveryStatus(newStatus);
+
+        DeliveryHistory history = DeliveryHistory.builder()
+                .order(order)
+                .deliveryStatus(newStatus)
+                .changedAt(LocalDateTime.now())
+                .build();
+
+        deliveryHistoryRepository.save(history);
     }
 }

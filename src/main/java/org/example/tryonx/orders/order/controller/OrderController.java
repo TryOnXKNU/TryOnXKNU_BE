@@ -29,6 +29,7 @@ public class OrderController {
     private final OrderRepository orderRepository;
     private final DeliveryService deliveryService;
 
+
     @PostMapping("/preview")
     public ResponseEntity<OrderPreviewResponseDto> previewOrder(
             @RequestBody OrderPreviewRequestDto requestDto,
@@ -110,12 +111,13 @@ public class OrderController {
         return ResponseEntity.ok(countMyOrders);
     }
 
-    @GetMapping("/delivery/{orderId}")
-    public DeliveryResponseDto getDelivery(
+    // 특정 주문의 배송 이력 조회
+    @GetMapping("delivery/{orderId}")
+    public List<DeliveryHistoryDto> getDeliveryHistory(
             @PathVariable Integer orderId,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         String email = userDetails.getUsername();
-        return deliveryService.getDeliveryInfo(orderId, email);
+        return deliveryService.getDeliveryHistory(orderId, email);
     }
 }
