@@ -7,7 +7,9 @@ import org.example.tryonx.enums.OrderStatus;
 import org.example.tryonx.enums.ReturnStatus;
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.member.domain.Member;
+import org.example.tryonx.member.domain.PointHistory;
 import org.example.tryonx.member.repository.MemberRepository;
+import org.example.tryonx.member.repository.PointHistoryRepository;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
@@ -39,6 +41,7 @@ public class ReturnService {
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
     private final PaymentRefundService paymentRefundService;
+    private final PointHistoryRepository pointHistoryRepository;
 
     @Transactional
     public void requestReturn(String email, ReturnRequestDto dto) {
@@ -260,6 +263,7 @@ public class ReturnService {
                 .orElseThrow(() -> new EntityNotFoundException("반품 내역이 존재하지 않습니다."));
         Order order = returns.getOrder();
         Integer orderId = order.getOrderId();
+        Member member = returns.getMember();
 
         if (order.getStatus() == OrderStatus.CANCELLED
                 && (status == ReturnStatus.REQUESTED || status == ReturnStatus.ACCEPTED || status == ReturnStatus.REJECTED || status == ReturnStatus.COLLECTING)) {
@@ -285,6 +289,16 @@ public class ReturnService {
                 order.setStatus(OrderStatus.CANCELLED);
             }else {
                 paymentRefundService.refundPayment(orderId, "사용자 요청 환불");
+                Integer earnPoints = order.getFinalAmount()
+                        .multiply(BigDecimal.valueOf(0.01))
+                        .setScale(0, RoundingMode.DOWN)
+                        .intValue();
+                Integer usedPoints = order.getUsedPoints();
+                member.usePoint(earnPoints);
+                member.savePoint(usedPoints);
+                pointHistoryRepository.save(PointHistory.use(member, earnPoints, "반품 : 적립된 " + earnPoints + " 포인트 회수"));
+                pointHistoryRepository.save(PointHistory.earn(member,usedPoints,"반품 : 사용한 " + usedPoints + " 포인트 반환" ));
+                memberRepository.save(member);
             }
             returns.setRejectReason(null);
             returns.setReturnApprovedAt(null);
