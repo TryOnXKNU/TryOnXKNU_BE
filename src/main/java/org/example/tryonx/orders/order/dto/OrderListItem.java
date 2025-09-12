@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.tryonx.enums.DeliveryStatus;
+import org.example.tryonx.enums.OrderStatus;
 import org.example.tryonx.enums.Size;
 
 import java.math.BigDecimal;
@@ -22,4 +23,5 @@ public class OrderListItem {
     private Integer orderItemsCount;
     private LocalDateTime orderedAt;
     private DeliveryStatus deliveryStatus;
+    private OrderStatus orderStatus;
 }
