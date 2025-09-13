@@ -14,6 +14,7 @@ public interface MemberRepository extends JpaRepository<Member, Long>, JpaSpecif
     Optional<Member> findByEmail(String email);
     Optional<Member> findByPhoneNumber(String phoneNumber);
     boolean existsByNickname(String nickname);
+    boolean existsByEmail(String email);
     Optional<Member> findByMemberId(Long memberId);
     List<Member> findByCreatedAtAfter(LocalDateTime dateTime);
     long countByCreatedAtAfter(LocalDateTime dateTime);
