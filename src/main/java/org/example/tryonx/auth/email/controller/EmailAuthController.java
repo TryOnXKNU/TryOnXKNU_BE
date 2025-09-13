@@ -25,6 +25,12 @@ public class EmailAuthController {
         return ResponseEntity.ok("인증 코드가 전송되었습니다.");
     }
 
+    @PostMapping("/send/password")
+    public ResponseEntity<String> sendCodeForResetPassword(@RequestParam String email) {
+        mailService.sendAuthCodeForUpdatePassword(email);
+        return ResponseEntity.ok("인증 코드가 전송되었습니다.");
+    }
+
     @PostMapping("/verify")
     public ResponseEntity<String> verifyCode(@RequestParam String email,
                                              @RequestParam String code) {
