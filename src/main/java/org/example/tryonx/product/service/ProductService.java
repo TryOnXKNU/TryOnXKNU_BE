@@ -59,17 +59,7 @@ public class ProductService {
             throw new IllegalArgumentException("이미 존재하는 상품명입니다: " + dto.getName());
         }
 
-        String middleCode;
-        if(dto.getCategoryId() == 1)
-            middleCode = "top";
-        else if(dto.getCategoryId() == 2)
-            middleCode = "bot";
-        else if(dto.getCategoryId() == 3)
-            middleCode = "dre";
-        else if(dto.getCategoryId() == 4)
-            middleCode = "out";
-        else
-            middleCode = "acc";
+        String middleCode = getMiddleCode(dto);
 
         // productCode 없이 먼저 저장
         Product product = Product.builder()
@@ -121,6 +111,27 @@ public class ProductService {
         }
 
         return product;
+    }
+
+    private String getMiddleCode(ProductCreateRequestDto dto) {
+        String middleCode;
+        if(dto.getCategoryId() == 1)
+            middleCode = "st";
+        else if(dto.getCategoryId() == 2)
+            middleCode = "lst";
+        else if(dto.getCategoryId() == 3)
+            middleCode = "lwt";
+        else if(dto.getCategoryId() == 4)
+            middleCode = "sbot";
+        else if(dto.getCategoryId() == 5)
+            middleCode = "lsbot";
+        else if(dto.getCategoryId() == 6)
+            middleCode = "lwbot";
+        else if(dto.getCategoryId() == 7)
+            middleCode = "outer";
+        else
+            middleCode = "acc";
+        return middleCode;
     }
 
 
