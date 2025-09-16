@@ -112,7 +112,7 @@ public class OrderController {
     }
 
     // 특정 주문의 배송 이력 조회
-    @GetMapping("delivery/{orderId}")
+    @GetMapping("/delivery/{orderId}")
     public List<DeliveryHistoryDto> getDeliveryHistory(
             @PathVariable Integer orderId,
             @AuthenticationPrincipal UserDetails userDetails
