@@ -24,9 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -81,22 +79,75 @@ public class ComfyUiService {
 
         BodyShape memberBodyShape = member.getBodyShape();
 
-        String model = switch (memberBodyShape) {
-            case STRAIGHT -> "straight.png";
-            case WAVE -> "wave.png";
-            case NATURAL -> "natural.png";
-        };
+        String model = null;
+        String prompt = null;
 
         Product product = productRepository.findById(productid)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        String prompt = switch (product.getCategory().getCategoryId()){
-            case 1 -> "black tshirt";
-            case 2 -> "pants";
-            case 3 -> "dress";
-            case 4 -> "black ";
-            default -> "clothes";
-        };
+        int categoryId = product.getCategory().getCategoryId();
+
+        switch (categoryId) {
+            case 1:
+                prompt = "black tshirt";
+                model = "STOPA.png";
+                break;
+            case 2:
+                prompt = "black tshirt";
+                model = "LSTOPA.png";
+                break;
+            case 3:
+                prompt = "black tshirt";
+                model = "LWTOPA.png";
+                break;
+            case 4:
+                prompt = "pants";
+                model = "LSTOPC.png";
+                break;
+            case 5:
+                prompt = "pants";
+                model = "LSTOPA.png";
+                break;
+            case 6:
+                prompt = "pants";
+                model = "LSTOPB.png";
+                break;
+            case 7:
+                prompt = "black cardigan";
+                model = "SOUTERWEARB.png";
+                break;
+            case 8:
+                prompt = "black cardigan";
+                model = "LOUTERWEARB.png";
+                break;
+            case 9:
+                prompt = "dress";
+                model = "SSDRESS.png";
+                break;
+            case 10:
+                prompt = "dress";
+                model = "SLDRESS.png";
+                break;
+            case 11:
+                prompt = "dress";
+                model = "LSDRESS.png";
+                break;
+            case 12:
+                prompt = "dress";
+                model = "LLDRESS.png";
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown categoryId: " + categoryId);
+        }
+
+        if (memberBodyShape == BodyShape.STRAIGHT) {
+            model = "1" + model;
+        } else if (memberBodyShape == BodyShape.NATURAL) {
+            model = "2" + model;
+        } else if (memberBodyShape == BodyShape.WAVE) {
+            model = "3" + model;
+        }
+
 
         String imgName = productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl();
         String prefix = "/upload/product/";
@@ -132,11 +183,8 @@ public class ComfyUiService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
         BodyShape memberBodyShape = member.getBodyShape();
-        String model = switch (memberBodyShape) {
-            case STRAIGHT -> "straight.png";
-            case WAVE -> "wave.png";
-            case NATURAL -> "natural.png";
-        };
+        if(memberBodyShape == BodyShape.STRAIGHT){}
+        String model;
 
         String prompt1 = null;
         String prompt2 = null;
@@ -156,7 +204,7 @@ public class ComfyUiService {
         String workflowJson = null;
 
         if (productId1 == null && productId2 == null){
-            throw new RuntimeException("최소 1개 이상의 상품을 선택해야 합니다.");
+            throw new IllegalArgumentException("최소 1개 이상의 상품을 선택해야 합니다.");
         }
         else if (productId1 != null && productId2 != null) {
             Product product1 = productRepository.findById(productId1)
@@ -167,28 +215,96 @@ public class ComfyUiService {
             Integer categoryId1 = product1.getCategory().getCategoryId();
             Integer categoryId2 = product2.getCategory().getCategoryId();
 
-            if (categoryId1.equals(categoryId2) ||
-                    (categoryId1 == 1 && categoryId2 == 3) ||
-                    (categoryId1 == 3 && categoryId2 == 1) ||
-                    (categoryId1 == 4) || (categoryId2 == 4)) {
-                throw new RuntimeException("선택한 상품 카테고리 조합이 옳바르지 않습니다."
-                        + categoryId1 + " & " + categoryId2);
+
+            if (categoryId1.equals(categoryId2)) {
+                throw new RuntimeException("같은 카테고리는 선택할 수 없습니다. ("
+                        + categoryId1 + " & " + categoryId2 + ")");
+            }
+// 악세서리 (13)
+            if (categoryId1 == 13 || categoryId2 == 13) {
+                throw new RuntimeException("악세서리는 선택 불가능합니다. ("
+                        + categoryId1 + " & " + categoryId2 + ")");
+            }
+// 드레스 (9~12)
+            Set<Integer> dress = Set.of(9, 10, 11, 12);
+            if (dress.contains(categoryId1) || dress.contains(categoryId2)) {
+                throw new RuntimeException("드레스는 단일착용만 가능합니다. ("
+                        + categoryId1 + " & " + categoryId2 + ")");
+            }
+// 그룹1: 1,2,3,7,8
+            Set<Integer> group1 = Set.of(1, 2, 3, 7, 8);
+// 그룹2: 4,5,6
+            Set<Integer> group2 = Set.of(4, 5, 6);
+// 서로 같은 그룹 안에서 두 개가 동시에 오면 불가
+            if (group1.contains(categoryId1) && group1.contains(categoryId2)) {
+                throw new RuntimeException("같은 그룹(상의 그룹)에서 두 개를 선택할 수 없습니다. ("
+                        + categoryId1 + " & " + categoryId2 + ")");
             }
 
-            prompt1 = switch (product1.getCategory().getCategoryId()){
-                case 1,3 -> "black tshirt";
-                case 2 -> "pants";
+            if (group2.contains(categoryId1) && group2.contains(categoryId2)) {
+                throw new RuntimeException("같은 그룹(하의 그룹)에서 두 개를 선택할 수 없습니다. ("
+                        + categoryId1 + " & " + categoryId2 + ")");
+            }
+
+
+// prompt1 설정
+            prompt1 = switch (product1.getCategory().getCategoryId()) {
+                case 1, 2, 3 -> "black tshirt";
+                case 7, 8-> "black cardigan";
+                case 4, 5, 6 -> "pants";
+                case 9, 10, 11, 12-> "dress";
                 default -> "clothes";
             };
-            prompt2 = switch (product2.getCategory().getCategoryId()){
-                case 1,3 -> "black tshirt";
-                case 2 -> "pants";
+
+// prompt2 설정
+            prompt2 = switch (product2.getCategory().getCategoryId()) {
+                case 1, 2, 3 -> "black tshirt";
+                case 7, 8-> "black cardigan";
+                case 4, 5, 6 -> "pants";
+                case 9, 10, 11, 12-> "dress";
                 default -> "clothes";
             };
-            System.out.println("--------------------------------------------");
-            System.out.println("prompt1: " + prompt1);
-            System.out.println("prompt2: " + prompt2);
-            System.out.println("--------------------------------------------");
+
+// model 설정
+            int cat1 = product1.getCategory().getCategoryId();
+            int cat2 = product2.getCategory().getCategoryId();
+            model = null;
+
+// 순서 상관 없도록 작은 값, 큰 값으로 정렬
+            int first = Math.min(cat1, cat2);
+            int second = Math.max(cat1, cat2);
+
+// 조합별 모델 매핑
+            if (first == 1 && second == 4) model = "STOPC.png";
+            else if (first == 1 && second == 5) model = "STOPA.png";
+            else if (first == 1 && second == 6) model = "STOPB.png";
+
+            else if (first == 2 && second == 4) model = "LSTOPC.png";
+            else if (first == 2 && second == 5) model = "LSTOPA.png";
+            else if (first == 2 && second == 6) model = "LSTOPB.png";
+
+            else if (first == 3 && second == 4) model = "LWTOPC.png";
+            else if (first == 3 && second == 5) model = "LWTOPA.png";
+            else if (first == 3 && second == 6) model = "LWTOPB.png";
+
+            else if (first == 4 && (second == 7)) model = "SOUTERWEARB.png";
+            else if (first == 5 && (second == 7)) model = "SOUTERWEARB.png";
+            else if (first == 6 && (second == 7)) model = "SOUTERWEARB.png";
+
+            else if (first == 4 && (second == 8)) model = "LOUTERWEARB.png";
+            else if (first == 5 && (second == 8)) model = "LOUTERWEARB.png";
+            else if (first == 6 && (second == 8)) model = "LOUTERWEARB.png";
+
+            if (model != null) {
+                if (memberBodyShape == BodyShape.STRAIGHT) {
+                    model = "1" + model;
+                } else if (memberBodyShape == BodyShape.NATURAL) {
+                    model = "2" + model;
+                } else if (memberBodyShape == BodyShape.WAVE) {
+                    model = "3" + model;
+                }
+            }
+
 
             imageName1 = productImageRepository.findByProductAndIsThumbnailTrue(product1)
                     .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
@@ -208,87 +324,9 @@ public class ComfyUiService {
                     .replace("{{prompt1}}", prompt1)
                     .replace("{{prompt2}}", prompt2);
 
-        }else if((productId1 == null) && (productId2 != null)){
-            Product product2 = productRepository.findById(productId2)
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
-
-            switch (product2.getCategory().getCategoryId()){
-                case 1 : case 3 :
-                    requestPrompt = "black tshirt";
-                    defaultPrompt = "pants";
-                    defaultImageName = "/upload/product/basic-pants.png";
-                    requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product2)
-                            .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
-                            .getImageUrl();
-                    break;
-                case 2 :
-                    requestPrompt = "pants";
-                    defaultPrompt = "black tshirt";
-                    defaultImageName = "/upload/product/basic-tshirt.png";
-                    requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product2)
-                            .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
-                            .getImageUrl();
-                    break;
-                case 4 :
-                    requestPrompt = "dress";
-                    defaultPrompt = "pants";
-                    defaultImageName = "/upload/product/basic-pants.png";
-                    requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product2)
-                            .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
-                            .getImageUrl();
-                    break;
-            };
-            fileNameOnly1 = stripPrefix(defaultImageName, "/upload/product/");
-            fileNameOnly2 = stripPrefix(requestImageName, "/upload/product/");
-
-            workflowJson = loadWorkflowFromResource("v2_one_person_two_clothes.json")
-                    .replace("{{modelImage}}", model)
-                    .replace("{{imageName1}}", fileNameOnly1 != null ? fileNameOnly1 : "")
-                    .replace("{{imageName2}}", fileNameOnly2 != null ? fileNameOnly2 : "")
-                    .replace("{{prompt1}}", defaultPrompt != null ? defaultPrompt : "")
-                    .replace("{{prompt2}}", requestPrompt != null ? requestPrompt : "");
-
-        }else if((productId2 == null) && (productId1 != null)){
-        Product product1 = productRepository.findById(productId1)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        switch (product1.getCategory().getCategoryId()){
-            case 1 : case 3 :
-                requestPrompt = "black tshirt";
-                defaultPrompt = "pants";
-                defaultImageName = "/upload/product/basic-pants.png";
-                requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product1)
-                        .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
-                        .getImageUrl();
-                break;
-            case 2 :
-                requestPrompt = "pants";
-                defaultPrompt = "black tshirt";
-                defaultImageName = "/upload/product/basic-tshirt.png";
-                requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product1)
-                        .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
-                        .getImageUrl();
-                break;
-            case 4 :
-                requestPrompt = "dress";
-                defaultPrompt = "pants";
-                defaultImageName = "/upload/product/basic-pants.png";
-                requestImageName = productImageRepository.findByProductAndIsThumbnailTrue(product1)
-                        .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
-                        .getImageUrl();
-                break;
-        };
-        fileNameOnly1 = stripPrefix(defaultImageName, "/upload/product/");
-        fileNameOnly2 = stripPrefix(requestImageName, "/upload/product/");
-
-
-        workflowJson = loadWorkflowFromResource("v2_one_person_two_clothes.json")
-                .replace("{{modelImage}}", model)
-                .replace("{{imageName1}}", fileNameOnly1 != null ? fileNameOnly1 : "")
-                .replace("{{imageName2}}", fileNameOnly2 != null ? fileNameOnly2 : "")
-                .replace("{{prompt1}}", defaultPrompt != null ? defaultPrompt : "")
-                .replace("{{prompt2}}", requestPrompt != null ? requestPrompt : "");
-    }
+        }else{
+            throw new IllegalArgumentException("상품 2개를 선택해야 합니다.");
+        }
 
         // Google Drive 새로고침
         refreshGoogleDrive();
@@ -299,13 +337,26 @@ public class ComfyUiService {
         // 2. 완료 대기
         waitUntilComplete(promptId);
 
-        // 3. 이미지명 추출
         List<String> generatedOutputImageFilenameList = getGeneratedOutputImageFilenameList(promptId);
 
-        // 4. 이미지 다운로드
-        String fileName = generatedOutputImageFilenameList.get(0);
-        downloadImage(fileName);
+        String fileName = generatedOutputImageFilenameList.stream()
+                .max(Comparator.comparingInt(name -> {
+                    // "ComfyUI_숫자_.png" 에서 숫자만 추출
+                    int start = name.indexOf('_') + 1;
+                    int end = name.lastIndexOf('_');
+                    return Integer.parseInt(name.substring(start, end));
+                }))
+                .orElseThrow(() -> new IllegalArgumentException("파일명이 없습니다."));
 
+        downloadImage(fileName);
+//        System.out.println("--------------------------------------------");
+//        System.out.println("prompt1: " + prompt1);
+//        System.out.println("prompt2: " + prompt2);
+//        System.out.println("model: " + model);
+//        System.out.println("filename1: " + fileNameOnly1);
+//        System.out.println("filename2: " + fileNameOnly2);
+//        System.out.println("fittingimage: " + generatedOutputImageFilenameList);
+//        System.out.println("--------------------------------------------");
         return fileName;
     }
 
