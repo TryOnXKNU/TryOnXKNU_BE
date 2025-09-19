@@ -133,26 +133,43 @@ public class ComfyUiFittingService {
                 ? clothingImageName.substring(prefix.length())
                 : clothingImageName;
 
-        // 카테고리에 따라 모델 이미지와 프롬프트 결정
-        Integer categoryId = product.getCategory().getCategoryId(); // ex) 1=TOP, 2=BOTTOM
-        String clothingPrompt;
-        String model1;
-        String model2;
-        String model3;
+        // 카테고리명과 체형 불러오기
+        String categoryName = product.getCategory().getName();   // ex) STOP, SBOTTOM
+        String bodyShape = product.getBodyShape().name();              // STRAIGHT, NATURAL, WAVE
 
-        if (categoryId == 1) { // TOP
-            clothingPrompt = "t-shirts";
-            model1 = "top_model1.png";
-            model2 = "top_model2.png";
-            model3 = "top_model3.png";
-        } else if (categoryId == 2) { // BOTTOM
-            clothingPrompt = "pants";
-            model1 = "bottom_model1.png";
-            model2 = "bottom_model2.png";
-            model3 = "bottom_model3.png";
-        } else {
-            throw new RuntimeException("지원하지 않는 카테고리: " + categoryId);
+        // 체형 → 번호 매핑
+        int bodyShapeNum = switch (bodyShape) {
+            case "STRAIGHT" -> 1;
+            case "NATURAL"  -> 2;
+            case "WAVE"     -> 3;
+            default -> throw new RuntimeException("지원하지 않는 체형: " + bodyShape);
+        };
+
+        // 카테고리별 프롬프트 매핑
+        Map<String, String> promptMap = Map.ofEntries(
+                Map.entry("STOP", "short t-shirts"),
+                Map.entry("LSTOP", "long sleeve"),
+                Map.entry("LWTOP", "long t-shirts"),
+                Map.entry("SBOTTOM", "short pants"),
+                Map.entry("LSBOTTOM", "long pants"),
+                Map.entry("LWBOTTOM", "long wide pants"),
+                Map.entry("SOUTERWEAR", "short outerwear"),
+                Map.entry("LOUTERWEAR", "long outerwear"),
+                Map.entry("SSDRESS", "short sleeve short dress"),
+                Map.entry("SLDRESS", "short sleeve long dress"),
+                Map.entry("LSDRESS", "long sleeve shore dress"),
+                Map.entry("LLDRESS", "long sleeve long dress")
+        );
+
+        String clothingPrompt = promptMap.get(categoryName);
+        if (clothingPrompt == null) {
+            throw new RuntimeException("지원하지 않는 카테고리: " + categoryName);
         }
+
+        // 모델 이미지명 생성 (예: STRAIGHT + STOP → 1STOPa.png, 1STOPb.png, 1STOPc.png)
+        String model1 = bodyShapeNum + categoryName + "a.png";
+        String model2 = bodyShapeNum + categoryName + "b.png";
+        String model3 = bodyShapeNum + categoryName + "c.png";
 
         // 워크플로 로드 및 치환
         String workflowJson = loadWorkflowFromResource("templates/workflows/v2_admin_fitting.json")
