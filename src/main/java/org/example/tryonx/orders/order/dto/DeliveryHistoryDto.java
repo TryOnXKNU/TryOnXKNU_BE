@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class DeliveryHistoryDto {
-    private Integer orderId;
+    private String orderNum;
     private LocalDateTime changedAt;
     private DeliveryStatus deliveryStatus;
 }

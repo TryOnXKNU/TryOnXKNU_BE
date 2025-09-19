@@ -34,7 +34,7 @@ public class DeliveryService {
         return deliveryHistoryRepository.findByOrder_OrderIdOrderByChangedAtDesc(orderId)
                 .stream()
                 .map(h -> new DeliveryHistoryDto(
-                        h.getOrder().getOrderId(),
+                        h.getOrder().getOrderNum(),
                         h.getChangedAt(),
                         h.getDeliveryStatus()
                 ))
