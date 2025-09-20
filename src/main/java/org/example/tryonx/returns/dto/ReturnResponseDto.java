@@ -20,7 +20,7 @@ public class ReturnResponseDto {
     private String reason;
     private String status;
     private LocalDateTime returnRequestedAt;
-    private LocalDateTime returnApprovedAt;
+    private LocalDateTime updatedAt;
     private String productName;
     private String productImageUrl;
 }

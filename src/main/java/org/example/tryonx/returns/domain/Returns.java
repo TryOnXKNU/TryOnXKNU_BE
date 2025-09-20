@@ -49,11 +49,10 @@ public class Returns {
 
     private String reason;
 
-    @Column(name = "return_requested_at")
+    @Column(name = "return_requested_at", nullable = false, updatable = false)
     private LocalDateTime returnRequestedAt;
 
-    @Column(name = "return_approved_at")
-    private LocalDateTime returnApprovedAt;
+    private LocalDateTime updatedAt;
 
     @Column(name = "reject_reason")
     private String rejectReason;
