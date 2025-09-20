@@ -18,7 +18,7 @@ public class ExchangeResponseDto {
     private Integer orderItemId;
     private String reason;
     private LocalDateTime requestedAt;
-    private LocalDateTime processedAt;
+    private LocalDateTime updatedAt;
     private String status;
     private BigDecimal price;
     private Integer quantity;

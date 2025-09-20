@@ -49,11 +49,11 @@ public class Exchange {
 
     private String reason;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime exchange_requestedAt;
 
-    private LocalDateTime exchange_processedAt;
+    private LocalDateTime updatedAt;
 
     @Column(name = "reject_reason")
     private String rejectReason;
-
 }

@@ -111,7 +111,7 @@ public class ReturnService {
                             returns.getReason(),
                             returns.getStatus().name(),
                             returns.getReturnRequestedAt(),
-                            returns.getReturnApprovedAt(),
+                            returns.getUpdatedAt(),
                             productName,
                             imageUrl
                     );
@@ -171,7 +171,7 @@ public class ReturnService {
                 purchasedSize,
                 returns.getReason(),
                 returns.getReturnRequestedAt(),
-                returns.getReturnApprovedAt(),
+                returns.getUpdatedAt(),
                 returns.getStatus().name(),
                 productName,
                 imageUrl,
@@ -246,7 +246,7 @@ public class ReturnService {
                 purchasedSize,
                 returns.getReason(),
                 returns.getReturnRequestedAt(),
-                returns.getReturnApprovedAt(),
+                returns.getUpdatedAt(),
                 returns.getStatus().name(),
                 productName,
                 imageUrl,
@@ -275,19 +275,18 @@ public class ReturnService {
         }
 
         returns.setStatus(status);
+        returns.setUpdatedAt(LocalDateTime.now());
 
-        if (status == ReturnStatus.ACCEPTED) {
-            returns.setReturnApprovedAt(LocalDateTime.now());
-            returns.setRejectReason(null); // 반려 사유 초기화
-        } else if (status == ReturnStatus.REJECTED) {
+        if (status == ReturnStatus.REJECTED) {
             returns.setRejectReason(reason);
             returns.getOrderItem().setAfterServiceStatus(AfterServiceStatus.NONE);
             orderItemRepository.save(returns.getOrderItem());
-            returns.setReturnApprovedAt(null); // 승인일시 제거
-        } else if (status == ReturnStatus.COMPLETED){
+        }
+
+        if (status == ReturnStatus.COMPLETED) {
             if (order.getFinalAmount().compareTo(BigDecimal.ZERO) == 0) {
                 order.setStatus(OrderStatus.CANCELLED);
-            }else {
+            } else {
                 paymentRefundService.refundPayment(orderId, "사용자 요청 환불");
                 Integer earnPoints = order.getFinalAmount()
                         .multiply(BigDecimal.valueOf(0.01))
@@ -297,16 +296,10 @@ public class ReturnService {
                 member.usePoint(earnPoints);
                 member.savePoint(usedPoints);
                 pointHistoryRepository.save(PointHistory.use(member, earnPoints, "반품 : 적립된 " + earnPoints + " 포인트 회수"));
-                pointHistoryRepository.save(PointHistory.earn(member,usedPoints,"반품 : 사용한 " + usedPoints + " 포인트 반환" ));
+                pointHistoryRepository.save(PointHistory.earn(member, usedPoints, "반품 : 사용한 " + usedPoints + " 포인트 반환"));
                 memberRepository.save(member);
             }
             returns.setRejectReason(null);
-            returns.setReturnApprovedAt(null);
-        }
-        else {
-            // 다른 상태일 경우 초기화
-            returns.setRejectReason(null);
-            returns.setReturnApprovedAt(null);
         }
 
         returnRepository.save(returns);

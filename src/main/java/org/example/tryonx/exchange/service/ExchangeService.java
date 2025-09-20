@@ -100,7 +100,7 @@ public class ExchangeService {
                             e.getOrderItem().getOrderItemId(),
                             e.getReason(),
                             e.getExchange_requestedAt(),
-                            e.getExchange_processedAt(),
+                            e.getUpdatedAt(),
                             e.getStatus().name(),
                             e.getPrice(),
                             e.getQuantity(),
@@ -139,7 +139,7 @@ public class ExchangeService {
                 exchange.getOrderItem().getOrderItemId(),
                 exchange.getReason(),
                 exchange.getExchange_requestedAt(),
-                exchange.getExchange_processedAt(),
+                exchange.getUpdatedAt(),
                 exchange.getStatus().name(),
                 exchange.getPrice(),
                 exchange.getQuantity(),
@@ -174,32 +174,6 @@ public class ExchangeService {
                 })
                 .collect(Collectors.toList());
     }
-
-    /* 교환 상세정보 */
-//    public ExchangeDetailDto findByExchangeId(Integer exchangeId) {
-//        Exchange exchange = exchangeRepository.findById(exchangeId)
-//                .orElseThrow(() -> new EntityNotFoundException("교환 내역을 찾을 수 없습니다."));
-//
-//        String productName = exchange.getProduct() != null ? exchange.getProduct().getProductName() : null;
-//        String imageUrl = (exchange.getProduct() != null && !exchange.getProduct().getImages().isEmpty())
-//                ? exchange.getProduct().getImages().get(0).getImageUrl()
-//                : null;
-//
-//        return new ExchangeDetailDto(
-//                exchange.getExchangeId(),
-//                exchange.getMember().getMemberId(),
-//                exchange.getOrder().getOrderId(),
-//                exchange.getOrderItem().getOrderItemId(),
-//                exchange.getPrice(),
-//                exchange.getQuantity(),
-//                exchange.getReason(),
-//                exchange.getExchange_requestedAt(),
-//                exchange.getExchange_processedAt(),
-//                exchange.getStatus().name(),
-//                productName,
-//                imageUrl
-//        );
-//    }
 
     //교환 상세조회 (사용자 본인만)
     public ExchangeDetailDto findByExchangeId(String email, Integer exchangeId) {
@@ -240,7 +214,7 @@ public class ExchangeService {
                 exchange.getQuantity(),
                 exchange.getReason(),
                 exchange.getExchange_requestedAt(),
-                exchange.getExchange_processedAt(),
+                exchange.getUpdatedAt(),
                 exchange.getStatus().name(),
                 productName,
                 imageUrl,
@@ -301,7 +275,7 @@ public class ExchangeService {
                 exchange.getQuantity(),
                 exchange.getReason(),
                 exchange.getExchange_requestedAt(),
-                exchange.getExchange_processedAt(),
+                exchange.getUpdatedAt(),
                 exchange.getStatus().name(),
                 productName,
                 imageUrl,
@@ -323,10 +297,7 @@ public class ExchangeService {
         }
 
         exchange.setStatus(status);
-
-        if (status == ExchangeStatus.ACCEPTED) {
-            exchange.setExchange_processedAt(LocalDateTime.now());
-        }
+        exchange.setUpdatedAt(LocalDateTime.now());
 
         if (status == ExchangeStatus.REJECTED) {
             exchange.setRejectReason(reason);

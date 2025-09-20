@@ -24,7 +24,7 @@ public class ReturnDetailDto {
     private Size size;
     private String reason;
     private LocalDateTime requestedAt;
-    private LocalDateTime processedAt;
+    private LocalDateTime updatedAt;
     private String status;
     private String productName;
     private String productImageUrl;
