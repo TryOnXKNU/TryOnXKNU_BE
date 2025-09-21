@@ -31,4 +31,5 @@ public class ExchangeDetailDto {
     private String rejectReason;
     private BigDecimal discountRate;
     private BigDecimal discountPrice;
+    private Size exchangeSize;
 }

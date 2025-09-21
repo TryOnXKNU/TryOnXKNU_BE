@@ -3,6 +3,7 @@ package org.example.tryonx.exchange.domain;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.tryonx.enums.ExchangeStatus;
+import org.example.tryonx.enums.Size;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
@@ -56,4 +57,9 @@ public class Exchange {
 
     @Column(name = "reject_reason")
     private String rejectReason;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Size exchangeSize;
+
 }

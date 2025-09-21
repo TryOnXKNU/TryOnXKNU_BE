@@ -9,6 +9,7 @@ import org.example.tryonx.image.domain.ProductImage;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -83,5 +84,8 @@ public class Product {
                 .filter(newCategory -> !Objects.equals(this.category, newCategory))
                 .ifPresent(newCategory -> this.category = newCategory);
     }
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductItem> productItems = new ArrayList<>();
 
 }

@@ -25,4 +25,5 @@ public class ExchangeResponseDto {
     private Size size;
     private String productName;
     private String productImageUrl;
+    private Size exchangeSize;
 }

@@ -1,6 +1,7 @@
 package org.example.tryonx.exchange.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.enums.Size;
 import org.example.tryonx.exchange.dto.ExchangeDetailDto;
 import org.example.tryonx.exchange.dto.ExchangeRequestDto;
 import org.example.tryonx.exchange.dto.ExchangeResponseDto;
@@ -18,6 +19,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ExchangeController {
     private final ExchangeService exchangeService;
+
+    // 교환 가능한 사이즈 조회
+    @GetMapping("/{orderItemId}/available-sizes")
+    public ResponseEntity<List<Size>> getAvailableSizes(@PathVariable Integer orderItemId) {
+        return ResponseEntity.ok(exchangeService.getAvailableSizes(orderItemId));
+    }
 
     //교환 신청
     @PostMapping
