@@ -1,6 +1,7 @@
 package org.example.tryonx.exchange.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.enums.Size;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.AfterServiceStatus;
@@ -19,6 +20,7 @@ import org.example.tryonx.orders.order.domain.OrderItem;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.example.tryonx.product.domain.Product;
+import org.example.tryonx.product.domain.ProductItem;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +38,23 @@ public class ExchangeService {
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+
+    @Transactional(readOnly = true)
+    public List<Size> getAvailableSizes(Integer orderItemId) {
+        OrderItem orderItem = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new EntityNotFoundException("주문 아이템 없음"));
+
+        Product product = orderItem.getProductItem().getProduct();
+        Size purchasedSize = orderItem.getProductItem().getSize(); // 구매한 사이즈
+
+        return product.getProductItems().stream()
+                .filter(pi -> pi.getStatus() == ProductStatus.AVAILABLE)
+                .map(ProductItem::getSize)
+                .filter(size -> !size.equals(purchasedSize)) // 구매한 사이즈 제외
+                .toList();
+    }
+
+
 
     @Transactional
     public void requestExchange(String email, ExchangeRequestDto dto) {
@@ -72,6 +91,7 @@ public class ExchangeService {
                 .status(ExchangeStatus.REQUESTED)
                 .reason(dto.getReason())
                 .exchange_requestedAt(LocalDateTime.now())
+                .exchangeSize(dto.getExchangeSize())
                 .build();
 
         exchangeRepository.save(exchange);
@@ -106,7 +126,8 @@ public class ExchangeService {
                             e.getQuantity(),
                             purchasedSize,
                             productName,
-                            imageUrl
+                            imageUrl,
+                            e.getExchangeSize()
                     );
                 })
                 .toList();
@@ -145,7 +166,8 @@ public class ExchangeService {
                 exchange.getQuantity(),
                 purchasedSize,
                 productName,
-                imageUrl
+                imageUrl,
+                exchange.getExchangeSize()
         );
     }
 
@@ -220,7 +242,8 @@ public class ExchangeService {
                 imageUrl,
                 rejectReason,
                 product.getDiscountRate(),
-                product.getPrice().min(discount)
+                product.getPrice().min(discount),
+                exchange.getExchangeSize()
         );
     }
 
@@ -281,7 +304,8 @@ public class ExchangeService {
                 imageUrl,
                 rejectReason,
                 rate,
-                discountedFinal
+                discountedFinal,
+                exchange.getExchangeSize()
         );
     }
 
