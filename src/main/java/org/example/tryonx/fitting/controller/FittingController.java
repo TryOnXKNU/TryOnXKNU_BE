@@ -47,7 +47,7 @@ public class FittingController {
     }
 
     @PostMapping("/try-on/dual")
-    public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(required = false) Integer productId1, @RequestParam(required = false) Integer productId2) throws Exception {
+    public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId1, @RequestParam(required = false) Integer productId2) throws Exception {
         String email = userDetails.getUsername();
         String filename = comfyUiService.executeFittingTwoClothesFlow(email, productId1, productId2);
         return ResponseEntity.ok(" upload/fitting/downloaded_" + filename);

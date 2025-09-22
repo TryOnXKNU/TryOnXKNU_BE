@@ -183,9 +183,9 @@ public class ComfyUiService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
         BodyShape memberBodyShape = member.getBodyShape();
-        if(memberBodyShape == BodyShape.STRAIGHT){}
         String model;
 
+        String prompt = null;
         String prompt1 = null;
         String prompt2 = null;
 
@@ -205,8 +205,86 @@ public class ComfyUiService {
 
         if (productId1 == null && productId2 == null){
             throw new IllegalArgumentException("최소 1개 이상의 상품을 선택해야 합니다.");
-        }
-        else if (productId1 != null && productId2 != null) {
+        }else if(productId1 != null && productId2 == null){
+            Product product = productRepository.findById(productId1)
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
+
+            int categoryId = product.getCategory().getCategoryId();
+
+            switch (categoryId) {
+                case 1:
+                    prompt = "black tshirt";
+                    model = "STOPA.png";
+                    break;
+                case 2:
+                    prompt = "black tshirt";
+                    model = "LSTOPA.png";
+                    break;
+                case 3:
+                    prompt = "black tshirt";
+                    model = "LWTOPA.png";
+                    break;
+                case 4:
+                    prompt = "pants";
+                    model = "LSTOPC.png";
+                    break;
+                case 5:
+                    prompt = "pants";
+                    model = "LSTOPA.png";
+                    break;
+                case 6:
+                    prompt = "pants";
+                    model = "LSTOPB.png";
+                    break;
+                case 7:
+                    prompt = "black cardigan";
+                    model = "SOUTERWEARB.png";
+                    break;
+                case 8:
+                    prompt = "black cardigan";
+                    model = "LOUTERWEARB.png";
+                    break;
+                case 9:
+                    prompt = "dress";
+                    model = "SSDRESS.png";
+                    break;
+                case 10:
+                    prompt = "dress";
+                    model = "SLDRESS.png";
+                    break;
+                case 11:
+                    prompt = "dress";
+                    model = "LSDRESS.png";
+                    break;
+                case 12:
+                    prompt = "dress";
+                    model = "LLDRESS.png";
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown categoryId: " + categoryId);
+            }
+
+            if (memberBodyShape == BodyShape.STRAIGHT) {
+                model = "1" + model;
+            } else if (memberBodyShape == BodyShape.NATURAL) {
+                model = "2" + model;
+            } else if (memberBodyShape == BodyShape.WAVE) {
+                model = "3" + model;
+            }
+
+
+            String imgName = productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl();
+            String prefix = "/upload/product/";
+            String fileNameOnly = imgName.startsWith(prefix)
+                    ? imgName.substring(prefix.length())
+                    : imgName;
+
+
+            workflowJson = loadWorkflowFromResource("v2_one_person_one_clothes.json")
+                    .replace("{{imageName}}", fileNameOnly)
+                    .replace("{{modelImage}}", model)
+                    .replace("{{prompt}}", prompt);
+        } else if (productId1 != null && productId2 != null) {
             Product product1 = productRepository.findById(productId1)
                     .orElseThrow(() -> new RuntimeException("Product not found - id : " + productId1));
             Product product2 = productRepository.findById(productId2)
@@ -325,7 +403,7 @@ public class ComfyUiService {
                     .replace("{{prompt2}}", prompt2);
 
         }else{
-            throw new IllegalArgumentException("상품 2개를 선택해야 합니다.");
+            throw new IllegalArgumentException("상품 선택 옵션이 잘못되었습니다.");
         }
 
         // Google Drive 새로고침
