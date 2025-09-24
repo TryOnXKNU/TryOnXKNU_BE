@@ -228,13 +228,13 @@ public class OrderService {
         int itemCount = orderItems.size();
         String productSummary = itemCount > 1 ? mainProductName + " 외 " + (itemCount - 1) + "건" : mainProductName;
 
-        if (usedPoints > 0) {
+        if (usedPoints >= 1000) {
             pointHistoryRepository.save(
                     PointHistory.use(member, usedPoints, "[" + productSummary + "] 주문 결제 중 포인트 사용으로 인한 차감"));
         }
 
         int savePoints = 0;
-        if(usedPoints >= 1000){
+        if(usedPoints == 0){
             savePoints = savedOrder.getFinalAmount()
                     .multiply(BigDecimal.valueOf(0.01))
                     .setScale(0, RoundingMode.DOWN)
