@@ -128,9 +128,17 @@ public class ProductService {
         else if(dto.getCategoryId() == 6)
             middleCode = "lwbot";
         else if(dto.getCategoryId() == 7)
-            middleCode = "outer";
+            middleCode = "souter";
+        else if(dto.getCategoryId() == 8)
+            middleCode = "louter";
+        else if(dto.getCategoryId() == 9)
+            middleCode = "ssdre";
+        else if(dto.getCategoryId() == 10)
+            middleCode = "sldre";
+        else if(dto.getCategoryId() == 11)
+            middleCode = "lsdre";
         else
-            middleCode = "acc";
+            middleCode = "lldre";
         return middleCode;
     }
 

@@ -293,9 +293,9 @@ public class ReturnService {
                         .setScale(0, RoundingMode.DOWN)
                         .intValue();
                 Integer usedPoints = order.getUsedPoints();
-                member.usePoint(earnPoints);
+//                member.usePoint(earnPoints);
                 member.savePoint(usedPoints);
-                pointHistoryRepository.save(PointHistory.use(member, earnPoints, "반품 : 적립된 " + earnPoints + " 포인트 회수"));
+//                pointHistoryRepository.save(PointHistory.use(member, earnPoints, "반품 : 적립된 " + earnPoints + " 포인트 회수"));
                 pointHistoryRepository.save(PointHistory.earn(member, usedPoints, "반품 : 사용한 " + usedPoints + " 포인트 반환"));
                 memberRepository.save(member);
             }

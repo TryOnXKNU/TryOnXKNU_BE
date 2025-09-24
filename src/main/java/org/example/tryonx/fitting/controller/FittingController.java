@@ -39,12 +39,12 @@ public class FittingController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/try-on/single")
-    public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId) throws Exception {
-        String email = userDetails.getUsername();
-        String filename = comfyUiService.executeFittingFlow(email, productId);
-        return ResponseEntity.ok("/upload/fitting/downloaded_"+ filename);
-    }
+//    @PostMapping("/try-on/single")
+//    public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId) throws Exception {
+//        String email = userDetails.getUsername();
+//        String filename = comfyUiService.executeFittingFlow(email, productId);
+//        return ResponseEntity.ok("/upload/fitting/downloaded_"+ filename);
+//    }
 
     @PostMapping("/try-on/dual")
     public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId1, @RequestParam(required = false) Integer productId2) throws Exception {
