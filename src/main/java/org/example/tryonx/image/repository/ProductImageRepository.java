@@ -13,5 +13,5 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Inte
     ProductImage findByImageUrl(String imageUrl);
     long countByProduct(Product product);
     Optional<ProductImage> findFirstByProductAndIsThumbnailTrue(Product product);
-
+    Optional<ProductImage> findFirstByProductAndIsThumbnailFalse(Product product);
 }
