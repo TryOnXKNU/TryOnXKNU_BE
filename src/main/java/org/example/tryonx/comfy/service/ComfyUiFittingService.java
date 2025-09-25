@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.fitting.domain.ProductFitting;
 import org.example.tryonx.fitting.repository.ProductFittingRepository;
+import org.example.tryonx.image.domain.ProductImage;
+import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.repository.ProductRepository;
@@ -36,6 +38,7 @@ public class ComfyUiFittingService {
     private final ProductFittingRepository productFittingRepository;
     private final ProductRepository productRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ProductImageRepository productImageRepository;
 
     @Value("${ngrok.url}")
     private String baseUrl;
@@ -153,8 +156,8 @@ public class ComfyUiFittingService {
                 Map.entry("SBOTTOM", "short pants"),
                 Map.entry("LSBOTTOM", "long pants"),
                 Map.entry("LWBOTTOM", "long wide pants"),
-                Map.entry("SOUTERWEAR", "short outerwear"),
-                Map.entry("LOUTERWEAR", "long outerwear"),
+                Map.entry("SOUTERWEAR", "cardigan"),
+                Map.entry("LOUTERWEAR", "cardigan"),
                 Map.entry("SSDRESS", "short sleeve short dress"),
                 Map.entry("SLDRESS", "short sleeve long dress"),
                 Map.entry("LSDRESS", "long sleeve shore dress"),
@@ -166,18 +169,34 @@ public class ComfyUiFittingService {
             throw new RuntimeException("지원하지 않는 카테고리: " + categoryName);
         }
 
-        // 모델 이미지명 생성 (예: STRAIGHT + STOP → 1STOPa.png, 1STOPb.png, 1STOPc.png)
+        // 상품 대표 이미지
+        ProductImage thumbnail = productImageRepository
+                .findFirstByProductAndIsThumbnailTrue(product)
+                .orElseThrow(() -> new RuntimeException("대표 이미지가 없습니다."));
+
+        // 상품 보조 이미지
+        ProductImage subImage = productImageRepository
+                .findFirstByProductAndIsThumbnailFalse(product)
+                .orElse(thumbnail); // 없으면 대표 이미지로 대체
+
+        // 파일명만 추출 (prefix 제거)
+        String clothFront = Paths.get(thumbnail.getImageUrl()).getFileName().toString();
+        String clothBack  = Paths.get(subImage.getImageUrl()).getFileName().toString();
+
+        // 모델 이미지명 생성
         String model1 = bodyShapeNum + categoryName + "a.png";
         String model2 = bodyShapeNum + categoryName + "b.png";
         String model3 = bodyShapeNum + categoryName + "c.png";
 
-        // 워크플로 로드 및 치환
+        // 워크플로 JSON 치환
         String workflowJson = loadWorkflowFromResource("templates/workflows/v2_admin_fitting.json")
-                .replace("{{imageName}}", fileNameOnly)
                 .replace("{{clothingPrompt}}", clothingPrompt)
                 .replace("{{model1}}", model1)
                 .replace("{{model2}}", model2)
-                .replace("{{model3}}", model3);
+                .replace("{{model3}}", model3)
+                .replace("{{clothFront}}", clothFront)   // a, c 매핑용 (파일명만)
+                .replace("{{clothBack}}", clothBack);    // b 매핑용 (파일명만)
+
 
         String promptId = sendWorkflow(workflowJson);
         waitUntilComplete(promptId);

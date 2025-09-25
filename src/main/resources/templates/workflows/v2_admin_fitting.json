@@ -647,7 +647,7 @@
     },
     "40": {
       "inputs": {
-        "image": "{{imageName}}"
+        "image": "{{clothFront}}"
       },
       "class_type": "LoadImage",
       "_meta": {
@@ -1374,7 +1374,7 @@
     },
     "86": {
       "inputs": {
-        "image": "{{imageName}}"
+        "image": "{{clothBack}}"
       },
       "class_type": "LoadImage",
       "_meta": {
