@@ -1,5 +1,7 @@
 package org.example.tryonx.returns.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.ReturnStatus;
 import org.example.tryonx.returns.dto.ReturnDetailDto;
@@ -13,11 +15,13 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/admin/returns")
+@Tag(name = "Admin Returns API", description = "관리자 빈픔 관리 API")
 public class AdminReturnsController {
     private final ReturnService returnService;
 
     //전체 반품 목록 조회
     @GetMapping("/all")
+    @Operation(summary = "전체 반품 목록 조회")
     public ResponseEntity<List<ReturnListDto>> getAllReturns() {
         List<ReturnListDto> returnList = returnService.getReturnList();
         return ResponseEntity.ok(returnList);
@@ -25,6 +29,7 @@ public class AdminReturnsController {
 
     //반품 상세 정보
     @GetMapping("/{returnId}")
+    @Operation(summary = "반품 상세 조회")
     public ResponseEntity<ReturnDetailDto> getReturnDetail(@PathVariable Integer returnId) {
         ReturnDetailDto dto = returnService.findByReturnIdForAdmin(returnId);
         return ResponseEntity.ok(dto);
@@ -32,6 +37,7 @@ public class AdminReturnsController {
 
     //반품 상태 변경
     @PatchMapping("/{returnId}/status/{status}")
+    @Operation(summary = "반품 상태 변경")
     public ResponseEntity<Void> updateStatus(
             @PathVariable Integer returnId,
             @PathVariable ReturnStatus status,
