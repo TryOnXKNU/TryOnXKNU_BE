@@ -1,5 +1,7 @@
 package org.example.tryonx.admin.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.comfy.service.ComfyUiDualService;
@@ -37,6 +39,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/admin/fitting")
 @RequiredArgsConstructor
+@Tag(name = "Admin AI Fitting API", description = "관리자 상품 등록 AI 피팅 API")
 public class AdminFittingController {
 //    private final ComfyUiService comfyUiService;
 //    private final ProductRepository productRepository;
@@ -195,6 +198,7 @@ public class AdminFittingController {
 //    }
 
     @PostMapping("/clothing/triple")
+    @Operation(summary = "상품 등록 AI 피팅 이미지 생성")
     public ResponseEntity<String> generateTriple(
             @AuthenticationPrincipal UserDetails user,
             @RequestParam Integer productId
@@ -215,6 +219,7 @@ public class AdminFittingController {
     }
 
     @PostMapping("/clothing/result")
+    @Operation(summary = "상품 등록 AI 피팅 이미지 조회")
     public ResponseEntity<List<String>> getGeneratedImageUrls(@RequestParam Integer productId){
         List<String> fittingImageUrls = comfyUiFittingService.getFittingImageUrls(productId);
         return ResponseEntity.ok(fittingImageUrls);

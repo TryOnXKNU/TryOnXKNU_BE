@@ -1,5 +1,7 @@
 package org.example.tryonx.exchange.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.ExchangeStatus;
 import org.example.tryonx.exchange.dto.ExchangeDetailDto;
@@ -13,11 +15,13 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin/exchanges")
+@Tag(name = "Admin Exchanges API", description = "관리자 교환 관리 API")
 public class AdminExchangeController {
     private final ExchangeService exchangeService;
 
     //전체 교환 목록 조회
     @GetMapping("/all")
+    @Operation(summary = "전체 교환 목록 조회")
     public ResponseEntity<List<ExchangeListDto>> getAllExchanges() {
         List<ExchangeListDto> exchangeList = exchangeService.getExchangeList();
         return ResponseEntity.ok(exchangeList);
@@ -25,6 +29,7 @@ public class AdminExchangeController {
 
     //교환 상세 정보
     @GetMapping("/{exchangeId}")
+    @Operation(summary = "교환 상세 조회")
     public ResponseEntity<ExchangeDetailDto> getExchangeDetailForAdmin(@PathVariable Integer exchangeId) {
         ExchangeDetailDto dto = exchangeService.findByExchangeIdForAdmin(exchangeId);
         return ResponseEntity.ok(dto);
@@ -32,6 +37,7 @@ public class AdminExchangeController {
 
     //교환 상태 변경
     @PatchMapping("/{exchangeId}/status/{status}")
+    @Operation(summary = "교환 상태 변경")
     public ResponseEntity<Void> updateStatus(
             @PathVariable Integer exchangeId,
             @PathVariable ExchangeStatus status,

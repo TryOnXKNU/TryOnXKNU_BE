@@ -1,5 +1,7 @@
 package org.example.tryonx.returns.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.returns.dto.ReturnDetailDto;
 import org.example.tryonx.returns.dto.ReturnRequestDto;
@@ -15,12 +17,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/return")
+@Tag(name = "User Returns API", description = "사용쟈 반품 API")
 @RequiredArgsConstructor
 public class ReturnController {
     private final ReturnService returnService;
 
     //반품 신청
     @PostMapping
+    @Operation(summary = "반품 신청")
     public ResponseEntity<String> requestReturn(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody ReturnRequestDto dto
@@ -32,6 +36,7 @@ public class ReturnController {
 
     // 반품 신청 내역 조회
     @GetMapping("/my")
+    @Operation(summary = "반품 내역 조회")
     public ResponseEntity<List<ReturnResponseDto>> getMyReturns(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         List<ReturnResponseDto> list = returnService.getMyReturns(email);
@@ -40,6 +45,7 @@ public class ReturnController {
 
     // 반품 신청 상세 조회
     @GetMapping("/{returnId}")
+    @Operation(summary = "반품 상세 조회")
     public ResponseEntity<ReturnDetailDto> getReturnDetail(
             @PathVariable Integer returnId,
             @AuthenticationPrincipal UserDetails userDetails

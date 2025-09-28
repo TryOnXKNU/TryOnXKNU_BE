@@ -1,5 +1,7 @@
 package org.example.tryonx.kakao.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.tryonx.kakao.dto.KakaoLoginRequest;
@@ -15,6 +17,7 @@ import java.util.Map;
 @RequestMapping("")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Kakao Login API", description = "카카오로그인 API")
 public class AuthController {
     private final AuthService authService;
 
@@ -24,6 +27,7 @@ public class AuthController {
     private String redirectUrl;
 
     @GetMapping("/kakao/login")
+    @Operation(summary = "카카오로그인")
     public ResponseEntity<Map<String, String>> getKakaoLoginUrl() {
         String kakaoUrl = "https://kauth.kakao.com/oauth/authorize" +
                 "?response_type=code" +
@@ -36,12 +40,14 @@ public class AuthController {
     }
 
     @GetMapping("/kakao/callback")
+    @Operation(summary = "카카오 인가코드 콜백")
     public ResponseEntity<?> getKaKaoAuthorizeCode(@RequestParam("code") String authorizeCode) {
         log.info("[kakao-login] authorizaCode : {}", authorizeCode);
         return authService.getKakaoUserInfo(authorizeCode);
     }
 
     @PostMapping("/api/v1/auth/kakao")
+    @Operation(summary = "카카오 인증")
     public ResponseEntity<?> kakaoLogin(@RequestBody Map<String, String> body) {
         String accessToken = body.get("accessToken");
         log.info("[Kakao SDK Login] AccessToken: {}", accessToken);
