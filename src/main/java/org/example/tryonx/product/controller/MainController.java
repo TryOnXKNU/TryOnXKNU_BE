@@ -20,7 +20,7 @@ public class MainController {
     private final ProductService productService;
 
     @GetMapping("/popular-styles")
-    @Operation(summary = "인기 많은 스타알")
+    @Operation(summary = "인기 많은 스타일")
     public List<ProductDto> popularStyles() {
         return productService.getTopLikedProducts(6);
     }

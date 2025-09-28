@@ -26,7 +26,7 @@ public class AskController {
 
     //문의하기 조회
     @GetMapping("/available")
-    @Operation(summary = "문의가능한 목록 조회")
+    @Operation(summary = "문의 가능한 목록 조회")
     public ResponseEntity<List<AskListItem>> getAskableItems(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         List<AskListItem> askableItems = askService.getAskableItems(email);

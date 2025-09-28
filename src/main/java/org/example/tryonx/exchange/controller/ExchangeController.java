@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/exchange")
-@Tag(name = "User Exchanges API", description = "사용쟈 교환 API")
+@Tag(name = "User Exchanges API", description = "사용자 교환 API")
 @RequiredArgsConstructor
 public class ExchangeController {
     private final ExchangeService exchangeService;
