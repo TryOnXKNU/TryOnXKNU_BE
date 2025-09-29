@@ -1,19 +1,17 @@
 package org.example.tryonx.orders.payment.controller;
 
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.tryonx.orders.order.dto.OrderPreviewRequestDto;
 import org.example.tryonx.orders.payment.dto.PaymentCompleteReqDto;
 import org.example.tryonx.orders.payment.dto.PaymentCompleteResDto;
 import org.example.tryonx.orders.payment.dto.PrecheckRequstDto;
-import org.example.tryonx.orders.payment.service.PaymentRefundService;
 import org.example.tryonx.orders.payment.service.PaymentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +19,13 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/payment")
+@Tag(name = "Users Payments API", description = "회원 결제 API")
 @RequiredArgsConstructor
 public class PaymentController {
     private final PaymentService paymentService;
-    private final PaymentRefundService refundService;
 
     @PostMapping("/precheck")
+    @Operation(summary = "결제 확인")
     public ResponseEntity<?> precheck(@RequestBody @Valid PrecheckRequstDto req) {
         var res = paymentService.precheck(req);
         if (!res.isOk()) return ResponseEntity.status(HttpStatus.CONFLICT).body(false);
@@ -34,6 +33,7 @@ public class PaymentController {
     }
 
     @PostMapping("/complete")
+    @Operation(summary = "결제 완료")
     public ResponseEntity<PaymentCompleteResDto> complete(
             @RequestBody PaymentCompleteReqDto req, @AuthenticationPrincipal UserDetails userDetails, HttpServletRequest httpReq
             ) {

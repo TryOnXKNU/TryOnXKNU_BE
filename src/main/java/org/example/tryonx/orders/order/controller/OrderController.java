@@ -1,5 +1,7 @@
 package org.example.tryonx.orders.order.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.PaymentStatus;
 import org.example.tryonx.orders.order.domain.Order;
@@ -20,6 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/order")
+@Tag(name = "Users Orders API", description = "회원 주문 API")
 @RequiredArgsConstructor
 public class OrderController {
 
@@ -31,6 +34,7 @@ public class OrderController {
 
 
     @PostMapping("/preview")
+    @Operation(summary = "주문서")
     public ResponseEntity<OrderPreviewResponseDto> previewOrder(
             @RequestBody OrderPreviewRequestDto requestDto,
             @AuthenticationPrincipal UserDetails userDetails
@@ -41,6 +45,7 @@ public class OrderController {
     }
 
     @PostMapping
+    @Operation(summary = "주문하기")
     public ResponseEntity<?> createOrder(@RequestBody OrderRequestDto req,
                                          @AuthenticationPrincipal UserDetails user) {
         if (user == null) {
@@ -92,6 +97,7 @@ public class OrderController {
 
 
     @GetMapping("/my")
+    @Operation(summary = "주문내역 조회")
     public ResponseEntity<List<OrderListItem>> getMyOrders(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         List<OrderListItem> orders = orderService.getMyOrders(email);
@@ -99,12 +105,14 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
+    @Operation(summary = "주문 상세 조회")
     public ResponseEntity<OrderDetailResponseDto> getOrder(@PathVariable Integer orderId) {
         OrderDetailResponseDto orderDetail = orderService.getOrderDetail(orderId);
         return ResponseEntity.ok(orderDetail);
     }
 
     @GetMapping("/my/count")
+    @Operation(summary = "주문건수 조회")
     public ResponseEntity<Integer> getMyCount(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         Integer countMyOrders = orderService.countMyOrders(email);
@@ -113,6 +121,7 @@ public class OrderController {
 
     // 특정 주문의 배송 이력 조회
     @GetMapping("/delivery/{orderId}")
+    @Operation(summary = "배송 조회")
     public List<DeliveryHistoryDto> getDeliveryHistory(
             @PathVariable Integer orderId,
             @AuthenticationPrincipal UserDetails userDetails

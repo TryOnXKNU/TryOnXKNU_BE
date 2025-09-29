@@ -27,7 +27,7 @@ public class AdminOrderController {
     }
 
     @GetMapping("/{orderId}")
-    @Operation(summary = "주문 상세조회")
+    @Operation(summary = "주문 상세 조회")
     public ResponseEntity<OrderInfoDto> getOrderDetail(@PathVariable Integer orderId) {
         return ResponseEntity.ok(adminOrderService.getOrderDetail(orderId));
     }

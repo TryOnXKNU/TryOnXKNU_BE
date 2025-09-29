@@ -19,7 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/ask")
-@Tag(name = "User Asks API", description = "사용자 문의 API")
+@Tag(name = "User Asks API", description = "회원 문의 API")
 @RequiredArgsConstructor
 public class AskController {
     private final AskService askService;

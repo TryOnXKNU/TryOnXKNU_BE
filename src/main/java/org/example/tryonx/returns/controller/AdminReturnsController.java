@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/admin/returns")
-@Tag(name = "Admin Returns API", description = "관리자 빈픔 관리 API")
+@Tag(name = "Admin Returns API", description = "관리자 반품 관리 API")
 public class AdminReturnsController {
     private final ReturnService returnService;
 

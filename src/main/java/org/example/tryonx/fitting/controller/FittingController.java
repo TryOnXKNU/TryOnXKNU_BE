@@ -1,5 +1,7 @@
 package org.example.tryonx.fitting.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.tryonx.comfy.service.ComfyUiService;
 import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.fitting.dto.BodyShapeRequest;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/fitting")
+@Tag(name = "User AI Fitting API", description = "회원 AI 피팅 API")
 public class FittingController {
     private final MemberService memberService;
     private final FittingService fittingService;
@@ -25,6 +28,7 @@ public class FittingController {
     }
 
     @GetMapping
+    @Operation(summary = "체형 조회")
     public ResponseEntity<?> fittingPageInfo(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         FittingResponse pageData = fittingService.getFittingPageData(email);
@@ -33,6 +37,7 @@ public class FittingController {
 
 
     @PostMapping("/body-shape")
+    @Operation(summary = "체형 변경")
     public ResponseEntity<?> selectBodyShape(@AuthenticationPrincipal UserDetails userDetails, @RequestBody BodyShapeRequest request) {
         String email = userDetails.getUsername();
         BodyShape response = fittingService.updateBodyShape(email, request);
@@ -47,6 +52,7 @@ public class FittingController {
 //    }
 
     @PostMapping("/try-on/dual")
+    @Operation(summary = "AI 피팅")
     public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId1, @RequestParam(required = false) Integer productId2) throws Exception {
         String email = userDetails.getUsername();
         String filename = comfyUiService.executeFittingTwoClothesFlow(email, productId1, productId2);
