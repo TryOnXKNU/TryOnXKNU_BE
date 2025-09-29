@@ -58,7 +58,7 @@ public class AskController {
 
     //문의내역 상세보기
     @GetMapping("/{askId}")
-    @Operation(summary = "문의내역 상세조회")
+    @Operation(summary = "문의내역 상세 조회")
     public ResponseEntity<AskResponseDto> getAskDetail(@PathVariable Long askId,
                                                        @AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
