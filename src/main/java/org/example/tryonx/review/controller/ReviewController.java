@@ -1,5 +1,7 @@
 package org.example.tryonx.review.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.tryonx.review.dto.*;
 import org.example.tryonx.review.service.ReviewService;
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/reviews")
+@Tag(name = "Users Reviews API", description = "회원 리뷰 API")
 public class ReviewController {
     private final ReviewService reviewService;
     public ReviewController(ReviewService reviewService) {
@@ -20,6 +23,7 @@ public class ReviewController {
     }
 
     @PostMapping
+    @Operation(summary = "리뷰 작성")
     public ResponseEntity<String> createReview(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestPart(name = "dto")ReviewCreateRequestDto reviewCreateRequestDto,
@@ -41,6 +45,7 @@ public class ReviewController {
 //    }
 
     @GetMapping
+    @Operation(summary = "내 리뷰 내역 조회")
     public ResponseEntity<List<ReviewResponseDto>> getMyReviews(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         List<ReviewResponseDto> reviews = reviewService.getMyReviews(email);
@@ -48,23 +53,27 @@ public class ReviewController {
     }
 
     @GetMapping("/product")
+    @Operation(summary = "상품 리뷰 조회")
     public ResponseEntity<List<ProductReviewDto>> getProductReviews(@RequestParam Integer productId) {
         List<ProductReviewDto> productReviews = reviewService.getProductReviews(productId);
         return ResponseEntity.ok(productReviews);
     }
 
     @PostMapping("/product/filter")
+    @Operation(summary = "리뷰 필터별 조회")
     public ResponseEntity<List<ProductReviewDto>> getFilteredReviews(@RequestBody FilteringRequestDto requestDto) {
         List<ProductReviewDto> result = reviewService.getProductReviewsFiltered(requestDto);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/product/count")
+    @Operation(summary = "리뷰건수 조회")
     public ResponseEntity<Integer> getProductCount(@RequestParam Integer productId) {
         Integer count = reviewService.reviewCountByProductId(productId);
         return ResponseEntity.ok(count);
     }
     @GetMapping("/my/count")
+    @Operation(summary = "내 리뷰건수 조회")
     public ResponseEntity<Integer> getMyCount(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         Integer count = reviewService.countMyReviews(email);

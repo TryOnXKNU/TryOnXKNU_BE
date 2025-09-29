@@ -1,5 +1,7 @@
 package org.example.tryonx.member.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.tryonx.member.domain.Role;
 import org.example.tryonx.member.dto.*;
 import org.example.tryonx.member.service.MemberService;
@@ -7,15 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v1/users")
+@Tag(name = "Users API", description = "회원 API")
 public class MemberController {
     private final MemberService memberService;
     public MemberController(MemberService memberService) {
@@ -23,14 +23,15 @@ public class MemberController {
     }
 
     @GetMapping
+    @Operation(summary = "마이페이지")
     public ResponseEntity<MyInfoResponseDto> myInfo(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         MyInfoResponseDto myInfo = memberService.getMyInfo(email);
         return new ResponseEntity<>(myInfo, HttpStatus.OK);
     }
 
-
     @PatchMapping("/password")
+    @Operation(summary = "비밀번호 변경")
     public ResponseEntity<?> updatePassword(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdatePasswordReq updatePasswordReq){
         String email = userDetails.getUsername();
         memberService.updatePassword(email,updatePasswordReq.newPassword());
@@ -38,6 +39,7 @@ public class MemberController {
     }
 
     @PatchMapping("/nickname")
+    @Operation(summary = "닉네임 변경")
     public ResponseEntity<?> updateNickname(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String nickName){
         String email = userDetails.getUsername();
         memberService.updateNickname(email, nickName);
@@ -45,6 +47,7 @@ public class MemberController {
     }
 
     @PatchMapping("/address")
+    @Operation(summary = "주소 변경")
     public ResponseEntity<?> updateAddress(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String address){
         String email = userDetails.getUsername();
         memberService.updateAddress(email, address);
@@ -52,6 +55,7 @@ public class MemberController {
     }
 
     @PatchMapping("/bodyInfo")
+    @Operation(summary = "체형 변경")
     public ResponseEntity<?> updateBodyInfo(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateBodyInfoDto dto) {
         String email = userDetails.getUsername();
         memberService.updateBodyInformation(email, dto);
@@ -59,6 +63,7 @@ public class MemberController {
     }
 
     @PostMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "프로필 이미지 변경")
     public ResponseEntity<String> updateProfileImage(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("profileImage") MultipartFile profileImage) {
@@ -73,12 +78,14 @@ public class MemberController {
     }
 
     @PostMapping("/check-password")
+    @Operation(summary = "비밀번호 확인")
     public ResponseEntity<?> checkPassword(@AuthenticationPrincipal UserDetails userDetails, @RequestBody CheckPasswordRequest request) {
         String email = userDetails.getUsername();
         return new ResponseEntity<>(memberService.checkPassword(email, request.password()), HttpStatus.OK);
     }
 
     @GetMapping("/profile-image")
+    @Operation(summary = "프로필 이미지 조회")
     public ResponseEntity<String> getProfileImage(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         String profileImage = memberService.getProfileImage(email);
@@ -87,6 +94,7 @@ public class MemberController {
 
     /* 권한 변경 */
     @PatchMapping("/members/{memberId}/role/{role}")
+    @Operation(summary = "권한 변경")
     public ResponseEntity<Void> updateMemberRole(
             @PathVariable Long memberId,
             @PathVariable Role role
@@ -96,6 +104,7 @@ public class MemberController {
     }
 
     @DeleteMapping("/me")
+    @Operation(summary = "회원 탈퇴")
     public ResponseEntity<Void> deleteMember(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         memberService.deleteMember(email);

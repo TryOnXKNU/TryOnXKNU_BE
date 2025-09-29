@@ -1,5 +1,7 @@
 package org.example.tryonx.auth.sms.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.auth.sms.service.SmsService;
 import org.springframework.http.HttpStatus;
@@ -8,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth/sms")
+@Tag(name = "SMS Auth API", description = "문자 인증 API")
 @RequiredArgsConstructor
 public class SmsAuthController {
 
@@ -18,6 +21,7 @@ public class SmsAuthController {
      * 수신자 번호 (010xxxxxxxx 형식)
      */
     @PostMapping("/send")
+    @Operation(summary = "회원가입 시 문자 전송")
     public ResponseEntity<String> sendCodeForSignup(@RequestParam String phoneNumber) {
         try {
             if(smsService.sendAuthCode(phoneNumber))
@@ -30,6 +34,7 @@ public class SmsAuthController {
     }
 
     @PostMapping("/send/id")
+    @Operation(summary = "아이디 찾기 시 문자 전송")
     public ResponseEntity<String> sendCodeForFindId(@RequestParam String phoneNumber) {
         try {
             if(smsService.sendAuthCodeForFindId(phoneNumber))
@@ -47,6 +52,7 @@ public class SmsAuthController {
      * @param code 사용자 입력 코드
      */
     @PostMapping("/verify")
+    @Operation(summary = "문자 인증")
     public ResponseEntity<String> verifyCode(@RequestParam String phoneNumber,
                                              @RequestParam String code) {
         boolean verified = smsService.verifyCode(phoneNumber, code);

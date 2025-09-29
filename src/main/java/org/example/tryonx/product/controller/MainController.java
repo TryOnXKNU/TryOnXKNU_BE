@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/main")
-@Tag(name = "User Main Home API", description = "사용자 메인 홈 API")
+@Tag(name = "User Main Home API", description = "회원 메인 홈 API")
 @RequiredArgsConstructor
 public class MainController {
     private final ProductService productService;

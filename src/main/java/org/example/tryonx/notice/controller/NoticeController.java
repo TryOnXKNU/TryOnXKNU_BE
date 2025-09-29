@@ -1,6 +1,7 @@
 package org.example.tryonx.notice.controller;
 
-import org.example.tryonx.notice.domain.Notification;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.tryonx.notice.dto.NoticeResponseDto;
 import org.example.tryonx.notice.service.NoticeService;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/notice")
+@Tag(name = "Users Notices API", description = "회원 알림 API")
 public class NoticeController {
     private final NoticeService noticeService;
     public NoticeController(NoticeService noticeService) {
@@ -21,6 +23,7 @@ public class NoticeController {
     }
 
     @GetMapping
+    @Operation(summary = "알림 조회")
     public ResponseEntity<List<NoticeResponseDto>> getMyNotices(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         List<NoticeResponseDto> myNotifications = noticeService.findByEmail(email);

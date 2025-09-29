@@ -210,7 +210,7 @@ public class AdminFittingController {
         ProductImage thumbnail = productImageRepository.findFirstByProductAndIsThumbnailTrue(product)
                 .orElseThrow(() -> new RuntimeException("Thumbnail image not found"));
 
-        String clothingImageName = thumbnail.getImageUrl(); // ex) /upload/product/5/xxx.png
+        String clothingImageName = thumbnail.getImageUrl();
 
         comfyUiFittingService.executeFittingFlowWithClothingNameThreeImages(
                 email, clothingImageName, product);
