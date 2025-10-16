@@ -7,7 +7,6 @@ import org.example.tryonx.ask.repository.AskRepository;
 import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.exchange.repository.ExchangeRepository;
-import org.example.tryonx.fitting.dto.BodyShapeRequest;
 import org.example.tryonx.image.repository.ReviewImageRepository;
 import org.example.tryonx.like.repository.LikeRepository;
 import org.example.tryonx.member.domain.Member;
@@ -104,6 +103,7 @@ public class MemberService {
                 .height(member.getHeight())
                 .weight(member.getWeight())
                 .memberNum(member.getMemberNum())
+                .socialId(member.getSocialId())
                 .build();
     }
 

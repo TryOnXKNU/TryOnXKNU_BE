@@ -50,7 +50,8 @@ public class MemberListService {
                         member.getMemberId(),
 //                        member.getName(),
                         member.getNickname(),
-                        member.getMemberNum()
+                        member.getMemberNum(),
+                        member.getSocialId()
                 ))
                 .collect(Collectors.toList());
     }
@@ -73,6 +74,7 @@ public class MemberListService {
                 .height(member.getHeight())
                 .weight(member.getWeight())
                 .memberNum(member.getMemberNum())
+                .socialId(member.getSocialId())
                 .build();
     }
 
@@ -85,7 +87,8 @@ public class MemberListService {
                         member.getMemberId(),
 //                        member.getName(),
                         member.getNickname(),
-                        member.getMemberNum()
+                        member.getMemberNum(),
+                        member.getSocialId()
                 ))
                 .collect(Collectors.toList());
     }
@@ -161,7 +164,8 @@ public class MemberListService {
                         rate,
                         discountedPrice,
                         order.getFinalAmount(),
-                        member.getMemberNum()
+                        member.getMemberNum(),
+                        member.getSocialId()
                 ));
             }
         }

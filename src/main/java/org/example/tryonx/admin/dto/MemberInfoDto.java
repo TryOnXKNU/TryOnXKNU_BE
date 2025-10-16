@@ -23,4 +23,5 @@ public class MemberInfoDto {
     private Integer height;
     private Integer weight;
     private String memberNum;
+    private Long socialId;
 }

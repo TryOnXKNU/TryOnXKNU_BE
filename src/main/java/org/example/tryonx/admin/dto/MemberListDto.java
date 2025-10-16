@@ -13,4 +13,5 @@ public class MemberListDto {
 //    private String name;
     private String nickname;
     private String memberNum;
+    private Long socialId;
 }
