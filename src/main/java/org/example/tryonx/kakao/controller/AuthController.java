@@ -48,10 +48,9 @@ public class AuthController {
 
     @PostMapping("/api/v1/auth/kakao")
     @Operation(summary = "카카오 인증")
-    public ResponseEntity<?> kakaoLogin(@RequestBody Map<String, String> body) {
-        String accessToken = body.get("accessToken");
-        log.info("[Kakao SDK Login] AccessToken: {}", accessToken);
-        return authService.kakaoLoginWithSDK(accessToken);
+    public ResponseEntity<?> kakaoLogin(@RequestBody KakaoLoginRequest req) {
+        log.info("[Kakao SDK Login] AccessToken: {}", req.getAccessToken());
+        return authService.kakaoLoginWithSDK(req.getAccessToken());
     }
 
 }
