@@ -16,8 +16,11 @@ import org.example.tryonx.member.dto.MyInfoResponseDto;
 import org.example.tryonx.member.dto.UpdateBodyInfoDto;
 import org.example.tryonx.member.dto.UpdateMemberRequestDto;
 import org.example.tryonx.member.repository.MemberRepository;
+import org.example.tryonx.member.repository.PointHistoryRepository;
+import org.example.tryonx.notice.repository.NotificationRepository;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
+import org.example.tryonx.orders.payment.repository.PaymentRepository;
 import org.example.tryonx.returns.repository.ReturnRepository;
 import org.example.tryonx.review.domain.Review;
 import org.example.tryonx.review.repository.ReviewRepository;
@@ -50,9 +53,12 @@ public class MemberService {
     private final OrderItemRepository orderItemRepository;
     private final ReturnRepository returnRepository;
     private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
+    private final NotificationRepository notificationRepository;
+    private final PointHistoryRepository pointHistoryRepository;
     private static final long EXPIRE_TIME = 3 * 60;
 
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, StringRedisTemplate redisTemplate, CartItemRepository cartItemRepository, LikeRepository likeRepository, ReviewRepository reviewRepository, ReviewImageRepository reviewImageRepository, AskRepository askRepository, ExchangeRepository exchangeRepository, OrderItemRepository orderItemRepository, ReturnRepository returnRepository, OrderRepository orderRepository) {
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, StringRedisTemplate redisTemplate, CartItemRepository cartItemRepository, LikeRepository likeRepository, ReviewRepository reviewRepository, ReviewImageRepository reviewImageRepository, AskRepository askRepository, ExchangeRepository exchangeRepository, OrderItemRepository orderItemRepository, ReturnRepository returnRepository, OrderRepository orderRepository, PaymentRepository paymentRepository, NotificationRepository notificationRepository, PointHistoryRepository pointHistoryRepository) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.redisTemplate = redisTemplate;
@@ -65,6 +71,9 @@ public class MemberService {
         this.orderItemRepository = orderItemRepository;
         this.returnRepository = returnRepository;
         this.orderRepository = orderRepository;
+        this.paymentRepository = paymentRepository;
+        this.notificationRepository = notificationRepository;
+        this.pointHistoryRepository = pointHistoryRepository;
     }
 
     public Member getMember(String email){
@@ -270,12 +279,28 @@ public class MemberService {
         // 6. 교환 삭제
         exchangeRepository.deleteAllByMember(member);
 
-        // 7. 주문 아이템 삭제 (order는 cascade 설정이므로 별도 처리 X)
+        // 7. 결제 정보 삭제 (orders 삭제 전에 필수)
+        List<org.example.tryonx.orders.order.domain.Order> orders = orderRepository.findByMember(member);
+        for (org.example.tryonx.orders.order.domain.Order order : orders) {
+            paymentRepository.findByOrder_OrderId(order.getOrderId())
+                    .ifPresent(paymentRepository::delete);
+        }
+
+        // 8. 주문 아이템 삭제
         orderItemRepository.deleteAllByMember(member);
 
+        // 9. 주문 삭제
         orderRepository.deleteAllByMember(member);
 
-        // 8. 회원 삭제
+        // 10. 알림 삭제
+        List<org.example.tryonx.notice.domain.Notification> notifications = notificationRepository.findByMember(member);
+        notificationRepository.deleteAll(notifications);
+
+        // 11. 포인트 히스토리 삭제
+        List<org.example.tryonx.member.domain.PointHistory> pointHistories = pointHistoryRepository.findByMemberOrderByCreatedAtDesc(member);
+        pointHistoryRepository.deleteAll(pointHistories);
+
+        // 12. 회원 삭제
         memberRepository.delete(member);
     }
 
