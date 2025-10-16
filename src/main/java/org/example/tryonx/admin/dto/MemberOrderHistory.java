@@ -30,4 +30,5 @@ public class MemberOrderHistory {
     private BigDecimal discountPrice;
     private BigDecimal finalAmount;
     private String memberNum;
+    private Long socialId;
 }
