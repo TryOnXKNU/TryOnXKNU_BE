@@ -182,6 +182,7 @@ public class AuthServiceImpl implements AuthService {
 
             Optional<Member> existingMemberOpt = memberRepository.findByEmail(dto.getEmail());
             Member member;
+            boolean isNewMember = false;
 
             if (existingMemberOpt.isPresent()) {
                 Member existingMember = existingMemberOpt.get();
@@ -190,6 +191,8 @@ public class AuthServiceImpl implements AuthService {
                 }
                 member = existingMember;
             } else {
+                // 신규 회원
+                isNewMember = true;
                 member = Member.builder()
                         .email(dto.getEmail())
                         .name(dto.getName() != null ? dto.getName() : dto.getProfile_nickname())
@@ -211,7 +214,9 @@ public class AuthServiceImpl implements AuthService {
 
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
+            response.put("role", member.getRole().toString());
             response.put("nickname", member.getNickname());
+            response.put("isNewMember", isNewMember);
 
             return ResponseEntity.ok(response);
 
