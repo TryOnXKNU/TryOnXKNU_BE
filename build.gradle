@@ -56,7 +56,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.bytedeco:javacv-platform:1.5.10'
 
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'  // 추가
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
 }
 
