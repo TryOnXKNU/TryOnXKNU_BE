@@ -1,5 +1,7 @@
 package org.example.tryonx.comfy.service;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -39,12 +42,16 @@ public class ComfyUiFittingService {
     private final ProductRepository productRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ProductImageRepository productImageRepository;
+    private final AmazonS3 amazonS3;
 
     @Value("${ngrok.url}")
     private String baseUrl;
 
     @Value("${app.upload.dir:upload}")
     private String uploadRoot;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucketName;
 
     private void refreshGoogleDrive() {
         String url = baseUrl + "/pysssss/drive/sync";
@@ -60,66 +67,9 @@ public class ComfyUiFittingService {
         }
     }
 
-//    public void executeFittingFlowWithClothingNameThreeImages(
-//            String email, String clothingImageName, Product product
-//    ) throws IOException, InterruptedException {
-//
-//        memberRepository.findByEmail(email)
-//                .orElseThrow(() -> new RuntimeException("Member not found"));
-//
-//        refreshGoogleDrive();
-//        // '/upload/product/' 접두어 제거
-//        String prefix = "/upload/product/";
-//        String fileNameOnly = clothingImageName.startsWith(prefix)
-//                ? clothingImageName.substring(prefix.length())
-//                : clothingImageName;
-//
-//        // 워크플로 로드 및 치환
-//        String workflowJson = loadWorkflowFromResource("templates/workflows/v2_admin_fitting.json")
-//                .replace("{{imageName}}", fileNameOnly);
-//
-//        String promptId = sendWorkflow(workflowJson);
-//        waitUntilComplete(promptId);
-//
-//        // 출력 prefix 3개
-//        List<String> prefixes = List.of("TRYONX_A", "TRYONX_B", "TRYONX_C");
-//        Map<String, List<String>> imagesByPrefix = getGeneratedOutputImageFilenamesByPrefix(promptId, prefixes);
-//
-//        // 각 프리픽스에서 1장씩 꺼내기
-//        List<String> originals = new ArrayList<>(3);
-//        for (String pfx : prefixes) {
-//            List<String> list = imagesByPrefix.getOrDefault(pfx, Collections.emptyList());
-//            if (list.isEmpty()) {
-//                throw new RuntimeException("SaveImage 출력이 없습니다. prefix=" + pfx + " | 전체=" + imagesByPrefix);
-//            }
-//            originals.add(list.get(0));
-//            System.out.println("탐지된 출력(" + pfx + "): " + list.get(0));
-//        }
-//
-//        // 중복 방지 체크
-//        if (new HashSet<>(originals).size() != originals.size()) {
-//            throw new RuntimeException("세 출력 이미지 중 중복 발생: " + originals);
-//        }
-//
-//        // 저장 파일명
-//        List<String> finals = List.of(
-//                "A_" + originals.get(0),
-//                "B_" + originals.get(1),
-//                "C_" + originals.get(2)
-//        );
-//
-//        for (int i = 0; i < 3; i++) {
-//            downloadImageAs(originals.get(i), finals.get(i));
-//        }
-//
-//        // DB 저장
-//        saveFixedSequences3(product,
-//                "/upload/fitting/" + finals.get(0),
-//                "/upload/fitting/" + finals.get(1),
-//                "/upload/fitting/" + finals.get(2));
-//
-//        System.out.println("저장 완료: " + finals);
-//    }
+    /**
+     * 피팅 생성 후 S3 업로드 저장 버전
+     */
 
     public void executeFittingFlowWithClothingNameThreeImages(
             String email, String clothingImageName, Product product
@@ -138,7 +88,7 @@ public class ComfyUiFittingService {
 
         // 카테고리명과 체형 불러오기
         String categoryName = product.getCategory().getName();   // ex) STOP, SBOTTOM
-        String bodyShape = product.getBodyShape().name();              // STRAIGHT, NATURAL, WAVE
+        String bodyShape = product.getBodyShape().name();        // STRAIGHT, NATURAL, WAVE
 
         // 체형 → 번호 매핑
         int bodyShapeNum = switch (bodyShape) {
@@ -209,11 +159,12 @@ public class ComfyUiFittingService {
         List<String> originals = new ArrayList<>(3);
         for (String pfx : prefixes) {
             List<String> list = imagesByPrefix.getOrDefault(pfx, Collections.emptyList());
-            if (list.isEmpty()) {
-                throw new RuntimeException("SaveImage 출력이 없습니다. prefix=" + pfx + " | 전체=" + imagesByPrefix);
-            }
+//            if (list.isEmpty()) {
+//                throw new RuntimeException("SaveImage 출력이 없습니다. prefix=" + pfx + " | 전체=" + imagesByPrefix);
+//            }
+            if (list.isEmpty()) throw new RuntimeException("출력 없음: " + pfx);
             originals.add(list.get(0));
-            System.out.println("탐지된 출력(" + pfx + "): " + list.get(0));
+            //System.out.println("탐지된 출력(" + pfx + "): " + list.get(0));
         }
 
         // 중복 방지 체크
@@ -228,17 +179,29 @@ public class ComfyUiFittingService {
                 "C_" + originals.get(2)
         );
 
+//        for (int i = 0; i < 3; i++) {
+//            downloadImageAs(originals.get(i), finals.get(i));
+//        }
+
+//        // DB 저장
+//        saveFixedSequences3(product,
+//                "/upload/fitting/" + finals.get(0),
+//                "/upload/fitting/" + finals.get(1),
+//                "/upload/fitting/" + finals.get(2));
+//
+//        System.out.println("저장 완료: " + finals);
+
+        // S3 업로드
+        List<String> fittingUrls = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            downloadImageAs(originals.get(i), finals.get(i));
+            String s3Url = downloadImageAndUploadToS3(originals.get(i), finals.get(i), product.getProductCode());
+            fittingUrls.add(s3Url);
         }
 
-        // DB 저장
-        saveFixedSequences3(product,
-                "/upload/fitting/" + finals.get(0),
-                "/upload/fitting/" + finals.get(1),
-                "/upload/fitting/" + finals.get(2));
+        // DB 저장 시 S3 URL 저장
+        saveFixedSequences3(product, fittingUrls.get(0), fittingUrls.get(1), fittingUrls.get(2));
 
-        System.out.println("저장 완료: " + finals);
+        System.out.println("S3 저장 완료: " + fittingUrls);
     }
 
 
@@ -362,30 +325,66 @@ public class ComfyUiFittingService {
         return fitting;
     }
 
-    private void downloadImageAs(String originalFilename, String finalFilename)
+//    private void downloadImageAs(String originalFilename, String finalFilename)
+//            throws IOException, InterruptedException {
+//        if (originalFilename == null || originalFilename.isBlank())
+//            throw new IllegalArgumentException("원본 이미지 파일 이름이 비어 있습니다.");
+//
+//        String url = baseUrl + "/view?filename=" + originalFilename;
+//        int maxRetries = 15;
+//        Path outputPath = ensureFittingDir().resolve(finalFilename);
+//
+//        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+//            try {
+//                byte[] imageData = restTemplate.getForObject(url, byte[].class);
+//                if (imageData != null && imageData.length > 0) {
+//                    Files.write(outputPath, imageData,
+//                            StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+//                    System.out.println("저장됨: " + outputPath);
+//                    return;
+//                }
+//            } catch (HttpClientErrorException.NotFound e) {
+//                System.out.println("이미지 준비중(" + attempt + "/" + maxRetries + "): " + originalFilename);
+//            }
+//            Thread.sleep(800);
+//        }
+//        throw new IOException("이미지 다운로드 실패: " + originalFilename + " → " + outputPath);
+//    }
+
+    /**
+     * S3 업로드 버전으로 변경된 downloadImageAs()
+     */
+    private String downloadImageAndUploadToS3(String originalFilename, String finalFilename, String productCode)
             throws IOException, InterruptedException {
-        if (originalFilename == null || originalFilename.isBlank())
-            throw new IllegalArgumentException("원본 이미지 파일 이름이 비어 있습니다.");
 
         String url = baseUrl + "/view?filename=" + originalFilename;
         int maxRetries = 15;
-        Path outputPath = ensureFittingDir().resolve(finalFilename);
 
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 byte[] imageData = restTemplate.getForObject(url, byte[].class);
                 if (imageData != null && imageData.length > 0) {
-                    Files.write(outputPath, imageData,
-                            StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-                    System.out.println("저장됨: " + outputPath);
-                    return;
+
+                    // S3 경로 지정: fitting/{productCode}/{finalFilename}
+                    String key = "fitting/" + productCode + "/" + finalFilename;
+
+                    ObjectMetadata metadata = new ObjectMetadata();
+                    metadata.setContentLength(imageData.length);
+                    metadata.setContentType("image/png");
+
+                    amazonS3.putObject(bucketName, key, new ByteArrayInputStream(imageData), metadata);
+                    String imageUrl = amazonS3.getUrl(bucketName, key).toString();
+
+                    System.out.println("S3 업로드 완료: " + imageUrl);
+                    return imageUrl;
                 }
-            } catch (HttpClientErrorException.NotFound e) {
+            } catch (Exception e) {
                 System.out.println("이미지 준비중(" + attempt + "/" + maxRetries + "): " + originalFilename);
             }
             Thread.sleep(800);
         }
-        throw new IOException("이미지 다운로드 실패: " + originalFilename + " → " + outputPath);
+
+        throw new IOException("이미지 다운로드 실패: " + originalFilename);
     }
 
     @Transactional

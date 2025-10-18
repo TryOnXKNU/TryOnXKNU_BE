@@ -1,5 +1,7 @@
 package org.example.tryonx.product.service;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.category.Category;
 import org.example.tryonx.category.CategoryRepository;
@@ -23,6 +25,7 @@ import org.example.tryonx.product.repository.ProductItemRepository;
 import org.example.tryonx.product.repository.ProductRepository;
 import org.example.tryonx.review.dto.ProductReviewDto;
 import org.example.tryonx.review.service.ReviewService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,7 +40,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -51,6 +53,71 @@ public class ProductService {
     private final ReviewService reviewService;
     private final MemberRepository memberRepository;
     private final ProductFittingRepository productFittingRepository;
+    private final AmazonS3 amazonS3;
+
+//    @Transactional
+//    public Product createProduct(ProductCreateRequestDto dto, List<MultipartFile> images) {
+//
+//        if (productRepository.existsByProductName(dto.getName())) {
+//            throw new IllegalArgumentException("이미 존재하는 상품명입니다: " + dto.getName());
+//        }
+//
+//        String middleCode = getMiddleCode(dto);
+//
+//        // productCode 없이 먼저 저장
+//        Product product = Product.builder()
+//                .productName(dto.getName())
+//                .description(dto.getDescription())
+//                .category(categoryRepository.findById(dto.getCategoryId()).orElse(null))
+//                .discountRate(dto.getDiscountRate())
+//                .price(dto.getPrice())
+//                .bodyShape(dto.getBodyShape())
+//                .createdAt(LocalDateTime.now())
+//                .build();
+//
+//        productRepository.save(product); // 여기서 productId 생성됨
+//
+//        // 생성된 productId로 productCode 생성 후 다시 저장
+//        String paddedId = String.format("%05d", product.getProductId());
+//        String productCode = "ax" + middleCode + paddedId;
+//        product.setProductCode(productCode);
+//        productRepository.save(product);
+//
+//        // 아이템 저장
+//        dto.getProductItemInfoDtos().forEach(itemDto -> {
+//            createProductItem(product, itemDto);
+//        });
+//
+//        // 이미지 저장
+//        if (images != null && !images.isEmpty()) {
+//            boolean isFirst = true;
+//            for (MultipartFile image : images) {
+//                String filename = image.getOriginalFilename();
+//                Path savePath = Paths.get("upload/product").resolve(filename);
+//
+//                try {
+//                    Files.createDirectories(savePath.getParent());
+//                    image.transferTo(savePath);
+//
+//                    ProductImage productImage = ProductImage.builder()
+//                            .product(product)
+//                            .imageUrl("/upload/product/" + filename)
+//                            .isThumbnail(isFirst)
+//                            .build();
+//
+//                    productImageRepository.save(productImage);
+//                    isFirst = false;
+//                } catch (IOException e) {
+//                    throw new RuntimeException("이미지 저장 실패", e);
+//                }
+//            }
+//        }
+//
+//        return product;
+//    }
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucketName;
 
     @Transactional
     public Product createProduct(ProductCreateRequestDto dto, List<MultipartFile> images) {
@@ -74,44 +141,47 @@ public class ProductService {
 
         productRepository.save(product); // 여기서 productId 생성됨
 
-        // 생성된 productId로 productCode 생성 후 다시 저장
+        // productCode 생성
         String paddedId = String.format("%05d", product.getProductId());
         String productCode = "ax" + middleCode + paddedId;
         product.setProductCode(productCode);
         productRepository.save(product);
 
         // 아이템 저장
-        dto.getProductItemInfoDtos().forEach(itemDto -> {
-            createProductItem(product, itemDto);
-        });
+        dto.getProductItemInfoDtos().forEach(itemDto -> createProductItem(product, itemDto));
 
-        // 이미지 저장
+        // 이미지 S3 업로드
         if (images != null && !images.isEmpty()) {
             boolean isFirst = true;
             for (MultipartFile image : images) {
-                String filename = image.getOriginalFilename();
-                Path savePath = Paths.get("upload/product").resolve(filename);
+                String originalFilename = image.getOriginalFilename();
+                String s3Key = "product/" + productCode + "/" + originalFilename;
 
                 try {
-                    Files.createDirectories(savePath.getParent());
-                    image.transferTo(savePath);
+                    amazonS3.putObject(
+                            new PutObjectRequest(bucketName, s3Key, image.getInputStream(), null)
+                    );
+
+                    String imageUrl = amazonS3.getUrl(bucketName, s3Key).toString();
 
                     ProductImage productImage = ProductImage.builder()
                             .product(product)
-                            .imageUrl("/upload/product/" + filename)
+                            .imageUrl(imageUrl)  // S3 URL 저장
                             .isThumbnail(isFirst)
                             .build();
 
                     productImageRepository.save(productImage);
                     isFirst = false;
+
                 } catch (IOException e) {
-                    throw new RuntimeException("이미지 저장 실패", e);
+                    throw new RuntimeException("S3 업로드 실패: " + originalFilename, e);
                 }
             }
         }
 
         return product;
     }
+
 
     private String getMiddleCode(ProductCreateRequestDto dto) {
         String middleCode;
