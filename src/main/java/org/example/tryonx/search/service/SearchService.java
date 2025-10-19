@@ -1,6 +1,7 @@
 package org.example.tryonx.search.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.like.repository.LikeRepository;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.review.service.ReviewService;
@@ -39,7 +40,7 @@ public class SearchService {
 
     public List<ProductResponse> searchProducts(SearchDto searchDto) {
         String keyword = searchDto.getKeyword();
-        List<Product> products = searchRepository.findByProductNameContainingIgnoreCase(keyword);
+        List<Product> products = searchRepository.searchVisibleProducts(keyword);
 
         return products.stream()
                 .map(product -> {
