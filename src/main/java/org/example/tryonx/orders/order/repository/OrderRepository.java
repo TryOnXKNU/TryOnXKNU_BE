@@ -16,6 +16,9 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     Integer countByMember(Member member);
     void deleteAllByMember(Member member);
     List<Order> findByOrderedAtBetween(LocalDateTime start, LocalDateTime end);
-    List<Order> findByStatus(OrderStatus status);
-    List<Order> findByStatusAndOrderedAtBetween(OrderStatus status, LocalDateTime start, LocalDateTime end);
+//    List<Order> findByStatus(OrderStatus status);
+//    List<Order> findByStatusAndOrderedAtBetween(OrderStatus status, LocalDateTime start, LocalDateTime end);
+    List<Order> findByStatusInAndOrderedAtBetween(List<OrderStatus> statuses, LocalDateTime start, LocalDateTime end);
+    List<Order> findByStatusIn(List<OrderStatus> statuses);
+
 }
