@@ -1,6 +1,7 @@
 package org.example.tryonx.search.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.like.repository.LikeRepository;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.review.service.ReviewService;
@@ -39,7 +40,10 @@ public class SearchService {
 
     public List<ProductResponse> searchProducts(SearchDto searchDto) {
         String keyword = searchDto.getKeyword();
-        List<Product> products = searchRepository.findByProductNameContainingIgnoreCase(keyword);
+        List<ProductStatus> excluded = List.of(ProductStatus.HIDDEN);
+
+        List<Product> products = searchRepository
+                .findDistinctByItems_StatusNotInAndProductNameContainingIgnoreCase(excluded, keyword);
 
         return products.stream()
                 .map(product -> {
@@ -49,7 +53,7 @@ public class SearchService {
 
                     long likeCount = likeRepository.countByProduct(product);
                     Double avgRating = reviewService.getAverageRatingByProductId(product.getProductId());
-                    if (avgRating == null) avgRating = 0.0; // 필요시 기본값
+                    if (avgRating == null) avgRating = 0.0;
 
                     return ProductResponse.builder()
                             .productId(product.getProductId())
