@@ -1,5 +1,7 @@
 package org.example.tryonx.ask.service;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.ask.domain.Ask;
 import org.example.tryonx.ask.domain.AskImage;
@@ -18,11 +20,13 @@ import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.domain.ProductItem;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,6 +43,10 @@ public class AskService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final MemberRepository memberRepository;
+    private final AmazonS3 amazonS3;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     // 문의 내역 조회
     public List<AskHistoryItem> getMyAsks(String email) {
@@ -120,25 +128,51 @@ public class AskService {
                 .answerStatus(AnswerStatus.WAITING)
                 .build();
 
-        // 5. 이미지 저장 및 AskImage 연관
+//        // 5. 이미지 저장 및 AskImage 연관
+//        if (images != null && !images.isEmpty()) {
+//            for (MultipartFile image : images) {
+//                String filename = UUID.randomUUID() + "_" + image.getOriginalFilename();
+//                Path savePath = Paths.get("upload/ask").resolve(filename);
+//
+//                try {
+//                    Files.createDirectories(savePath.getParent());
+//                    image.transferTo(savePath);
+//
+//                    AskImage askImage = AskImage.builder()
+//                            .ask(ask)
+//                            .imageUrl("/upload/ask/" + filename)  // 실제 접근 경로
+//                            .build();
+//
+//                    ask.getImages().add(askImage); // 연관관계 설정
+//                } catch (IOException e) {
+//                    throw new RuntimeException("이미지 저장 실패: " + filename, e);
+//                }
+//            }
+//        }
+
+        // 5. 이미지 S3 업로드 및 AskImage 연관
         if (images != null && !images.isEmpty()) {
             for (MultipartFile image : images) {
-                String filename = UUID.randomUUID() + "_" + image.getOriginalFilename();
-                Path savePath = Paths.get("upload/ask").resolve(filename);
+                String fileName = "ask/" + UUID.randomUUID() + "_" + image.getOriginalFilename();
 
-                try {
-                    Files.createDirectories(savePath.getParent());
-                    image.transferTo(savePath);
+                ObjectMetadata metadata = new ObjectMetadata();
+                metadata.setContentType(image.getContentType());
+                metadata.setContentLength(image.getSize());
 
-                    AskImage askImage = AskImage.builder()
-                            .ask(ask)
-                            .imageUrl("/upload/ask/" + filename)  // 실제 접근 경로
-                            .build();
-
-                    ask.getImages().add(askImage); // 연관관계 설정
+                try (InputStream inputStream = image.getInputStream()) {
+                    amazonS3.putObject(bucket, fileName, inputStream, metadata);
                 } catch (IOException e) {
-                    throw new RuntimeException("이미지 저장 실패: " + filename, e);
+                    throw new RuntimeException("문의 이미지 S3 업로드 실패: " + fileName, e);
                 }
+
+                String imageUrl = amazonS3.getUrl(bucket, fileName).toString();
+
+                AskImage askImage = AskImage.builder()
+                        .ask(ask)
+                        .imageUrl(imageUrl)
+                        .build();
+
+                ask.getImages().add(askImage);
             }
         }
 
@@ -187,6 +221,19 @@ public class AskService {
         );
     }
 
+//    @Transactional
+//    public void deleteAsk(String email, Long askId) {
+//        Ask ask = askRepository.findById(askId)
+//                .orElseThrow(() -> new RuntimeException("존재하지 않는 문의글입니다."));
+//
+//        // 본인 확인
+//        if (!ask.getMember().getEmail().equals(email)) {
+//            throw new RuntimeException("본인의 문의글만 삭제할 수 있습니다.");
+//        }
+//
+//        askRepository.delete(ask);
+//    }
+
     @Transactional
     public void deleteAsk(String email, Long askId) {
         Ask ask = askRepository.findById(askId)
@@ -197,7 +244,34 @@ public class AskService {
             throw new RuntimeException("본인의 문의글만 삭제할 수 있습니다.");
         }
 
+        // S3 이미지 삭제
+        List<AskImage> askImages = ask.getImages();
+        if (askImages != null && !askImages.isEmpty()) {
+            for (AskImage askImage : askImages) {
+                String imageUrl = askImage.getImageUrl();
+                try {
+                    // imageUrl → S3 object key 변환
+                    // ex) https://tryonx-bucket.s3.ap-northeast-2.amazonaws.com/ask/uuid_image.jpg
+                    // → key = "ask/uuid_image.jpg"
+                    String key = extractKeyFromUrl(imageUrl);
+                    amazonS3.deleteObject(bucket, key);
+                } catch (Exception e) {
+                    System.err.println("S3 이미지 삭제 실패: " + imageUrl + " (" + e.getMessage() + ")");
+                }
+            }
+        }
+
+        // DB 삭제
         askRepository.delete(ask);
+    }
+    private String extractKeyFromUrl(String imageUrl) {
+        // 예: https://tryonx-bucket.s3.ap-northeast-2.amazonaws.com/ask/uuid_image.jpg
+        // 버킷 도메인 부분을 제외하고 키만 추출
+        int index = imageUrl.indexOf(".amazonaws.com/");
+        if (index == -1) {
+            throw new IllegalArgumentException("유효하지 않은 S3 URL: " + imageUrl);
+        }
+        return imageUrl.substring(index + ".amazonaws.com/".length());
     }
 
     public long countAllAsks() {
