@@ -1,5 +1,8 @@
 package org.example.tryonx.review.service;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.Size;
@@ -20,10 +23,12 @@ import org.example.tryonx.product.repository.ProductRepository;
 import org.example.tryonx.review.domain.Review;
 import org.example.tryonx.review.dto.*;
 import org.example.tryonx.review.repository.ReviewRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
@@ -43,6 +48,10 @@ public class ReviewService {
     private final ProductRepository productRepository;
     private final ProductItemRepository productItemRepository;
     private final PointHistoryRepository pointHistoryRepository;
+    private final AmazonS3 amazonS3;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     public boolean validateReviewPermission(String email, Integer orderItemId) {
         OrderItem item = orderItemRepository.findById(orderItemId)
@@ -89,23 +98,47 @@ public class ReviewService {
 
         pointHistoryRepository.save(PointHistory.earn(member, savePoint, "[" + productName + "] 리뷰 작성 포인트 " + savePoint + "지급"));
 
-        if (images != null && !images.isEmpty()){
+//        if (images != null && !images.isEmpty()){
+//            for (MultipartFile image : images) {
+//                String filename = UUID.randomUUID() + "_" + image.getOriginalFilename();
+//                Path savePath = Paths.get("upload/review").resolve(filename);
+//
+//                try {
+//                    Files.createDirectories(savePath.getParent());
+//                    image.transferTo(savePath);
+//
+//                    ReviewImage reviewImage = ReviewImage.builder()
+//                            .review(review)
+//                            .imageUrl("/upload/review/" + filename)
+//                            .build();
+//                    reviewImageRepository.save(reviewImage);
+//                } catch (IOException e) {
+//                    throw new RuntimeException("이미지 저장 실패", e);
+//                }
+//            }
+//        }
+        // S3 업로드 로직
+        if (images != null && !images.isEmpty()) {
             for (MultipartFile image : images) {
-                String filename = UUID.randomUUID() + "_" + image.getOriginalFilename();
-                Path savePath = Paths.get("upload/review").resolve(filename);
+                String fileName = "review/" + UUID.randomUUID() + "_" + image.getOriginalFilename();
 
-                try {
-                    Files.createDirectories(savePath.getParent());
-                    image.transferTo(savePath);
+                ObjectMetadata metadata = new ObjectMetadata();
+                metadata.setContentType(image.getContentType());
+                metadata.setContentLength(image.getSize());
 
-                    ReviewImage reviewImage = ReviewImage.builder()
-                            .review(review)
-                            .imageUrl("/upload/review/" + filename)
-                            .build();
-                    reviewImageRepository.save(reviewImage);
+                try (InputStream inputStream = image.getInputStream()) {
+                    amazonS3.putObject(bucket, fileName, inputStream, metadata);
                 } catch (IOException e) {
-                    throw new RuntimeException("이미지 저장 실패", e);
+                    throw new RuntimeException("리뷰 이미지 S3 업로드 실패", e);
                 }
+
+                String imageUrl = amazonS3.getUrl(bucket, fileName).toString();
+
+                ReviewImage reviewImage = ReviewImage.builder()
+                        .review(review)
+                        .imageUrl(imageUrl)
+                        .build();
+                reviewImageRepository.save(reviewImage);
             }
         }
         return true;
