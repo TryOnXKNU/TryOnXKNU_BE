@@ -1,6 +1,9 @@
 package org.example.tryonx.member.service;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.example.tryonx.admin.dto.MemberInfoDto;
 import org.example.tryonx.ask.domain.Ask;
 import org.example.tryonx.ask.repository.AskRepository;
@@ -24,6 +27,7 @@ import org.example.tryonx.orders.payment.repository.PaymentRepository;
 import org.example.tryonx.returns.repository.ReturnRepository;
 import org.example.tryonx.review.domain.Review;
 import org.example.tryonx.review.repository.ReviewRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +35,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,6 +45,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+@RequiredArgsConstructor
 @Service
 public class MemberService {
     private final MemberRepository memberRepository;
@@ -51,30 +58,17 @@ public class MemberService {
     private final AskRepository askRepository;
     private final ExchangeRepository exchangeRepository;
     private final OrderItemRepository orderItemRepository;
+
     private final ReturnRepository returnRepository;
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
     private final NotificationRepository notificationRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private static final long EXPIRE_TIME = 3 * 60;
+    private final AmazonS3 amazonS3;
 
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, StringRedisTemplate redisTemplate, CartItemRepository cartItemRepository, LikeRepository likeRepository, ReviewRepository reviewRepository, ReviewImageRepository reviewImageRepository, AskRepository askRepository, ExchangeRepository exchangeRepository, OrderItemRepository orderItemRepository, ReturnRepository returnRepository, OrderRepository orderRepository, PaymentRepository paymentRepository, NotificationRepository notificationRepository, PointHistoryRepository pointHistoryRepository) {
-        this.memberRepository = memberRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.redisTemplate = redisTemplate;
-        this.cartItemRepository = cartItemRepository;
-        this.likeRepository = likeRepository;
-        this.reviewRepository = reviewRepository;
-        this.reviewImageRepository = reviewImageRepository;
-        this.askRepository = askRepository;
-        this.exchangeRepository = exchangeRepository;
-        this.orderItemRepository = orderItemRepository;
-        this.returnRepository = returnRepository;
-        this.orderRepository = orderRepository;
-        this.paymentRepository = paymentRepository;
-        this.notificationRepository = notificationRepository;
-        this.pointHistoryRepository = pointHistoryRepository;
-    }
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     public Member getMember(String email){
         Member member = memberRepository.findByEmail(email)
@@ -219,31 +213,89 @@ public class MemberService {
         memberRepository.save(member);
     }
 
+//    public void updateProfileImage(String email, MultipartFile profileImage) {
+//        Member member = memberRepository.findByEmail(email)
+//                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+//        if(profileImage != null){
+//            String fileName = UUID.randomUUID() + "_" + profileImage.getOriginalFilename();
+//            Path filePath = Paths.get("upload/profile").resolve(fileName);
+//
+//            try{
+//                Files.createDirectories(filePath.getParent());
+//                profileImage.transferTo(filePath);
+//                member.setProfileUrl("/upload/profile/" + fileName);
+//                memberRepository.save(member);
+//            }catch (Exception e){
+//                throw new RuntimeException("이미지 저장 실패", e);
+//            }
+//        }
+//    }
+//
+//    public String getProfileImage(String email) {
+//        Member member = memberRepository.findByEmail(email)
+//                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+//        if(member.getProfileUrl() == null){
+//            return null;
+//        }
+//        return member.getProfileUrl();
+//    }
+
+    @Transactional
     public void updateProfileImage(String email, MultipartFile profileImage) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
-        if(profileImage != null){
-            String fileName = UUID.randomUUID() + "_" + profileImage.getOriginalFilename();
-            Path filePath = Paths.get("upload/profile").resolve(fileName);
 
-            try{
-                Files.createDirectories(filePath.getParent());
-                profileImage.transferTo(filePath);
-                member.setProfileUrl("/upload/profile/" + fileName);
-                memberRepository.save(member);
-            }catch (Exception e){
-                throw new RuntimeException("이미지 저장 실패", e);
+        if (profileImage != null && !profileImage.isEmpty()) {
+
+            // 기존 프로필 이미지가 존재할 때만 S3에서 삭제
+            String oldUrl = member.getProfileUrl();
+            if (oldUrl != null && oldUrl.startsWith("https://")) {
+                try {
+                    String oldKey = extractKeyFromUrl(oldUrl);
+                    amazonS3.deleteObject(bucket, oldKey);
+                } catch (Exception e) {
+                    System.err.println("기존 프로필 이미지 삭제 실패: " + e.getMessage());
+                }
             }
+
+            // 새 파일명 지정 (폴더명 + UUID)
+            String fileName = "profile/" + UUID.randomUUID() + "_" + profileImage.getOriginalFilename();
+
+            // 메타데이터 설정
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType(profileImage.getContentType());
+            metadata.setContentLength(profileImage.getSize());
+
+            try (InputStream inputStream = profileImage.getInputStream()) {
+                amazonS3.putObject(bucket, fileName, inputStream, metadata);
+            } catch (IOException e) {
+                throw new RuntimeException("프로필 이미지 S3 업로드 실패", e);
+            }
+
+            // 이미지 URL 생성 및 저장
+            String imageUrl = amazonS3.getUrl(bucket, fileName).toString();
+            member.setProfileUrl(imageUrl);
+            memberRepository.save(member);
         }
     }
 
     public String getProfileImage(String email) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
-        if(member.getProfileUrl() == null){
-            return null;
+        return member.getProfileUrl(); // null이면 프론트에서 기본 이미지로 처리
+    }
+
+    private String extractKeyFromUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            throw new IllegalArgumentException("imageUrl이 비어 있습니다.");
         }
-        return member.getProfileUrl();
+
+        int index = imageUrl.indexOf(".amazonaws.com/");
+        if (index == -1) {
+            throw new IllegalArgumentException("유효하지 않은 S3 URL: " + imageUrl);
+        }
+
+        return imageUrl.substring(index + ".amazonaws.com/".length());
     }
 
     /* 권한 변경 */
