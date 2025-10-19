@@ -6,6 +6,7 @@ import org.example.tryonx.category.Category;
 import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.fitting.domain.ProductFitting;
 import org.example.tryonx.image.domain.ProductImage;
+import org.example.tryonx.like.domain.Like;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -87,5 +88,8 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductItem> productItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Like> likes = new ArrayList<>();
 
 }
