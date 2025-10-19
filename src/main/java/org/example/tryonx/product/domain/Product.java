@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.tryonx.category.Category;
 import org.example.tryonx.enums.BodyShape;
-import org.example.tryonx.enums.ProductStatus;
 import org.example.tryonx.fitting.domain.ProductFitting;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.like.domain.Like;
@@ -92,10 +91,5 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Like> likes = new ArrayList<>();
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ProductStatus status;
-
 
 }
