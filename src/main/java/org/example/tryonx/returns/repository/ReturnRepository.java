@@ -17,4 +17,6 @@ public interface ReturnRepository extends JpaRepository<Returns, Integer> {
     List<Returns> findAllByStatus(ReturnStatus status);
     Optional<Returns> findByOrderItem(OrderItem orderItem);
     void deleteByOrderItem(OrderItem orderItem);
+    List<Returns> findByStatusAndOrder_OrderIdIn(ReturnStatus status, List<Integer> orderIds);
+
 }
