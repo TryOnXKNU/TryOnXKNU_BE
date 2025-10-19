@@ -5,9 +5,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.cart.domain.CartItem;
 import org.example.tryonx.cart.repository.CartItemRepository;
-import org.example.tryonx.enums.DeliveryStatus;
-import org.example.tryonx.enums.PaymentStatus;
-import org.example.tryonx.enums.ProductStatus;
+import org.example.tryonx.enums.*;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
@@ -18,7 +16,6 @@ import org.example.tryonx.notice.domain.Notification;
 import org.example.tryonx.notice.repository.NotificationRepository;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
-import org.example.tryonx.enums.OrderStatus;
 import org.example.tryonx.orders.order.dto.*;
 import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
@@ -28,6 +25,8 @@ import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.domain.ProductItem;
 import org.example.tryonx.product.repository.ProductItemRepository;
 import org.example.tryonx.product.repository.ProductRepository;
+import org.example.tryonx.returns.domain.Returns;
+import org.example.tryonx.returns.repository.ReturnRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -54,6 +53,7 @@ public class OrderService {
     private final NotificationRepository notificationRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final PaymentRepository paymentRepository;
+    private final ReturnRepository returnRepository;
 
     @Transactional
     public Integer createOrder(String email, OrderRequestDto requestDto) {
@@ -561,7 +561,7 @@ public OrderDetailResponseDto getOrderDetail(Integer orderId) {
         LocalDateTime end   = month.plusMonths(1).atDay(1).atStartOfDay();
 
         List<Order> orders = usePaidOnly()
-                ? orderRepository.findByStatusAndOrderedAtBetween(paid(), start, end)
+                ? orderRepository.findByStatusInAndOrderedAtBetween(paidLikeStatuses(), start, end)
                 : orderRepository.findByOrderedAtBetween(start, end);
 
         return sumFinalAmount(orders);
@@ -570,7 +570,7 @@ public OrderDetailResponseDto getOrderDetail(Integer orderId) {
     /** 전체 매출 */
     public BigDecimal getTotalSalesAmount() {
         List<Order> orders = usePaidOnly()
-                ? orderRepository.findByStatus(paid())
+                ? orderRepository.findByStatusIn(paidLikeStatuses())
                 : orderRepository.findAll();
 
         return sumFinalAmount(orders);
@@ -582,7 +582,7 @@ public OrderDetailResponseDto getOrderDetail(Integer orderId) {
         LocalDateTime end   = LocalDate.of(year + 1, 1, 1).atStartOfDay();
 
         List<Order> orders = usePaidOnly()
-                ? orderRepository.findByStatusAndOrderedAtBetween(paid(), start, end)
+                ? orderRepository.findByStatusInAndOrderedAtBetween(paidLikeStatuses(), start, end)
                 : orderRepository.findByOrderedAtBetween(start, end);
 
         return sumFinalAmount(orders);
@@ -594,17 +594,57 @@ public OrderDetailResponseDto getOrderDetail(Integer orderId) {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end   = start.plusDays(1);
 
-        List<Order> orders = paidOnly && hasStatusSupport()
-                ? orderRepository.findByStatusAndOrderedAtBetween(paid(), start, end)
-                : orderRepository.findByOrderedAtBetween(start, end);
+        List<Order> orders;
+
+        if (paidOnly && hasStatusSupport()) {
+            orders = orderRepository.findByStatusInAndOrderedAtBetween(
+                    List.of(OrderStatus.PAID, OrderStatus.PARTIAL_REFUNDED),
+                    start,
+                    end
+            );
+        } else {
+            orders = orderRepository.findByOrderedAtBetween(start, end);
+        }
 
         return sumFinalAmount(orders);
     }
 
     private BigDecimal sumFinalAmount(List<Order> orders) {
-        return orders.stream()
+        if (orders.isEmpty()) return BigDecimal.ZERO;
+
+        //총 결제금액
+        BigDecimal total = orders.stream()
                 .map(Order::getFinalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        //환불된 주문들
+        List<Integer> orderIds = orders.stream()
+                .map(Order::getOrderId)
+                .toList();
+
+        List<Returns> completedReturns =
+                returnRepository.findByStatusAndOrder_OrderIdIn(ReturnStatus.COMPLETED, orderIds);
+
+        //환불 금액(할인 반영)
+        BigDecimal refunded = completedReturns.stream()
+                .map(r -> {
+                    BigDecimal price = r.getPrice() != null ? r.getPrice() : BigDecimal.ZERO;
+                    int qty = r.getQuantity() != null ? r.getQuantity() : 1;
+
+                    //OrderItem에서 할인율 가져오기
+                    BigDecimal discountRate = BigDecimal.ZERO;
+                    if (r.getOrderItem() != null && r.getOrderItem().getDiscountRate() != null) {
+                        discountRate = r.getOrderItem().getDiscountRate();
+                    }
+
+                    //할인 반영된 금액 계산
+                    return calcDiscountPrice(price, discountRate)
+                            .multiply(BigDecimal.valueOf(qty));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        //총 매출 - 환불금액
+        return total.subtract(refunded).max(BigDecimal.ZERO);
     }
 
     // ---- 설정 ----
@@ -621,4 +661,7 @@ public OrderDetailResponseDto getOrderDetail(Integer orderId) {
         return OrderStatus.PAID; // enum 상수 사용
     }
 
+    private List<OrderStatus> paidLikeStatuses() {
+        return List.of(OrderStatus.PAID, OrderStatus.PARTIAL_REFUNDED);
+    }
 }

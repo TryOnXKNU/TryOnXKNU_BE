@@ -262,6 +262,8 @@ public class ReturnService {
         Returns returns = returnRepository.findById(returnId)
                 .orElseThrow(() -> new EntityNotFoundException("반품 내역이 존재하지 않습니다."));
         Order order = returns.getOrder();
+        OrderItem orderItem = returns.getOrderItem();
+        Integer quantity = returns.getQuantity();
         Integer orderId = order.getOrderId();
         Member member = returns.getMember();
 
@@ -287,15 +289,14 @@ public class ReturnService {
             if (order.getFinalAmount().compareTo(BigDecimal.ZERO) == 0) {
                 order.setStatus(OrderStatus.CANCELLED);
             } else {
-                paymentRefundService.refundPayment(orderId, "사용자 요청 환불");
-                Integer earnPoints = order.getFinalAmount()
-                        .multiply(BigDecimal.valueOf(0.01))
-                        .setScale(0, RoundingMode.DOWN)
-                        .intValue();
+//                paymentRefundService.refundPayment(orderId, "사용자 요청 환불");
+                BigDecimal refundAmount = calcDiscountPrice(returns.getPrice(),orderItem.getDiscountRate()).multiply(BigDecimal.valueOf(quantity));
+                if(order.getFinalAmount().compareTo(refundAmount) == 0)
+                    paymentRefundService.refundPayment(orderId, "사용자 요청 환불");
+                else
+                    paymentRefundService.refundPaymentPartial(orderId, refundAmount, returns.getReason());
                 Integer usedPoints = order.getUsedPoints();
-//                member.usePoint(earnPoints);
                 member.savePoint(usedPoints);
-//                pointHistoryRepository.save(PointHistory.use(member, earnPoints, "반품 : 적립된 " + earnPoints + " 포인트 회수"));
                 pointHistoryRepository.save(PointHistory.earn(member, usedPoints, "반품 : 사용한 " + usedPoints + " 포인트 반환"));
                 memberRepository.save(member);
             }
@@ -335,4 +336,18 @@ public class ReturnService {
         return returnRepository.count();
     }
 
+    // 숫자 % (예: 10) → 소수 (0.10)
+    private static BigDecimal percentToRate(BigDecimal percent) {
+        percent = nz(percent);
+        if (percent.signum() <= 0) return BigDecimal.ZERO;
+        return percent.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+    }
+
+    private static BigDecimal calcDiscountPrice(BigDecimal price, BigDecimal percent) {
+        price = nz(price);
+        BigDecimal rate = percentToRate(percent);
+        if (rate.signum() <= 0) return price; // 할인 없음
+        return price.multiply(BigDecimal.ONE.subtract(rate))
+                .setScale(0, RoundingMode.HALF_UP); // 원단위 반올림
+    }
 }
