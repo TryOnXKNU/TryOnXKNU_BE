@@ -122,6 +122,7 @@ public class AdminOrderService {
                     .price(unitPrice)            // 스냅샷 단가
                     .discountRate(rate)          // 스냅샷 할인율(%)
                     .discountPrice(discountedFinal)
+                    .afterServiceStatus(orderItem.getAfterServiceStatus())
                     .build();
         }).toList();
 
