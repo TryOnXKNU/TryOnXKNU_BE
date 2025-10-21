@@ -311,6 +311,7 @@ public class OrderService {
                                         .price(originalPrice)                 // 원가
                                         .discountRate(percent)            // %
                                         .discountPrice(finalDiscountedUnitPrice) // 최종 할인가(적용가)
+                                        .afterServiceStatus(item.getAfterServiceStatus())
                                         .build();
                             })
                             .toList();
@@ -495,7 +496,8 @@ public OrderDetailResponseDto getOrderDetail(Integer orderId) {
                 productItem.getSize(),
                 percent,
                 discountPrice,
-                imgUrl
+                imgUrl,
+                orderItem.getAfterServiceStatus()
         );
     }).toList();
 

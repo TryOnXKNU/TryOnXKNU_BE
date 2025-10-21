@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.tryonx.enums.AfterServiceStatus;
 import org.example.tryonx.enums.Size;
 
 import java.math.BigDecimal;
@@ -22,4 +23,5 @@ public class OrderItemDto {
     private BigDecimal price;
     private BigDecimal discountRate;
     private BigDecimal discountPrice;
+    private AfterServiceStatus afterServiceStatus;
 }
