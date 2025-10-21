@@ -259,6 +259,12 @@ public class ComfyUiService {
                 case 12:
                     prompt = "dress";
                     model = "LLDRESS.png";
+                case 13:
+                    prompt = "skirt";
+                    model = "SSKIRTB.png";
+                case 14:
+                    prompt = "skirt";
+                    model = "LSKIRTB.png";
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown categoryId: " + categoryId);
@@ -298,11 +304,6 @@ public class ComfyUiService {
                 throw new RuntimeException("같은 카테고리는 선택할 수 없습니다. ("
                         + categoryId1 + " & " + categoryId2 + ")");
             }
-// 악세서리 (13)
-            if (categoryId1 == 13 || categoryId2 == 13) {
-                throw new RuntimeException("악세서리는 선택 불가능합니다. ("
-                        + categoryId1 + " & " + categoryId2 + ")");
-            }
 // 드레스 (9~12)
             Set<Integer> dress = Set.of(9, 10, 11, 12);
             if (dress.contains(categoryId1) || dress.contains(categoryId2)) {
@@ -312,7 +313,7 @@ public class ComfyUiService {
 // 그룹1: 1,2,3,7,8
             Set<Integer> group1 = Set.of(1, 2, 3, 7, 8);
 // 그룹2: 4,5,6
-            Set<Integer> group2 = Set.of(4, 5, 6);
+            Set<Integer> group2 = Set.of(4, 5, 6, 13, 14);
 // 서로 같은 그룹 안에서 두 개가 동시에 오면 불가
             if (group1.contains(categoryId1) && group1.contains(categoryId2)) {
                 throw new RuntimeException("같은 그룹(상의 그룹)에서 두 개를 선택할 수 없습니다. ("
@@ -331,6 +332,7 @@ public class ComfyUiService {
                 case 7, 8-> "black cardigan";
                 case 4, 5, 6 -> "pants";
                 case 9, 10, 11, 12-> "dress";
+                case 13, 14-> "skirt";
                 default -> "clothes";
             };
 
@@ -340,6 +342,7 @@ public class ComfyUiService {
                 case 7, 8-> "black cardigan";
                 case 4, 5, 6 -> "pants";
                 case 9, 10, 11, 12-> "dress";
+                case 13, 14-> "skirt";
                 default -> "clothes";
             };
 
@@ -356,22 +359,36 @@ public class ComfyUiService {
             if (first == 1 && second == 4) model = "STOPC.png";
             else if (first == 1 && second == 5) model = "STOPA.png";
             else if (first == 1 && second == 6) model = "STOPB.png";
+            else if (first == 1 && second == 13) model = "LSKIRTA.png";
+            else if (first == 1 && second == 14) model = "SSKIRTA.png";
 
             else if (first == 2 && second == 4) model = "LSTOPC.png";
             else if (first == 2 && second == 5) model = "LSTOPA.png";
             else if (first == 2 && second == 6) model = "LSTOPB.png";
+            else if (first == 2 && second == 13) model = "LSKIRTB.png";
+            else if (first == 2 && second == 14) model = "SSKIRTB.png";
 
             else if (first == 3 && second == 4) model = "LWTOPC.png";
             else if (first == 3 && second == 5) model = "LWTOPA.png";
             else if (first == 3 && second == 6) model = "LWTOPB.png";
+            else if (first == 3 && second == 13) model = "LSKIRTC.png";
+            else if (first == 3 && second == 14) model = "SSKIRTC.png";
 
-            else if (first == 4 && (second == 7)) model = "SOUTERWEARB.png";
+            else if (first == 4 && (second == 7)) model = "SOUTERWEARA.png";
             else if (first == 5 && (second == 7)) model = "SOUTERWEARB.png";
-            else if (first == 6 && (second == 7)) model = "SOUTERWEARB.png";
+            else if (first == 6 && (second == 7)) model = "SOUTERWEARC.png";
 
-            else if (first == 4 && (second == 8)) model = "LOUTERWEARB.png";
+            else if (first == 4 && (second == 8)) model = "LOUTERWEARA.png";
             else if (first == 5 && (second == 8)) model = "LOUTERWEARB.png";
-            else if (first == 6 && (second == 8)) model = "LOUTERWEARB.png";
+            else if (first == 6 && (second == 8)) model = "LOUTERWEARC.png";
+
+            else if (first == 4 && (second == 13)) model = "SOUTERWEARD.png";
+            else if (first == 5 && (second == 13)) model = "SOUTERWEARD.png";
+            else if (first == 6 && (second == 13)) model = "SOUTERWEARD.png";
+
+            else if (first == 4 && (second == 14)) model = "SOUTERWEARE.png";
+            else if (first == 5 && (second == 14)) model = "SOUTERWEARE.png";
+            else if (first == 6 && (second == 14)) model = "SOUTERWEARE.png";
 
             if (model != null) {
                 if (memberBodyShape == BodyShape.STRAIGHT) {
