@@ -192,11 +192,11 @@ public class ProductService {
         else if(dto.getCategoryId() == 3)
             middleCode = "lwt";
         else if(dto.getCategoryId() == 4)
-            middleCode = "sbot";
+            middleCode = "spa";
         else if(dto.getCategoryId() == 5)
-            middleCode = "lsbot";
+            middleCode = "lspa";
         else if(dto.getCategoryId() == 6)
-            middleCode = "lwbot";
+            middleCode = "lwpa";
         else if(dto.getCategoryId() == 7)
             middleCode = "souter";
         else if(dto.getCategoryId() == 8)
@@ -207,8 +207,12 @@ public class ProductService {
             middleCode = "sldre";
         else if(dto.getCategoryId() == 11)
             middleCode = "lsdre";
-        else
+        else if(dto.getCategoryId() == 12)
             middleCode = "lldre";
+        else if(dto.getCategoryId() == 13)
+            middleCode = "sskt";
+        else
+            middleCode = "lskt";
         return middleCode;
     }
 
