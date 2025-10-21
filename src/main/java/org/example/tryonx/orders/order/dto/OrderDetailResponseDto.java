@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.tryonx.enums.AfterServiceStatus;
 import org.example.tryonx.enums.DeliveryStatus;
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.enums.OrderStatus;
@@ -42,5 +43,6 @@ public class OrderDetailResponseDto {
         private BigDecimal discountRate;
         private BigDecimal discountPrice;
         private String imgUrl;
+        private AfterServiceStatus afterServiceStatus;
     }
 }
