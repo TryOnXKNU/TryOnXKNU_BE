@@ -103,15 +103,17 @@ public class ComfyUiFittingService {
                 Map.entry("STOP", "short t-shirts"),
                 Map.entry("LSTOP", "long sleeve"),
                 Map.entry("LWTOP", "long t-shirts"),
-                Map.entry("SBOTTOM", "short pants"),
-                Map.entry("LSBOTTOM", "long pants"),
-                Map.entry("LWBOTTOM", "long wide pants"),
+                Map.entry("SPANTS", "short pants"),
+                Map.entry("LSPANTS", "long pants"),
+                Map.entry("LWPANTS", "long wide pants"),
                 Map.entry("SOUTERWEAR", "cardigan"),
                 Map.entry("LOUTERWEAR", "cardigan"),
                 Map.entry("SSDRESS", "short sleeve short dress"),
                 Map.entry("SLDRESS", "short sleeve long dress"),
                 Map.entry("LSDRESS", "long sleeve shore dress"),
-                Map.entry("LLDRESS", "long sleeve long dress")
+                Map.entry("LLDRESS", "long sleeve long dress"),
+                Map.entry("SSKIRT", "short skirt"),
+                Map.entry("LSKIRT", "long skirt")
         );
 
         String clothingPrompt = promptMap.get(categoryName);
