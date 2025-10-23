@@ -34,4 +34,7 @@ public class ProductItem {
     @Column(nullable = false, length = 20)
     @Setter
     private ProductStatus status = ProductStatus.SOLDOUT;
+
+    @OneToOne(mappedBy = "productItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Measurement measurement;
 }
