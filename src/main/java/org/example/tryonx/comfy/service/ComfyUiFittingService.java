@@ -71,7 +71,7 @@ public class ComfyUiFittingService {
      * 피팅 생성 후 S3 업로드 저장 버전
      */
 
-    public void executeFittingFlowWithClothingNameThreeImages(
+    public List<String> executeFittingFlowWithClothingNameThreeImages(
             String email, String clothingImageName, Product product
     ) throws IOException, InterruptedException {
 
@@ -204,6 +204,8 @@ public class ComfyUiFittingService {
         saveFixedSequences3(product, fittingUrls.get(0), fittingUrls.get(1), fittingUrls.get(2));
 
         System.out.println("S3 저장 완료: " + fittingUrls);
+        
+        return fittingUrls;
     }
 
 

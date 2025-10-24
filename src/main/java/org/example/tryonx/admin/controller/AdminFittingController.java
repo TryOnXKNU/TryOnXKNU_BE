@@ -199,7 +199,7 @@ public class AdminFittingController {
 
     @PostMapping("/clothing/triple")
     @Operation(summary = "상품 등록 AI 피팅 이미지 생성")
-    public ResponseEntity<String> generateTriple(
+    public ResponseEntity<Map<String, Object>> generateTriple(
             @AuthenticationPrincipal UserDetails user,
             @RequestParam Integer productId
     ) throws Exception {
@@ -212,10 +212,15 @@ public class AdminFittingController {
 
         String clothingImageName = thumbnail.getImageUrl();
 
-        comfyUiFittingService.executeFittingFlowWithClothingNameThreeImages(
+        List<String> fittingImageUrls = comfyUiFittingService.executeFittingFlowWithClothingNameThreeImages(
                 email, clothingImageName, product);
 
-        return ResponseEntity.ok("피팅 이미지 3장 생성 및 저장 완료");
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "피팅 이미지 3장 생성 및 저장 완료");
+        response.put("fittingImageUrls", fittingImageUrls);
+        response.put("productId", productId);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/clothing/result")
