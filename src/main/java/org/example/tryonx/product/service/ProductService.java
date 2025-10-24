@@ -1,6 +1,7 @@
 package org.example.tryonx.product.service;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.category.Category;
@@ -25,12 +26,24 @@ import org.example.tryonx.product.repository.ProductItemRepository;
 import org.example.tryonx.product.repository.ProductRepository;
 import org.example.tryonx.review.dto.ProductReviewDto;
 import org.example.tryonx.review.service.ReviewService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
@@ -40,6 +53,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -116,8 +130,14 @@ public class ProductService {
 //        return product;
 //    }
 
+    @Autowired
+    private RestTemplate restTemplate;
+
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
+
+    @Value("${ngrok.url}")
+    private String baseUrl;
 
     @Transactional
     public Product createProduct(ProductCreateRequestDto dto, List<MultipartFile> images) {
@@ -150,28 +170,47 @@ public class ProductService {
         // 아이템 저장
         dto.getProductItemInfoDtos().forEach(itemDto -> createProductItem(product, itemDto));
 
-        // 이미지 S3 업로드
+        // ========================
+        // 이미지 S3 업로드 + Comfy 전달
+        // ========================
         if (images != null && !images.isEmpty()) {
             boolean isFirst = true;
+
             for (MultipartFile image : images) {
                 String originalFilename = image.getOriginalFilename();
-                String s3Key = "product/" + productCode + "/" + originalFilename;
+                // UUID 포함해서 S3와 Comfy 모두 동일한 이름으로 저장
+                String uniqueFilename = UUID.randomUUID() + "_" + originalFilename;
+                String s3Key = "product/" + productCode + "/" + uniqueFilename;
 
                 try {
-                    amazonS3.putObject(
-                            new PutObjectRequest(bucketName, s3Key, image.getInputStream(), null)
-                    );
+                    // 1. ByteArray 미리 복사
+                    byte[] imageBytes = image.getBytes();
 
-                    String imageUrl = amazonS3.getUrl(bucketName, s3Key).toString();
+                    // 2. S3 업로드
+                    ObjectMetadata metadata = new ObjectMetadata();
+                    metadata.setContentType(image.getContentType());
+                    metadata.setContentLength(imageBytes.length);
 
+                    try (InputStream inputStream = new ByteArrayInputStream(imageBytes)) {
+                        amazonS3.putObject(new PutObjectRequest(bucketName, s3Key, inputStream, metadata));
+                    }
+
+                    // 3. S3 URL
+                    String s3Url = amazonS3.getUrl(bucketName, s3Key).toString();
+
+                    // 4. DB 저장
                     ProductImage productImage = ProductImage.builder()
                             .product(product)
-                            .imageUrl(imageUrl)  // S3 URL 저장
+                            .imageUrl(s3Url)
                             .isThumbnail(isFirst)
                             .build();
-
                     productImageRepository.save(productImage);
                     isFirst = false;
+
+                    //5. Comfy 서버에도 같은 이름으로 업로드
+                    sendToComfyServer(imageBytes, uniqueFilename);
+
+                    System.out.println("S3 업로드 완료 & Comfy 전송: " + s3Url);
 
                 } catch (IOException e) {
                     throw new RuntimeException("S3 업로드 실패: " + originalFilename, e);
@@ -179,7 +218,63 @@ public class ProductService {
             }
         }
 
+//        // 이미지 S3 업로드
+//        if (images != null && !images.isEmpty()) {
+//            boolean isFirst = true;
+//            for (MultipartFile image : images) {
+//                String originalFilename = image.getOriginalFilename();
+//                String s3Key = "product/" + productCode + "/" + originalFilename;
+//
+//                try {
+//                    amazonS3.putObject(
+//                            new PutObjectRequest(bucketName, s3Key, image.getInputStream(), null)
+//                    );
+//
+//                    String imageUrl = amazonS3.getUrl(bucketName, s3Key).toString();
+//
+//                    ProductImage productImage = ProductImage.builder()
+//                            .product(product)
+//                            .imageUrl(imageUrl)  // S3 URL 저장
+//                            .isThumbnail(isFirst)
+//                            .build();
+//
+//                    productImageRepository.save(productImage);
+//                    isFirst = false;
+//
+//                } catch (IOException e) {
+//                    throw new RuntimeException("S3 업로드 실패: " + originalFilename, e);
+//                }
+//            }
+//        }
+
         return product;
+    }
+
+    private void sendToComfyServer(byte[] imageBytes, String filename) {
+        String COMFY_URL = baseUrl + "/upload/image"; // ngrok으로 연결된 Comfy 서버
+
+        try {
+            ByteArrayResource fileResource = new ByteArrayResource(imageBytes) {
+                @Override
+                public String getFilename() {
+                    return filename;
+                }
+            };
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("image", fileResource);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(COMFY_URL, requestEntity, String.class);
+
+            System.out.println("Comfy 전송 성공: " + response.getBody());
+
+        } catch (Exception e) {
+            System.err.println("Comfy 서버 전송 실패 (" + filename + "): " + e.getMessage());
+        }
     }
 
 
