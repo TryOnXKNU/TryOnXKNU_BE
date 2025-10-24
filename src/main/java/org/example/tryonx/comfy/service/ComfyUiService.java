@@ -1,5 +1,7 @@
 package org.example.tryonx.comfy.service;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.fitting.domain.ProductFitting;
@@ -19,6 +21,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -35,9 +38,12 @@ public class ComfyUiService {
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
     private final ProductFittingRepository productFittingRepository;
+    private final AmazonS3 amazonS3;
 
     @Value("${ngrok.url}")
     private String baseUrl;
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     private void refreshGoogleDrive() {
         String url = baseUrl + "/pysssss/drive/sync";
@@ -150,10 +156,14 @@ public class ComfyUiService {
 
 
         String imgName = productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl();
-        String prefix = "/upload/product/";
+        String productCode = product.getProductCode();
+        String prefix = "https://tryonx.s3.ap-northeast-2.amazonaws.com/product/" + productCode + "/";
+        //https://tryonx.s3.ap-northeast-2.amazonaws.com/product/axlsdre00008/970e533f-3fef-43ea-a590-179035d863a1_06968472-AA0C-4369-AFEF-263682E826E2.png
         String fileNameOnly = imgName.startsWith(prefix)
                 ? imgName.substring(prefix.length())
                 : imgName;
+
+        System.out.println(fileNameOnly+"*************");
 
 
         String workflowJson = loadWorkflowFromResource("v2_one_person_one_clothes.json")
@@ -259,9 +269,11 @@ public class ComfyUiService {
                 case 12:
                     prompt = "dress";
                     model = "LLDRESS.png";
+                    break;
                 case 13:
                     prompt = "skirt";
                     model = "SSKIRTB.png";
+                    break;
                 case 14:
                     prompt = "skirt";
                     model = "LSKIRTB.png";
@@ -280,7 +292,9 @@ public class ComfyUiService {
 
 
             String imgName = productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl();
-            String prefix = "/upload/product/";
+            String productCode = product.getProductCode();
+            String prefix = "https://tryonx.s3.ap-northeast-2.amazonaws.com/product/" + productCode + "/";
+            //https://tryonx.s3.ap-northeast-2.amazonaws.com/product/axlsdre00008/970e533f-3fef-43ea-a590-179035d863a1_06968472-AA0C-4369-AFEF-263682E826E2.png
             String fileNameOnly = imgName.startsWith(prefix)
                     ? imgName.substring(prefix.length())
                     : imgName;
@@ -359,20 +373,20 @@ public class ComfyUiService {
             if (first == 1 && second == 4) model = "STOPC.png";
             else if (first == 1 && second == 5) model = "STOPA.png";
             else if (first == 1 && second == 6) model = "STOPB.png";
-            else if (first == 1 && second == 13) model = "LSKIRTA.png";
-            else if (first == 1 && second == 14) model = "SSKIRTA.png";
+            else if (first == 1 && second == 13) model = "SSKIRTA.png";
+            else if (first == 1 && second == 14) model = "LSKIRTA.png";
 
             else if (first == 2 && second == 4) model = "LSTOPC.png";
             else if (first == 2 && second == 5) model = "LSTOPA.png";
             else if (first == 2 && second == 6) model = "LSTOPB.png";
-            else if (first == 2 && second == 13) model = "LSKIRTB.png";
-            else if (first == 2 && second == 14) model = "SSKIRTB.png";
+            else if (first == 2 && second == 13) model = "SSKIRTB.png";
+            else if (first == 2 && second == 14) model = "LSKIRTB.png";
 
             else if (first == 3 && second == 4) model = "LWTOPC.png";
             else if (first == 3 && second == 5) model = "LWTOPA.png";
             else if (first == 3 && second == 6) model = "LWTOPB.png";
-            else if (first == 3 && second == 13) model = "LSKIRTC.png";
-            else if (first == 3 && second == 14) model = "SSKIRTC.png";
+            else if (first == 3 && second == 13) model = "SSKIRTC.png";
+            else if (first == 3 && second == 14) model = "LSKIRTC.png";
 
             else if (first == 4 && (second == 7)) model = "SOUTERWEARA.png";
             else if (first == 5 && (second == 7)) model = "SOUTERWEARB.png";
@@ -382,13 +396,13 @@ public class ComfyUiService {
             else if (first == 5 && (second == 8)) model = "LOUTERWEARB.png";
             else if (first == 6 && (second == 8)) model = "LOUTERWEARC.png";
 
-            else if (first == 4 && (second == 13)) model = "SOUTERWEARD.png";
-            else if (first == 5 && (second == 13)) model = "SOUTERWEARD.png";
-            else if (first == 6 && (second == 13)) model = "SOUTERWEARD.png";
+            else if (first == 4 && (second == 13)) model = "SOUTERWEARE.png";
+            else if (first == 5 && (second == 13)) model = "SOUTERWEARE.png";
+            else if (first == 6 && (second == 13)) model = "SOUTERWEARE.png";
 
-            else if (first == 4 && (second == 14)) model = "SOUTERWEARE.png";
-            else if (first == 5 && (second == 14)) model = "SOUTERWEARE.png";
-            else if (first == 6 && (second == 14)) model = "SOUTERWEARE.png";
+            else if (first == 4 && (second == 14)) model = "SOUTERWEARD.png";
+            else if (first == 5 && (second == 14)) model = "SOUTERWEARD.png";
+            else if (first == 6 && (second == 14)) model = "SOUTERWEARD.png";
 
             if (model != null) {
                 if (memberBodyShape == BodyShape.STRAIGHT) {
@@ -408,8 +422,10 @@ public class ComfyUiService {
                     .orElseThrow(() -> new RuntimeException("Thumbnail not found for product2"))
                     .getImageUrl();
 
-            fileNameOnly1 = stripPrefix(imageName1, "/upload/product/");
-            fileNameOnly2 = stripPrefix(imageName2, "/upload/product/");
+
+
+            fileNameOnly1 = stripPrefix(imageName1, getProductPrefix(product1));
+            fileNameOnly2 = stripPrefix(imageName2, getProductPrefix(product2));
 
             // 워크플로우 JSON 생성
             workflowJson = loadWorkflowFromResource("v2_one_person_two_clothes.json")
@@ -443,18 +459,21 @@ public class ComfyUiService {
                 }))
                 .orElseThrow(() -> new IllegalArgumentException("파일명이 없습니다."));
 
-        downloadImage(fileName);
-//        System.out.println("--------------------------------------------");
+        downloadImageToS3(fileName);
+        System.out.println("--------------------------------------------");
 //        System.out.println("prompt1: " + prompt1);
 //        System.out.println("prompt2: " + prompt2);
 //        System.out.println("model: " + model);
-//        System.out.println("filename1: " + fileNameOnly1);
+        System.out.println(fileName);
 //        System.out.println("filename2: " + fileNameOnly2);
 //        System.out.println("fittingimage: " + generatedOutputImageFilenameList);
-//        System.out.println("--------------------------------------------");
+        System.out.println("--------------------------------------------");
         return fileName;
     }
 
+    private String getProductPrefix(Product product) {
+        return "https://tryonx.s3.ap-northeast-2.amazonaws.com/product/" + product.getProductCode() + "/";
+    }
 
     private String stripPrefix(String fileName, String prefix) {
         return fileName.startsWith(prefix) ? fileName.substring(prefix.length()) : fileName;
@@ -609,6 +628,46 @@ public class ComfyUiService {
         }
 
         throw new IOException(" 이미지 다운로드 실패: " + filename);
+    }
+
+    private void downloadImageToS3(String filename) throws IOException, InterruptedException {
+        if (filename == null || filename.isBlank()) {
+            throw new IllegalArgumentException("❌ 이미지 파일 이름이 null이거나 비어 있습니다.");
+        }
+
+        String url = baseUrl + "/view?filename=" + filename;
+        int maxRetries = 10;
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                byte[] imageData = restTemplate.getForObject(url, byte[].class);
+
+                if (imageData != null && imageData.length > 0) {
+                    // 🔹 새 파일명 (S3 경로 포함)
+                    String s3FileName = "fitting/fittingRoom/" + filename;
+
+                    // 🔹 메타데이터 설정
+                    ObjectMetadata metadata = new ObjectMetadata();
+                    metadata.setContentType("image/jpeg"); // 필요 시 content-type 감지 로직 추가
+                    metadata.setContentLength(imageData.length);
+
+                    try (ByteArrayInputStream inputStream = new ByteArrayInputStream(imageData)) {
+                        amazonS3.putObject(bucket, s3FileName, inputStream, metadata);
+                    }
+
+                    // 🔹 S3 URL 반환 또는 출력
+                    String imageUrl = amazonS3.getUrl(bucket, s3FileName).toString();
+                    System.out.println("✅ 이미지 업로드 완료: " + imageUrl);
+                    return;
+                }
+            } catch (HttpClientErrorException.NotFound e) {
+                System.out.println("⏳ [대기 중] 이미지가 아직 준비되지 않음. 재시도 " + attempt);
+            }
+
+            Thread.sleep(1000);
+        }
+
+        throw new IOException("❌ 이미지 다운로드 실패: " + filename);
     }
 
     // 상품사진파일명으로 한장 생성
