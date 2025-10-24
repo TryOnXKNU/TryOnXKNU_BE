@@ -56,6 +56,6 @@ public class FittingController {
     public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId1, @RequestParam(required = false) Integer productId2) throws Exception {
         String email = userDetails.getUsername();
         String filename = comfyUiService.executeFittingTwoClothesFlow(email, productId1, productId2);
-        return ResponseEntity.ok(" upload/fitting/downloaded_" + filename);
+        return ResponseEntity.ok("https://tryonx.s3.ap-northeast-2.amazonaws.com/fitting/fittingRoom/" + filename);
     }
 }
