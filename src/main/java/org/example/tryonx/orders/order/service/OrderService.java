@@ -489,6 +489,7 @@ public OrderDetailResponseDto getOrderDetail(Integer orderId) {
                         : product.getImages().get(0).getImageUrl());
 
         return new OrderDetailResponseDto.Item(
+                orderItem.getOrderItemId(),
                 product.getProductId(),
                 product.getProductName(),
                 orderItem.getPrice(),
