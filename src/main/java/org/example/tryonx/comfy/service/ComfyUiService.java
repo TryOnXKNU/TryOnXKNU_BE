@@ -396,13 +396,11 @@ public class ComfyUiService {
             else if (first == 5 && (second == 8)) model = "LOUTERWEARB.png";
             else if (first == 6 && (second == 8)) model = "LOUTERWEARC.png";
 
-            else if (first == 4 && (second == 13)) model = "SOUTERWEARE.png";
-            else if (first == 5 && (second == 13)) model = "SOUTERWEARE.png";
-            else if (first == 6 && (second == 13)) model = "SOUTERWEARE.png";
+            else if (first == 7 && (second == 13)) model = "SOUTERWEARE.png";
+            else if (first == 8 && (second == 13)) model = "LOUTERWEARE.png";
 
-            else if (first == 4 && (second == 14)) model = "SOUTERWEARD.png";
-            else if (first == 5 && (second == 14)) model = "SOUTERWEARD.png";
-            else if (first == 6 && (second == 14)) model = "SOUTERWEARD.png";
+            else if (first == 7 && (second == 14)) model = "SOUTERWEARD.png";
+            else if (first == 8 && (second == 14)) model = "DOUTERWEARD.png";
 
             if (model != null) {
                 if (memberBodyShape == BodyShape.STRAIGHT) {
