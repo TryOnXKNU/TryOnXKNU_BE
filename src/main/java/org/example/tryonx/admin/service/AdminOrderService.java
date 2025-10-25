@@ -164,8 +164,20 @@ public class AdminOrderService {
             throw new IllegalStateException("결제 완료된 주문만 배송 상태 변경 가능");
         }
 
+        // 최근 배송 이력 가져오기
+        DeliveryHistory lastHistory = deliveryHistoryRepository
+                .findTopByOrderOrderByChangedAtDesc(order)
+                .orElse(null);
+
+        // 가장 최근 상태가 동일하면 새 기록 생성 X
+        if (lastHistory != null && lastHistory.getDeliveryStatus() == newStatus) {
+            return;
+        }
+
+        // 실제 배송 상태 변경
         order.setDeliveryStatus(newStatus);
 
+        // 새로운 이력 저장
         DeliveryHistory history = DeliveryHistory.builder()
                 .order(order)
                 .deliveryStatus(newStatus)
@@ -174,4 +186,5 @@ public class AdminOrderService {
 
         deliveryHistoryRepository.save(history);
     }
+
 }
