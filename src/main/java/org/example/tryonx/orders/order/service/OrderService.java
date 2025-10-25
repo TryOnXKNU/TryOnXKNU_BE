@@ -172,7 +172,7 @@ public class OrderService {
 
         int usedPoints = requestDto.getPoint();
         if (usedPoints > member.getPoint()) {
-            throw new IllegalArgumentException("사용 가능한 포인트를 초과했습니다.");
+            throw new IllegalArgumentException("사용 가능한 적립금을 초과했습니다.");
         }
 
         finalAmount = finalAmount.subtract(BigDecimal.valueOf(usedPoints));
@@ -230,7 +230,7 @@ public class OrderService {
 
         if (usedPoints >= 1000) {
             pointHistoryRepository.save(
-                    PointHistory.use(member, usedPoints, "[" + productSummary + "] 주문 결제 중 포인트 사용으로 인한 차감"));
+                    PointHistory.use(member, usedPoints, "[" + productSummary + "] 주문 결제 중 적립금 사용으로 인한 차감"));
         }
 
         int savePoints = 0;
@@ -245,13 +245,13 @@ public class OrderService {
 
         if (savePoints > 0) {
             pointHistoryRepository.save(
-                    PointHistory.earn(member, savePoints, "[" + productSummary + "] 주문 적립 포인트 지급"));
+                    PointHistory.earn(member, savePoints, "[" + productSummary + "] 주문 적립 적립금 지급"));
         }
 
         Notification notification = Notification.builder()
                 .member(member)
-                .title("리뷰 작성 시 포인트 제공")
-                .content("구매 상품 리뷰 작성 시 상품 구매 금액의 5% 포인트를 드려요!")
+                .title("리뷰 작성 시 적립금 제공")
+                .content("구매 상품 리뷰 작성 시 상품 구매 금액의 5% 적립금을 드려요!")
                 .build();
         notificationRepository.save(notification);
 
