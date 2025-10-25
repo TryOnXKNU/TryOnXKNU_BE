@@ -16,6 +16,8 @@ import org.example.tryonx.orders.order.repository.OrderItemRepository;
 import org.example.tryonx.orders.order.repository.OrderRepository;
 import org.example.tryonx.orders.payment.service.PaymentRefundService;
 import org.example.tryonx.product.domain.Product;
+import org.example.tryonx.product.domain.ProductItem;
+import org.example.tryonx.product.repository.ProductItemRepository;
 import org.example.tryonx.returns.domain.Returns;
 import org.example.tryonx.returns.dto.ReturnDetailDto;
 import org.example.tryonx.returns.dto.ReturnListDto;
@@ -42,6 +44,7 @@ public class ReturnService {
     private final OrderRepository orderRepository;
     private final PaymentRefundService paymentRefundService;
     private final PointHistoryRepository pointHistoryRepository;
+    private final ProductItemRepository productItemRepository;
 
     @Transactional
     public void requestReturn(String email, ReturnRequestDto dto) {
@@ -266,6 +269,7 @@ public class ReturnService {
         Integer quantity = returns.getQuantity();
         Integer orderId = order.getOrderId();
         Member member = returns.getMember();
+        ProductItem productItem = orderItem.getProductItem();
 
         if (order.getStatus() == OrderStatus.CANCELLED
                 && (status == ReturnStatus.REQUESTED || status == ReturnStatus.ACCEPTED || status == ReturnStatus.REJECTED || status == ReturnStatus.COLLECTING)) {
@@ -300,6 +304,8 @@ public class ReturnService {
                 pointHistoryRepository.save(PointHistory.earn(member, usedPoints, "반품 : 사용한 " + usedPoints + " 적립금 반환"));
                 memberRepository.save(member);
             }
+            productItem.setStock(productItem.getStock() + 1);
+            productItemRepository.save(productItem);
             returns.setRejectReason(null);
         }
 
