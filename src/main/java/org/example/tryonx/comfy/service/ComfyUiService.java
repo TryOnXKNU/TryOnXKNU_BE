@@ -400,7 +400,7 @@ public class ComfyUiService {
             else if (first == 8 && (second == 13)) model = "LOUTERWEARE.png";
 
             else if (first == 7 && (second == 14)) model = "SOUTERWEARD.png";
-            else if (first == 8 && (second == 14)) model = "DOUTERWEARD.png";
+            else if (first == 8 && (second == 14)) model = "LOUTERWEARD.png";
 
             if (model != null) {
                 if (memberBodyShape == BodyShape.STRAIGHT) {
