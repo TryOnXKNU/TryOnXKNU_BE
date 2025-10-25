@@ -51,7 +51,8 @@ public class MemberListService {
 //                        member.getName(),
                         member.getNickname(),
                         member.getMemberNum(),
-                        member.getSocialId()
+                        member.getSocialId(),
+                        member.getRole()
                 ))
                 .collect(Collectors.toList());
     }
@@ -88,7 +89,8 @@ public class MemberListService {
 //                        member.getName(),
                         member.getNickname(),
                         member.getMemberNum(),
-                        member.getSocialId()
+                        member.getSocialId(),
+                        member.getRole()
                 ))
                 .collect(Collectors.toList());
     }

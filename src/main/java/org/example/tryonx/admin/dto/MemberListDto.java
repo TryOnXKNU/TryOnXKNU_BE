@@ -1,6 +1,7 @@
 package org.example.tryonx.admin.dto;
 
 import lombok.*;
+import org.example.tryonx.member.domain.Role;
 
 @Getter
 @Setter
@@ -14,4 +15,5 @@ public class MemberListDto {
     private String nickname;
     private String memberNum;
     private Long socialId;
+    private Role role;
 }
