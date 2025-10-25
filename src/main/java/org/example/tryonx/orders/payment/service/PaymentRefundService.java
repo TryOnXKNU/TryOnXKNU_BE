@@ -27,7 +27,7 @@ public class PaymentRefundService {
                 .orElseThrow(() -> new Exception("Order not found : " + orderId));
         org.example.tryonx.orders.payment.domain.Payment payment =
                 paymentRepository.findByOrder_OrderId(orderId)
-                        .orElseThrow(() -> new IllegalArgumentException("실제 결제 내역 없음(ex.전액 포인트 사용)"));
+                        .orElseThrow(() -> new IllegalArgumentException("실제 결제 내역 없음(ex.전액 적립금 사용)"));
 
         // 전체 환불: 금액 지정 X
         CancelData cancelData = new CancelData(payment.getImpUid(), true);

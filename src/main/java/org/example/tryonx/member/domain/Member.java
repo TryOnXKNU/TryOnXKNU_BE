@@ -103,7 +103,7 @@ public class Member {
 
     public void usePoint(int point) {
         if (this.point < point) {
-            throw new IllegalArgumentException("보유 포인트 부족");
+            throw new IllegalArgumentException("보유 적립금 부족");
         }
         this.point -= point;
     }
