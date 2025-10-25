@@ -107,6 +107,7 @@ public class MemberService {
                 .weight(member.getWeight())
                 .memberNum(member.getMemberNum())
                 .socialId(member.getSocialId())
+                .role(member.getRole())
                 .build();
     }
 

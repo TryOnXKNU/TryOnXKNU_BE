@@ -2,6 +2,7 @@ package org.example.tryonx.admin.dto;
 
 import lombok.*;
 import org.example.tryonx.enums.BodyShape;
+import org.example.tryonx.member.domain.Role;
 
 import java.time.LocalDate;
 
@@ -24,4 +25,5 @@ public class MemberInfoDto {
     private Integer weight;
     private String memberNum;
     private Long socialId;
+    private Role role;
 }
