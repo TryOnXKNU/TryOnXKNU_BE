@@ -297,7 +297,7 @@ public class ReturnService {
                     paymentRefundService.refundPaymentPartial(orderId, refundAmount, returns.getReason());
                 Integer usedPoints = order.getUsedPoints();
                 member.savePoint(usedPoints);
-                pointHistoryRepository.save(PointHistory.earn(member, usedPoints, "반품 : 사용한 " + usedPoints + " 포인트 반환"));
+                pointHistoryRepository.save(PointHistory.earn(member, usedPoints, "반품 : 사용한 " + usedPoints + " 적립금 반환"));
                 memberRepository.save(member);
             }
             returns.setRejectReason(null);

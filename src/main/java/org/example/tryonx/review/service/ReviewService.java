@@ -96,7 +96,7 @@ public class ReviewService {
         member.savePoint(savePoint);
         memberRepository.save(member);
 
-        pointHistoryRepository.save(PointHistory.earn(member, savePoint, "[" + productName + "] 리뷰 작성 포인트 " + savePoint + "지급"));
+        pointHistoryRepository.save(PointHistory.earn(member, savePoint, "[" + productName + "] 리뷰 작성 적립금 " + savePoint + "지급"));
 
 //        if (images != null && !images.isEmpty()){
 //            for (MultipartFile image : images) {
