@@ -324,24 +324,47 @@ public class ComfyUiService {
                 throw new RuntimeException("드레스는 단일착용만 가능합니다. ("
                         + categoryId1 + " & " + categoryId2 + ")");
             }
-// 그룹1: 1,2,3,7,8
-            Set<Integer> group1 = Set.of(1, 2, 3, 7, 8);
-// 그룹2: 4,5,6
-            Set<Integer> group2 = Set.of(4, 5, 6, 13, 14);
+// 그룹1: 상의 (1,2,3,7,8)
+            Set<Integer> upperGroup = Set.of(1, 2, 3, 7, 8);
+// 그룹2: 하의 (4,5,6,13,14)
+            Set<Integer> lowerGroup = Set.of(4, 5, 6, 13, 14);
 // 서로 같은 그룹 안에서 두 개가 동시에 오면 불가
-            if (group1.contains(categoryId1) && group1.contains(categoryId2)) {
+            if (upperGroup.contains(categoryId1) && upperGroup.contains(categoryId2)) {
                 throw new RuntimeException("같은 그룹(상의 그룹)에서 두 개를 선택할 수 없습니다. ("
                         + categoryId1 + " & " + categoryId2 + ")");
             }
 
-            if (group2.contains(categoryId1) && group2.contains(categoryId2)) {
+            if (lowerGroup.contains(categoryId1) && lowerGroup.contains(categoryId2)) {
                 throw new RuntimeException("같은 그룹(하의 그룹)에서 두 개를 선택할 수 없습니다. ("
                         + categoryId1 + " & " + categoryId2 + ")");
             }
 
+// 착용 순서 최적화: 하의를 먼저, 상의를 나중에 (상의가 하의를 자연스럽게 덮도록)
+            Product firstProduct, secondProduct;
+            Integer firstCategoryId, secondCategoryId;
 
-// prompt1 설정
-            prompt1 = switch (product1.getCategory().getCategoryId()) {
+            if (lowerGroup.contains(categoryId1)) {
+                // product1이 하의면 먼저
+                firstProduct = product1;
+                secondProduct = product2;
+                firstCategoryId = categoryId1;
+                secondCategoryId = categoryId2;
+            } else if (lowerGroup.contains(categoryId2)) {
+                // product2가 하의면 먼저
+                firstProduct = product2;
+                secondProduct = product1;
+                firstCategoryId = categoryId2;
+                secondCategoryId = categoryId1;
+            } else {
+                // 둘 다 상의인 경우 (이 경우는 이미 검증에서 걸러짐) 순서 유지
+                firstProduct = product1;
+                secondProduct = product2;
+                firstCategoryId = categoryId1;
+                secondCategoryId = categoryId2;
+            }
+
+// prompt1 설정 (먼저 입힐 의류)
+            prompt1 = switch (firstCategoryId) {
                 case 1, 2, 3 -> "black tshirt";
                 case 7, 8-> "black cardigan";
                 case 4, 5, 6 -> "pants";
@@ -350,8 +373,8 @@ public class ComfyUiService {
                 default -> "clothes";
             };
 
-// prompt2 설정
-            prompt2 = switch (product2.getCategory().getCategoryId()) {
+// prompt2 설정 (나중에 입힐 의류)
+            prompt2 = switch (secondCategoryId) {
                 case 1, 2, 3 -> "black tshirt";
                 case 7, 8-> "black cardigan";
                 case 4, 5, 6 -> "pants";
@@ -360,9 +383,9 @@ public class ComfyUiService {
                 default -> "clothes";
             };
 
-// model 설정
-            int cat1 = product1.getCategory().getCategoryId();
-            int cat2 = product2.getCategory().getCategoryId();
+// model 설정 (순서 최적화된 카테고리 사용)
+            int cat1 = firstCategoryId;
+            int cat2 = secondCategoryId;
             model = null;
 
 // 순서 상관 없도록 작은 값, 큰 값으로 정렬
@@ -413,17 +436,17 @@ public class ComfyUiService {
             }
 
 
-            imageName1 = productImageRepository.findByProductAndIsThumbnailTrue(product1)
-                    .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
+            imageName1 = productImageRepository.findByProductAndIsThumbnailTrue(firstProduct)
+                    .orElseThrow(() -> new RuntimeException("Thumbnail not found for firstProduct"))
                     .getImageUrl();
-            imageName2 = productImageRepository.findByProductAndIsThumbnailTrue(product2)
-                    .orElseThrow(() -> new RuntimeException("Thumbnail not found for product2"))
+            imageName2 = productImageRepository.findByProductAndIsThumbnailTrue(secondProduct)
+                    .orElseThrow(() -> new RuntimeException("Thumbnail not found for secondProduct"))
                     .getImageUrl();
 
 
 
-            fileNameOnly1 = stripPrefix(imageName1, getProductPrefix(product1));
-            fileNameOnly2 = stripPrefix(imageName2, getProductPrefix(product2));
+            fileNameOnly1 = stripPrefix(imageName1, getProductPrefix(firstProduct));
+            fileNameOnly2 = stripPrefix(imageName2, getProductPrefix(secondProduct));
 
             // 워크플로우 JSON 생성
             workflowJson = loadWorkflowFromResource("v2_one_person_two_clothes.json")
