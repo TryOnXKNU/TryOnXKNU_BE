@@ -79,116 +79,6 @@ public class ComfyUiService {
         return filename;
     }
 
-    public String executeFittingFlow(String email, Integer productid) throws IOException, InterruptedException {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Member not found"));
-
-        BodyShape memberBodyShape = member.getBodyShape();
-
-        String model = null;
-        String prompt = null;
-
-        Product product = productRepository.findById(productid)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        int categoryId = product.getCategory().getCategoryId();
-
-        switch (categoryId) {
-            case 1:
-                prompt = "black tshirt";
-                model = "STOPA.png";
-                break;
-            case 2:
-                prompt = "black tshirt";
-                model = "LSTOPA.png";
-                break;
-            case 3:
-                prompt = "black tshirt";
-                model = "LWTOPA.png";
-                break;
-            case 4:
-                prompt = "pants";
-                model = "LSTOPC.png";
-                break;
-            case 5:
-                prompt = "pants";
-                model = "LSTOPA.png";
-                break;
-            case 6:
-                prompt = "pants";
-                model = "LSTOPB.png";
-                break;
-            case 7:
-                prompt = "black cardigan";
-                model = "SOUTERWEARB.png";
-                break;
-            case 8:
-                prompt = "black cardigan";
-                model = "LOUTERWEARB.png";
-                break;
-            case 9:
-                prompt = "dress";
-                model = "SSDRESS.png";
-                break;
-            case 10:
-                prompt = "dress";
-                model = "SLDRESS.png";
-                break;
-            case 11:
-                prompt = "dress";
-                model = "LSDRESS.png";
-                break;
-            case 12:
-                prompt = "dress";
-                model = "LLDRESS.png";
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown categoryId: " + categoryId);
-        }
-
-        if (memberBodyShape == BodyShape.STRAIGHT) {
-            model = "1" + model;
-        } else if (memberBodyShape == BodyShape.NATURAL) {
-            model = "2" + model;
-        } else if (memberBodyShape == BodyShape.WAVE) {
-            model = "3" + model;
-        }
-
-
-        String imgName = productImageRepository.findByProductAndIsThumbnailTrue(product).get().getImageUrl();
-        String productCode = product.getProductCode();
-        String prefix = "https://tryonx.s3.ap-northeast-2.amazonaws.com/product/" + productCode + "/";
-        //https://tryonx.s3.ap-northeast-2.amazonaws.com/product/axlsdre00008/970e533f-3fef-43ea-a590-179035d863a1_06968472-AA0C-4369-AFEF-263682E826E2.png
-        String fileNameOnly = imgName.startsWith(prefix)
-                ? imgName.substring(prefix.length())
-                : imgName;
-
-        System.out.println(fileNameOnly+"*************");
-
-
-        String workflowJson = loadWorkflowFromResource("v2_one_person_one_clothes.json")
-                .replace("{{imageName}}", fileNameOnly)
-                .replace("{{modelImage}}", model)
-                .replace("{{prompt}}", prompt);
-
-        // Google Drive 새로고침
-        refreshGoogleDrive();
-
-        // 1. 워크플로우 실행
-        String promptId = sendWorkflow(workflowJson);
-
-        // 2. 완료 대기
-        waitUntilComplete(promptId);
-
-        // 3. 이미지명 추출
-        String filename = getGeneratedOutputImageFilename(promptId);
-
-        // 4. 이미지 다운로드
-        downloadImage(filename);
-
-        return filename;
-    }
-
     public String executeFittingTwoClothesFlow(String email, Integer productId1, Integer productId2) throws IOException, InterruptedException {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
@@ -223,15 +113,15 @@ public class ComfyUiService {
 
             switch (categoryId) {
                 case 1:
-                    prompt = "black tshirt";
+                    prompt = "tshirt";
                     model = "STOPA.png";
                     break;
                 case 2:
-                    prompt = "black tshirt";
+                    prompt = "tshirt";
                     model = "LSTOPA.png";
                     break;
                 case 3:
-                    prompt = "black tshirt";
+                    prompt = "tshirt";
                     model = "LWTOPA.png";
                     break;
                 case 4:
@@ -247,11 +137,11 @@ public class ComfyUiService {
                     model = "LSTOPB.png";
                     break;
                 case 7:
-                    prompt = "black cardigan";
+                    prompt = "cardigan";
                     model = "SOUTERWEARB.png";
                     break;
                 case 8:
-                    prompt = "black cardigan";
+                    prompt = "cardigan";
                     model = "LOUTERWEARB.png";
                     break;
                 case 9:
@@ -342,8 +232,8 @@ public class ComfyUiService {
 
 // prompt1 설정
             prompt1 = switch (product1.getCategory().getCategoryId()) {
-                case 1, 2, 3 -> "black tshirt";
-                case 7, 8-> "black cardigan";
+                case 1, 2, 3 -> "tshirt";
+                case 7, 8-> "cardigan";
                 case 4, 5, 6 -> "pants";
                 case 9, 10, 11, 12-> "dress";
                 case 13, 14-> "skirt";
@@ -352,8 +242,8 @@ public class ComfyUiService {
 
 // prompt2 설정
             prompt2 = switch (product2.getCategory().getCategoryId()) {
-                case 1, 2, 3 -> "black tshirt";
-                case 7, 8-> "black cardigan";
+                case 1, 2, 3 -> "tshirt";
+                case 7, 8-> "cardigan";
                 case 4, 5, 6 -> "pants";
                 case 9, 10, 11, 12-> "dress";
                 case 13, 14-> "skirt";
