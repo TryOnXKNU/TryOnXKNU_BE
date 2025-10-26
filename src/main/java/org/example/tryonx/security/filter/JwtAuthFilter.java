@@ -30,6 +30,14 @@ public class JwtAuthFilter extends GenericFilter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
+        
+        // Public 경로는 JWT 검증 건너뛰기
+        String requestURI = httpServletRequest.getRequestURI();
+        if (isPublicPath(requestURI)) {
+            filterChain.doFilter(servletRequest, servletResponse);
+            return;
+        }
+        
         String token = httpServletRequest.getHeader("Authorization");
         try{
             if(token != null){
@@ -58,6 +66,22 @@ public class JwtAuthFilter extends GenericFilter {
             httpServletResponse.setContentType("application/json");
             httpServletResponse.getWriter().write("invalid token");
         }
+    }
+    
+    private boolean isPublicPath(String requestURI) {
+        // Public 경로 목록
+        return requestURI.equals("/api/v1/products") ||
+               requestURI.startsWith("/api/v1/products/") ||
+               requestURI.equals("/api/v1/search") ||
+               requestURI.startsWith("/api/v1/main/") ||
+               requestURI.startsWith("/api/v1/auth/") ||
+               requestURI.startsWith("/swagger-ui/") ||
+               requestURI.startsWith("/v3/api-docs/") ||
+               requestURI.startsWith("/upload/") ||
+               requestURI.startsWith("/ws/") ||
+               requestURI.startsWith("/kakao/") ||
+               requestURI.equals("/login") ||
+               requestURI.equals("/index.html");
     }
 
 }
