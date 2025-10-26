@@ -45,45 +45,11 @@ public class ComfyUiService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    private void refreshGoogleDrive() {
-        String url = baseUrl + "/pysssss/drive/sync";
-        System.out.println("구글드라이브 새로고침중");
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
-            System.out.println("googledrive새로고침.");
-        } catch (RestClientException e) {
-            // 실패하더라도 워크플로우는 계속 진행하도록 오류만 로그에 남깁니다.
-            System.err.println("구글드라이브 새로고침 실패 :  " + e.getMessage());
-        }
-    }
-
-    public String executeInternalWorkflow() throws IOException, InterruptedException {
-        String workflowJson = loadWorkflowFromResource("tryon_flow.json");
-        // Google Drive 새로고침
-        refreshGoogleDrive();
-
-        // 1. 워크플로우 실행
-        String promptId = sendWorkflow(workflowJson);
-
-        // 2. 완료 대기
-        waitUntilComplete(promptId);
-
-        // 3. 이미지명 추출
-        String filename = getGeneratedOutputImageFilename(promptId);
-
-        // 4. 이미지 다운로드
-        downloadImage(filename);
-
-        return filename;
-    }
-
     public String executeFittingTwoClothesFlow(String email, Integer productId1, Integer productId2) throws IOException, InterruptedException {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
         BodyShape memberBodyShape = member.getBodyShape();
-        String model;
+        String model = null;
 
         String prompt = null;
         String prompt1 = null;
@@ -103,11 +69,13 @@ public class ComfyUiService {
 
         String workflowJson = null;
 
-        if (productId1 == null && productId2 == null){
+        if (productId1 == null && productId2 == null)
+        {
             throw new IllegalArgumentException("최소 1개 이상의 상품을 선택해야 합니다.");
-        }else if(productId1 != null && productId2 == null){
-            Product product = productRepository.findById(productId1)
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+        }
+        else if (productId1 != null && productId2 == null)
+        {
+            Product product = productRepository.findById(productId1).orElseThrow(() -> new RuntimeException("Product not found"));
 
             int categoryId = product.getCategory().getCategoryId();
 
@@ -194,7 +162,9 @@ public class ComfyUiService {
                     .replace("{{imageName}}", fileNameOnly)
                     .replace("{{modelImage}}", model)
                     .replace("{{prompt}}", prompt);
-        } else if (productId1 != null && productId2 != null) {
+        }
+        else if (productId1 != null && productId2 != null)
+        {
             Product product1 = productRepository.findById(productId1)
                     .orElseThrow(() -> new RuntimeException("Product not found - id : " + productId1));
             Product product2 = productRepository.findById(productId2)
@@ -203,42 +173,55 @@ public class ComfyUiService {
             Integer categoryId1 = product1.getCategory().getCategoryId();
             Integer categoryId2 = product2.getCategory().getCategoryId();
 
-
+            // 동일 카테고리 / 드레스 / 그룹 중복 예외처리
             if (categoryId1.equals(categoryId2)) {
                 throw new RuntimeException("같은 카테고리는 선택할 수 없습니다. ("
                         + categoryId1 + " & " + categoryId2 + ")");
             }
-// 드레스 (9~12)
+
             Set<Integer> dress = Set.of(9, 10, 11, 12);
             if (dress.contains(categoryId1) || dress.contains(categoryId2)) {
                 throw new RuntimeException("드레스는 단일착용만 가능합니다. ("
                         + categoryId1 + " & " + categoryId2 + ")");
             }
-// 그룹1: 1,2,3,7,8
+
             Set<Integer> group1 = Set.of(1, 2, 3, 7, 8);
-// 그룹2: 4,5,6
             Set<Integer> group2 = Set.of(4, 5, 6, 13, 14);
-// 서로 같은 그룹 안에서 두 개가 동시에 오면 불가
             if (group1.contains(categoryId1) && group1.contains(categoryId2)) {
                 throw new RuntimeException("같은 그룹(상의 그룹)에서 두 개를 선택할 수 없습니다. ("
                         + categoryId1 + " & " + categoryId2 + ")");
             }
-
             if (group2.contains(categoryId1) && group2.contains(categoryId2)) {
                 throw new RuntimeException("같은 그룹(하의 그룹)에서 두 개를 선택할 수 없습니다. ("
                         + categoryId1 + " & " + categoryId2 + ")");
             }
 
+            // 하의(4,5,6,13.14) → prompt1 / 나머지 → prompt2 로 지정
+            Set<Integer> bottomCategories = Set.of(4, 5, 6, 13, 14);
+            Product prompt1Product;
+            Product prompt2Product;
 
-// prompt1 설정
-            prompt1 = switch (product1.getCategory().getCategoryId()) {
+            if (bottomCategories.contains(categoryId1)) {
+                prompt1Product = product1;
+                prompt2Product = product2;
+            } else if (bottomCategories.contains(categoryId2)) {
+                prompt1Product = product2;
+                prompt2Product = product1;
+            } else {
+                // 둘 다 하의가 아닌 경우 기존 순서 유지
+                prompt1Product = product1;
+                prompt2Product = product2;
+            }
+
+            // prompt1 설정
+            prompt1 = switch (prompt1Product.getCategory().getCategoryId()) {
                 case 1 -> "short t-shirts";
                 case 2 -> "long sleeve";
                 case 3 -> "long t-shirts";
                 case 4 -> "short pants";
                 case 5 -> "long pants";
                 case 6 -> "long wide pants";
-                case 7, 8-> "cardigan";
+                case 7, 8 -> "cardigan";
                 case 9 -> "short sleeve short dress";
                 case 10 -> "short sleeve long dress";
                 case 11 -> "long sleeve shore dress";
@@ -248,15 +231,15 @@ public class ComfyUiService {
                 default -> "clothes";
             };
 
-// prompt2 설정
-            prompt2 = switch (product2.getCategory().getCategoryId()) {
+            // prompt2 설정
+            prompt2 = switch (prompt2Product.getCategory().getCategoryId()) {
                 case 1 -> "short t-shirts";
                 case 2 -> "long sleeve";
                 case 3 -> "long t-shirts";
                 case 4 -> "short pants";
                 case 5 -> "long pants";
                 case 6 -> "long wide pants";
-                case 7, 8-> "cardigan";
+                case 7, 8 -> "cardigan";
                 case 9 -> "short sleeve short dress";
                 case 10 -> "short sleeve long dress";
                 case 11 -> "long sleeve shore dress";
@@ -266,16 +249,10 @@ public class ComfyUiService {
                 default -> "clothes";
             };
 
-// model 설정
-            int cat1 = product1.getCategory().getCategoryId();
-            int cat2 = product2.getCategory().getCategoryId();
-            model = null;
+            // model 설정
+            int first = Math.min(categoryId1, categoryId2);
+            int second = Math.max(categoryId1, categoryId2);
 
-// 순서 상관 없도록 작은 값, 큰 값으로 정렬
-            int first = Math.min(cat1, cat2);
-            int second = Math.max(cat1, cat2);
-
-// 조합별 모델 매핑
             if (first == 1 && second == 4) model = "STOPC.png";
             else if (first == 1 && second == 5) model = "STOPA.png";
             else if (first == 1 && second == 6) model = "STOPB.png";
@@ -318,33 +295,32 @@ public class ComfyUiService {
                 }
             }
 
-
-            imageName1 = productImageRepository.findByProductAndIsThumbnailTrue(product1)
-                    .orElseThrow(() -> new RuntimeException("Thumbnail not found for product1"))
+            // prompt1, prompt2 순서에 맞게 이미지 매칭
+            String imageNamePrompt1 = productImageRepository.findByProductAndIsThumbnailTrue(prompt1Product)
+                    .orElseThrow(() -> new RuntimeException("Thumbnail not found for prompt1 product"))
                     .getImageUrl();
-            imageName2 = productImageRepository.findByProductAndIsThumbnailTrue(product2)
-                    .orElseThrow(() -> new RuntimeException("Thumbnail not found for product2"))
+            String imageNamePrompt2 = productImageRepository.findByProductAndIsThumbnailTrue(prompt2Product)
+                    .orElseThrow(() -> new RuntimeException("Thumbnail not found for prompt2 product"))
                     .getImageUrl();
 
+            fileNameOnly1 = stripPrefix(imageNamePrompt1, getProductPrefix(prompt1Product));
+            fileNameOnly2 = stripPrefix(imageNamePrompt2, getProductPrefix(prompt2Product));
 
-
-            fileNameOnly1 = stripPrefix(imageName1, getProductPrefix(product1));
-            fileNameOnly2 = stripPrefix(imageName2, getProductPrefix(product2));
-
-            // 워크플로우 JSON 생성
+            // 워크플로우 JSON 치환
             workflowJson = loadWorkflowFromResource("v2_one_person_two_clothes.json")
                     .replace("{{modelImage}}", model)
-                    .replace("{{imageName1}}", fileNameOnly1 != null ? fileNameOnly1 : "")
-                    .replace("{{imageName2}}", fileNameOnly2 != null ? fileNameOnly2 : "")
+                    .replace("{{imageName1}}", fileNameOnly1)
+                    .replace("{{imageName2}}", fileNameOnly2)
                     .replace("{{prompt1}}", prompt1)
                     .replace("{{prompt2}}", prompt2);
-
-        }else{
+        }
+        else
+        {
             throw new IllegalArgumentException("상품 선택 옵션이 잘못되었습니다.");
         }
 
         // Google Drive 새로고침
-        refreshGoogleDrive();
+//        refreshGoogleDrive();
 
         // 1. 워크플로우 실행
         String promptId = sendWorkflow(workflowJson);
@@ -364,14 +340,6 @@ public class ComfyUiService {
                 .orElseThrow(() -> new IllegalArgumentException("파일명이 없습니다."));
 
         downloadImageToS3(fileName);
-        System.out.println("--------------------------------------------");
-//        System.out.println("prompt1: " + prompt1);
-//        System.out.println("prompt2: " + prompt2);
-//        System.out.println("model: " + model);
-        System.out.println(fileName);
-//        System.out.println("filename2: " + fileNameOnly2);
-//        System.out.println("fittingimage: " + generatedOutputImageFilenameList);
-        System.out.println("--------------------------------------------");
         return fileName;
     }
 
@@ -425,7 +393,7 @@ public class ComfyUiService {
                 Boolean completed = (Boolean) status.get("completed");
 
                 if (Boolean.TRUE.equals(completed)) {
-                    System.out.println("✅ ComfyUI 이미지 생성 완료!");
+                    System.out.println("## ComfyUI 이미지 생성 완료! ##");
                     return;
                 }
 
@@ -521,7 +489,7 @@ public class ComfyUiService {
                 if (imageData != null && imageData.length > 0) {
                     Path outputPath = uploadPath.resolve("downloaded_" + filename);
                     Files.write(outputPath, imageData);
-                    System.out.println("✅ 이미지 저장 완료: " + outputPath);
+                    System.out.println("## 이미지 저장 완료: " + outputPath + " ##");
                     return;
                 }
             } catch (HttpClientErrorException.NotFound e) {
@@ -561,7 +529,7 @@ public class ComfyUiService {
 
                     // 🔹 S3 URL 반환 또는 출력
                     String imageUrl = amazonS3.getUrl(bucket, s3FileName).toString();
-                    System.out.println("✅ 이미지 업로드 완료: " + imageUrl);
+                    System.out.println("## 이미지 업로드 완료: " + imageUrl + " ##");
                     return;
                 }
             } catch (HttpClientErrorException.NotFound e) {
@@ -573,6 +541,21 @@ public class ComfyUiService {
 
         throw new IOException("❌ 이미지 다운로드 실패: " + filename);
     }
+
+
+    //    private void refreshGoogleDrive() {
+//        String url = baseUrl + "/pysssss/drive/sync";
+//        System.out.println("구글드라이브 새로고침중");
+//        try {
+//            HttpHeaders headers = new HttpHeaders();
+//            HttpEntity<String> entity = new HttpEntity<>(headers);
+//            restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+//            System.out.println("googledrive새로고침.");
+//        } catch (RestClientException e) {
+//            // 실패하더라도 워크플로우는 계속 진행하도록 오류만 로그에 남깁니다.
+//            System.err.println("구글드라이브 새로고침 실패 :  " + e.getMessage());
+//        }
+//    }
 
     // 상품사진파일명으로 한장 생성
 //    public String executeFittingFlowWithClothingName(String email, String clothingImageName) throws IOException, InterruptedException {
@@ -601,116 +584,119 @@ public class ComfyUiService {
 //        return filename;
 //    }
 
-    public void executeFittingFlowWithClothingName(String email, String clothingImageName, Product product) throws IOException, InterruptedException {
-        // 1. 사용자 확인
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Member not found"));
-
-        // 2. 파일명 전처리
-        String prefix = "/upload/product/";
-        String fileNameOnly = clothingImageName.startsWith(prefix)
-                ? clothingImageName.substring(prefix.length())
-                : clothingImageName;
-
-        // 3. 워크플로우 JSON 설정
-        String workflowJson = loadWorkflowFromResource("tryon_flow.json")
-                .replace("{{imageName}}", fileNameOnly);
-
-        // Google Drive 새로고침
-        refreshGoogleDrive();
-
-        // 4. ComfyUI 실행
-        String promptId = sendWorkflow(workflowJson);
-        waitUntilComplete(promptId);
-
-        // 5. 결과 이미지 원래 이름 → 다운로드용 이름
-        String originalFilename = getGeneratedOutputImageFilename(promptId);
-        String finalFilename = "downloaded_" + originalFilename;
-
+//    public void executeFittingFlowWithClothingName(String email, String clothingImageName, Product product) throws IOException, InterruptedException {
+//        // 1. 사용자 확인
+//        Member member = memberRepository.findByEmail(email)
+//                .orElseThrow(() -> new RuntimeException("Member not found"));
+//        // 2. 파일명 전처리
+//        String prefix = "/upload/product/";
+//        String fileNameOnly = clothingImageName.startsWith(prefix)
+//                ? clothingImageName.substring(prefix.length())
+//                : clothingImageName;
+//        // 3. 워크플로우 JSON 설정
+//        String workflowJson = loadWorkflowFromResource("tryon_flow.json")
+//                .replace("{{imageName}}", fileNameOnly);
+//        // Google Drive 새로고침
+//        refreshGoogleDrive();
+//        // 4. ComfyUI 실행
+//        String promptId = sendWorkflow(workflowJson);
+//        waitUntilComplete(promptId);
+//        // 5. 결과 이미지 원래 이름 → 다운로드용 이름
+//        String originalFilename = getGeneratedOutputImageFilename(promptId);
+//        String finalFilename = "downloaded_" + originalFilename;
 //        // 6. 이미지 저장
 //        downloadImageAs(originalFilename, finalFilename);
+//        String publicUrl = "/upload/fitting/" + finalFilename;
+//        // 7. DB 저장 (한 장일 때)
+//        saveOrRotateFittings(product, List.of(publicUrl));
+//    }
+
+//    private void downloadImageAs(String originalFilename, String finalFilename) throws IOException, InterruptedException {
+//        if (originalFilename == null || originalFilename.isBlank()) {
+//            throw new IllegalArgumentException("원본 이미지 파일 이름이 null이거나 비어 있습니다.");
+//        }
 //
-//        // 7. DB 저장
-//        ProductFitting fitting = new ProductFitting();
-//        fitting.setProduct(product);
-//        fitting.setSequence(1);
-//        fitting.setFittingImageUrl("/upload/fitting/" + finalFilename);  // 저장된 경로 반영
-//        productFittingRepository.save(fitting);
+//        String url = baseUrl + "/view?filename=" + originalFilename;
+//        int maxRetries = 10;
+//
+//        Path uploadPath = Paths.get("upload/fitting");
+//        if (!Files.exists(uploadPath)) {
+//            Files.createDirectories(uploadPath);
+//        }
+//
+//        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+//            try {
+//                byte[] imageData = restTemplate.getForObject(url, byte[].class);
+//                if (imageData != null && imageData.length > 0) {
+//                    Path outputPath = uploadPath.resolve(finalFilename);
+//                    Files.write(outputPath, imageData);
+//                    System.out.println("✅ 이미지 저장 완료: " + outputPath);
+//                    return;
+//                }
+//            } catch (HttpClientErrorException.NotFound e) {
+//                System.out.println(" [대기 중] 이미지가 아직 준비되지 않음. 재시도 " + attempt);
+//            }
+//
+//            Thread.sleep(1000);
+//        }
+//
+//        throw new IOException("이미지 다운로드 실패: " + originalFilename);
+//    }
 
-        // 6. 이미지 저장
-        downloadImageAs(originalFilename, finalFilename);
-        String publicUrl = "/upload/fitting/" + finalFilename;
+//    @Transactional
+//    public void saveOrRotateFittings(Product product, List<String> urls) {
+//        if (urls == null || urls.isEmpty()) return;
+//
+//        // 현재 슬롯 상황
+//        List<ProductFitting> current = productFittingRepository.findByProductOrderByUpdatedAtAsc(product);
+//        boolean hasSeq1 = current.stream().anyMatch(p -> p.getSequence() == 1);
+//        boolean hasSeq2 = current.stream().anyMatch(p -> p.getSequence() == 2);
+//
+//        for (String url : urls) {
+//            if (current.size() < 2) {
+//                // 빈 슬롯에 채우기
+//                int targetSeq = !hasSeq1 ? 1 : (!hasSeq2 ? 2 : 1); // 이 경우 1,2 중 비어있는 쪽
+//                ProductFitting pf = productFittingRepository.findByProductAndSequence(product, targetSeq)
+//                        .orElseGet(ProductFitting::new);
+//                pf.setProduct(product);
+//                pf.setSequence(targetSeq);
+//                pf.setFittingImageUrl(url);
+//                productFittingRepository.save(pf);
+//
+//                if (targetSeq == 1) hasSeq1 = true; else hasSeq2 = true;
+//                // 리스트 최신화
+//                if (current.stream().noneMatch(p -> p.getSequence() == targetSeq)) {
+//                    current.add(pf);
+//                }
+//            } else {
+//                ProductFitting oldest = current.get(0);
+//                oldest.setFittingImageUrl(url); // @PreUpdate로 updatedAt 갱신
+//                productFittingRepository.save(oldest);
+//
+//                current = productFittingRepository.findByProductOrderByUpdatedAtAsc(product);
+//            }
+//        }
+//    }
 
-        // 7. DB 저장 (한 장일 때)
-        saveOrRotateFittings(product, List.of(publicUrl));
-//        saveOrRotateFittings(product, List.of(publicUrl1, publicUrl2));
 
-    }
-    private void downloadImageAs(String originalFilename, String finalFilename) throws IOException, InterruptedException {
-        if (originalFilename == null || originalFilename.isBlank()) {
-            throw new IllegalArgumentException("원본 이미지 파일 이름이 null이거나 비어 있습니다.");
-        }
-
-        String url = baseUrl + "/view?filename=" + originalFilename;
-        int maxRetries = 10;
-
-        Path uploadPath = Paths.get("upload/fitting");
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
-        for (int attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                byte[] imageData = restTemplate.getForObject(url, byte[].class);
-                if (imageData != null && imageData.length > 0) {
-                    Path outputPath = uploadPath.resolve(finalFilename);
-                    Files.write(outputPath, imageData);
-                    System.out.println("✅ 이미지 저장 완료: " + outputPath);
-                    return;
-                }
-            } catch (HttpClientErrorException.NotFound e) {
-                System.out.println(" [대기 중] 이미지가 아직 준비되지 않음. 재시도 " + attempt);
-            }
-
-            Thread.sleep(1000);
-        }
-
-        throw new IOException("이미지 다운로드 실패: " + originalFilename);
-    }
-
-    @Transactional
-    public void saveOrRotateFittings(Product product, List<String> urls) {
-        if (urls == null || urls.isEmpty()) return;
-
-        // 현재 슬롯 상황
-        List<ProductFitting> current = productFittingRepository.findByProductOrderByUpdatedAtAsc(product);
-        boolean hasSeq1 = current.stream().anyMatch(p -> p.getSequence() == 1);
-        boolean hasSeq2 = current.stream().anyMatch(p -> p.getSequence() == 2);
-
-        for (String url : urls) {
-            if (current.size() < 2) {
-                // 빈 슬롯에 채우기
-                int targetSeq = !hasSeq1 ? 1 : (!hasSeq2 ? 2 : 1); // 이 경우 1,2 중 비어있는 쪽
-                ProductFitting pf = productFittingRepository.findByProductAndSequence(product, targetSeq)
-                        .orElseGet(ProductFitting::new);
-                pf.setProduct(product);
-                pf.setSequence(targetSeq);
-                pf.setFittingImageUrl(url);
-                productFittingRepository.save(pf);
-
-                if (targetSeq == 1) hasSeq1 = true; else hasSeq2 = true;
-                // 리스트 최신화
-                if (current.stream().noneMatch(p -> p.getSequence() == targetSeq)) {
-                    current.add(pf);
-                }
-            } else {
-                ProductFitting oldest = current.get(0);
-                oldest.setFittingImageUrl(url); // @PreUpdate로 updatedAt 갱신
-                productFittingRepository.save(oldest);
-
-                current = productFittingRepository.findByProductOrderByUpdatedAtAsc(product);
-            }
-        }
-    }
+//    public String executeInternalWorkflow() throws IOException, InterruptedException {
+//        String workflowJson = loadWorkflowFromResource("tryon_flow.json");
+//        // Google Drive 새로고침
+////        refreshGoogleDrive();
+//
+//        // 1. 워크플로우 실행
+//        String promptId = sendWorkflow(workflowJson);
+//
+//        // 2. 완료 대기
+//        waitUntilComplete(promptId);
+//
+//        // 3. 이미지명 추출
+//        String filename = getGeneratedOutputImageFilename(promptId);
+//
+//        // 4. 이미지 다운로드
+//        downloadImage(filename);
+//
+//        return filename;
+//    }
 
 }
