@@ -33,37 +33,31 @@ public class SecurityConfigs {
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(a->a
+                        // Admin only endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/products").hasRole("ADMIN")
+                        
+                        // Public endpoints - 명시적으로 먼저 선언
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products", "/api/v1/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/main/similar-styles", "/api/v1/main/popular-styles").permitAll()
+                        
+                        // Auth endpoints
                         .requestMatchers(
                         "/login",
                                 "/ws/**",
                         "/index.html",
-                        "/api/v1/auth/signup",
+                        "/api/v1/auth/**",
                         "/api/v1/fitting/camera/*",
-                        "/api/v1/auth/login",
-                        "/api/v1/auth/check-email",
-                        "/api/v1/auth/email/send",
-                                "/api/v1/auth/email/send/password",
-                        "/api/v1/auth/email/verify",
-                        "/api/v1/auth/sms/send",
-                                "/api/v1/auth/sms/send/id",
-                        "/api/v1/auth/sms/verify",
-                        "/api/v1/auth/find-id",
-                        "/api/v1/auth/duplicate-nickname",
-                        "/api/v1/auth/reset-password",
                                 "/upload/**",
                         "/kakao/**",
                         "/swagger-ui/**",
-                        "/v3/api-docs/**",                 // swagger JSON endpoint
-                        "/swagger-resources/**",           // swagger resource
-                        "/api/v1/auth/kakao",
-                        "/api/v1/main/similar-styles",
-                        "/api/v1/main/popular-styles",
-                        "/api/v1/products",
-                        "/api/v1/products/**",
-                        "/api/v1/search"
-                ).permitAll().anyRequest().authenticated())
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**"
+                ).permitAll()
+                        
+                        // All other requests require authentication
+                        .anyRequest().authenticated())
                 .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

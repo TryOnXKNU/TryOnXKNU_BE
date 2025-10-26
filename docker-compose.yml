@@ -5,10 +5,10 @@ services:
     container_name: tryonx-mysql
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: tryonx
-      MYSQL_ROOT_PASSWORD: root1234
-      MYSQL_USER: tryonx_user
-      MYSQL_PASSWORD: tryonx_pass
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-tryonx}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root1234}
+      MYSQL_USER: ${MYSQL_USER:-tryonx_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-tryonx_pass}
     ports:
       - "3306:3306"
     volumes:
@@ -46,12 +46,12 @@ services:
     container_name: tryonx-app
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "80:8080"
     environment:
       # Database
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/tryonx?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: tryonx_user
-      SPRING_DATASOURCE_PASSWORD: tryonx_pass
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-tryonx}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-tryonx_user}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-tryonx_pass}
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
 
       # JPA
