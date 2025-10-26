@@ -113,27 +113,27 @@ public class ComfyUiService {
 
             switch (categoryId) {
                 case 1:
-                    prompt = "tshirt";
+                    prompt = "short t-shirts";
                     model = "STOPA.png";
                     break;
                 case 2:
-                    prompt = "tshirt";
+                    prompt = "long sleeve";
                     model = "LSTOPA.png";
                     break;
                 case 3:
-                    prompt = "tshirt";
+                    prompt = "long t-shirts";
                     model = "LWTOPA.png";
                     break;
                 case 4:
-                    prompt = "pants";
+                    prompt = "short pants";
                     model = "LSTOPC.png";
                     break;
                 case 5:
-                    prompt = "pants";
+                    prompt = "long pants";
                     model = "LSTOPA.png";
                     break;
                 case 6:
-                    prompt = "pants";
+                    prompt = "long wide pants";
                     model = "LSTOPB.png";
                     break;
                 case 7:
@@ -145,27 +145,27 @@ public class ComfyUiService {
                     model = "LOUTERWEARB.png";
                     break;
                 case 9:
-                    prompt = "dress";
+                    prompt = "short sleeve short dress";
                     model = "SSDRESS.png";
                     break;
                 case 10:
-                    prompt = "dress";
+                    prompt = "short sleeve long dress";
                     model = "SLDRESS.png";
                     break;
                 case 11:
-                    prompt = "dress";
+                    prompt = "long sleeve shore dress";
                     model = "LSDRESS.png";
                     break;
                 case 12:
-                    prompt = "dress";
+                    prompt = "long sleeve long dress";
                     model = "LLDRESS.png";
                     break;
                 case 13:
-                    prompt = "skirt";
+                    prompt = "short skirt";
                     model = "SSKIRTB.png";
                     break;
                 case 14:
-                    prompt = "skirt";
+                    prompt = "long skirt";
                     model = "LSKIRTB.png";
                     break;
                 default:
@@ -232,21 +232,37 @@ public class ComfyUiService {
 
 // prompt1 설정
             prompt1 = switch (product1.getCategory().getCategoryId()) {
-                case 1, 2, 3 -> "tshirt";
+                case 1 -> "short t-shirts";
+                case 2 -> "long sleeve";
+                case 3 -> "long t-shirts";
+                case 4 -> "short pants";
+                case 5 -> "long pants";
+                case 6 -> "long wide pants";
                 case 7, 8-> "cardigan";
-                case 4, 5, 6 -> "pants";
-                case 9, 10, 11, 12-> "dress";
-                case 13, 14-> "skirt";
+                case 9 -> "short sleeve short dress";
+                case 10 -> "short sleeve long dress";
+                case 11 -> "long sleeve shore dress";
+                case 12 -> "long sleeve long dress";
+                case 13 -> "short skirt";
+                case 14 -> "long skirt";
                 default -> "clothes";
             };
 
 // prompt2 설정
             prompt2 = switch (product2.getCategory().getCategoryId()) {
-                case 1, 2, 3 -> "tshirt";
+                case 1 -> "short t-shirts";
+                case 2 -> "long sleeve";
+                case 3 -> "long t-shirts";
+                case 4 -> "short pants";
+                case 5 -> "long pants";
+                case 6 -> "long wide pants";
                 case 7, 8-> "cardigan";
-                case 4, 5, 6 -> "pants";
-                case 9, 10, 11, 12-> "dress";
-                case 13, 14-> "skirt";
+                case 9 -> "short sleeve short dress";
+                case 10 -> "short sleeve long dress";
+                case 11 -> "long sleeve shore dress";
+                case 12 -> "long sleeve long dress";
+                case 13 -> "short skirt";
+                case 14 -> "long skirt";
                 default -> "clothes";
             };
 
