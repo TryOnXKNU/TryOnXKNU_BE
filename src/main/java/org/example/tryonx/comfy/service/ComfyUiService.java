@@ -85,7 +85,7 @@ public class ComfyUiService {
                     model = "STOPA.png";
                     break;
                 case 2:
-                    prompt = "long sleeve";
+                    prompt = "long t-shirts";
                     model = "LSTOPA.png";
                     break;
                 case 3:
@@ -94,15 +94,15 @@ public class ComfyUiService {
                     break;
                 case 4:
                     prompt = "short pants";
-                    model = "LSTOPC.png";
+                    model = "SPANTSA.png";
                     break;
                 case 5:
                     prompt = "long pants";
-                    model = "LSTOPA.png";
+                    model = "LSPANTSB.png";
                     break;
                 case 6:
                     prompt = "long wide pants";
-                    model = "LSTOPB.png";
+                    model = "LWPANTSC.png";
                     break;
                 case 7:
                     prompt = "cardigan";
@@ -216,7 +216,7 @@ public class ComfyUiService {
             // prompt1 설정
             prompt1 = switch (prompt1Product.getCategory().getCategoryId()) {
                 case 1 -> "short t-shirts";
-                case 2 -> "long sleeve";
+                case 2 -> "long t-shirts";
                 case 3 -> "long t-shirts";
                 case 4 -> "short pants";
                 case 5 -> "long pants";
@@ -234,7 +234,7 @@ public class ComfyUiService {
             // prompt2 설정
             prompt2 = switch (prompt2Product.getCategory().getCategoryId()) {
                 case 1 -> "short t-shirts";
-                case 2 -> "long sleeve";
+                case 2 -> "long t-shirts";
                 case 3 -> "long t-shirts";
                 case 4 -> "short pants";
                 case 5 -> "long pants";
