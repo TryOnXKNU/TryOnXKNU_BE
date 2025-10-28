@@ -365,7 +365,6 @@ public class AdminProductService {
         }
     }
 
-    @Transactional
     private List<ProductListDto> getProductList(List<Product> productList) {
         return productList.stream()
                 .map(product -> {
