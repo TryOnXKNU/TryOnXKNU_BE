@@ -12,6 +12,7 @@ import org.example.tryonx.enums.AnswerStatus;
 import org.example.tryonx.enums.Size;
 import org.example.tryonx.product.domain.Product;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class AdminAskService {
     private final AskRepository askRepository;
 
+    @Transactional
     public List<AskListDto> getNewAsks() {
         return askRepository.findByAnswerStatus(AnswerStatus.WAITING).stream()
                 .map(ask -> {
@@ -48,7 +50,7 @@ public class AdminAskService {
                 .collect(Collectors.toList());
     }
 
-
+    @Transactional
     public List<AskListDto> getCompletedAsks() {
         return askRepository.findByAnswerStatus(AnswerStatus.COMPLETED).stream()
                 .map(ask -> {

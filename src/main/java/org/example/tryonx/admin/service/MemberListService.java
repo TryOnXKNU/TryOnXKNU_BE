@@ -43,6 +43,7 @@ public class MemberListService {
     private final ReturnRepository returnRepository;
 
     /* 멤버 전체 */
+    @Transactional
     public List<MemberListDto> getUserList(){
         return memberRepository.findAll().stream()
                 .map(member -> new MemberListDto(
@@ -80,6 +81,7 @@ public class MemberListService {
     }
 
     /* 신규 회원 조회 */
+    @Transactional
     public List<MemberListDto> getRecentUsers() {
         LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
         return memberRepository.findByCreatedAtAfter(oneWeekAgo).stream()
@@ -127,6 +129,7 @@ public class MemberListService {
         return memberRepository.findAll(spec);
     }
 
+    @Transactional
     public List<MemberOrderHistory> getOrderHistoryByMember(Long memberId) {
         Member member = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("멤버 없음"));

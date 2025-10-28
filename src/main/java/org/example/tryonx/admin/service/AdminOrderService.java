@@ -34,7 +34,7 @@ public class AdminOrderService {
     private final PaymentRepository paymentRepository;
     private final DeliveryHistoryRepository deliveryHistoryRepository;
 
-
+    @Transactional
     public List<OrderListDto> getAllOrders() {
         return orderRepository.findAll().stream()
                 .map(order -> {
