@@ -62,6 +62,10 @@ dependencies {
 
 }
 
+jar {
+    exclude('**/application.properties')
+}
+
 tasks.named('test') {
     useJUnitPlatform()
 }

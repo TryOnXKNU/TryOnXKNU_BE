@@ -55,11 +55,13 @@ public class AdminProductService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
+    @Transactional
     public List<ProductListDto> getAllProducts() {
         List<Product> products = productRepository.findAll();
         return this.getProductList(products);
     }
 
+    @Transactional
     public ProductResponseDto getProductDetail(Integer productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalStateException("해당 상품이 없습니다."));
