@@ -82,6 +82,10 @@ public class Order {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DeliveryHistory> deliveryHistories;
+
+
     @PrePersist
     void prePersist() {
         if (orderedAt == null) orderedAt = LocalDateTime.now();
