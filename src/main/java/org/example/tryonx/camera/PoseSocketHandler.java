@@ -48,9 +48,20 @@ public class PoseSocketHandler implements WebSocketHandler {
         session.sendMessage(new TextMessage("{\"ok\":true}"));
     }
 
+//    @Override
+//    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+//        log.error("WS error", exception);
+//    }
+
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        log.error("WS error", exception);
+        if (exception instanceof java.net.SocketException &&
+                exception.getMessage() != null &&
+                exception.getMessage().contains("Connection reset")) {
+            log.info("Client disconnected abruptly: {}", session.getId());
+        } else {
+            log.error("WS error", exception);
+        }
     }
 
     @Override
