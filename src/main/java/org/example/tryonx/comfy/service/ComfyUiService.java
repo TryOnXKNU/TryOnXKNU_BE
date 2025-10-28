@@ -89,7 +89,7 @@ public class ComfyUiService {
                     model = "LSTOPA.png";
                     break;
                 case 3:
-                    prompt = "long t-shirts";
+                    prompt = "gray t-shirts";
                     model = "LWTOPA.png";
                     break;
                 case 4:
@@ -217,7 +217,7 @@ public class ComfyUiService {
             prompt1 = switch (prompt1Product.getCategory().getCategoryId()) {
                 case 1 -> "short t-shirts";
                 case 2 -> "long t-shirts";
-                case 3 -> "long t-shirts";
+                case 3 -> "gray t-shirts";
                 case 4 -> "short pants";
                 case 5 -> "long pants";
                 case 6 -> "long wide pants";
@@ -235,7 +235,7 @@ public class ComfyUiService {
             prompt2 = switch (prompt2Product.getCategory().getCategoryId()) {
                 case 1 -> "short t-shirts";
                 case 2 -> "long t-shirts";
-                case 3 -> "long t-shirts";
+                case 3 -> "gray t-shirts";
                 case 4 -> "short pants";
                 case 5 -> "long pants";
                 case 6 -> "long wide pants";
