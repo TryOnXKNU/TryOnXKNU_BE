@@ -136,14 +136,18 @@ public class AuthServiceImpl implements AuthService {
 
             return ResponseDto.builder()
                     .kakaoId(kakaoId)
-                    .name((String) kakaoAccount.get("name"))
+                    //.name((String) kakaoAccount.get("name"))
                     .email((String) kakaoAccount.get("email"))
                     .profile_image((String) profile.get("profile_image_url"))
                     .profile_nickname((String) profile.get("nickname"))
-                    .birthday((String) kakaoAccount.get("birthday"))
-                    .birthyear((String) kakaoAccount.get("birthyear"))
-                    .phone_number((String) kakaoAccount.get("phone_number"))
-                    .shipping_address((String) kakaoAccount.get("shipping_address"))
+                    //.birthday((String) kakaoAccount.get("birthday"))
+                    //.birthyear((String) kakaoAccount.get("birthyear"))
+                    //.phone_number((String) kakaoAccount.get("phone_number"))
+                    //.shipping_address((String) kakaoAccount.get("shipping_address"))
+                    .name((String) kakaoAccount.getOrDefault("name", null))
+                    .birthday((String) kakaoAccount.getOrDefault("birthday", null))
+                    .birthyear((String) kakaoAccount.getOrDefault("birthyear", null))
+                    .phone_number((String) kakaoAccount.getOrDefault("phone_number", null))
                     .build();
 
         } catch (Exception e) {
@@ -159,7 +163,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private LocalDate parseBirth(String birthyear, String birthday) {
+//        try {
+//            return LocalDate.parse(birthyear + "-" + birthday.substring(0, 2) + "-" + birthday.substring(2));
+//        } catch (Exception e) {
+//            return null;
+//        }
         try {
+            if (birthyear == null || birthday == null || birthday.length() != 4) return null;
             return LocalDate.parse(birthyear + "-" + birthday.substring(0, 2) + "-" + birthday.substring(2));
         } catch (Exception e) {
             return null;
@@ -175,10 +185,10 @@ public class AuthServiceImpl implements AuthService {
 
             ResponseDto dto = getInfo(accessToken);
 
-            if (dto == null || dto.getPhone_number() == null) {
-                log.error("카카오 응답에 phone_number가 없습니다.");
-                return ResponseEntity.badRequest().body("전화번호가 제공되지 않았습니다.");
-            }
+//            if (dto == null || dto.getPhone_number() == null) {
+//                log.error("카카오 응답에 phone_number가 없습니다.");
+//                return ResponseEntity.badRequest().body("전화번호가 제공되지 않았습니다.");
+//            }
 
             Optional<Member> existingMemberOpt = memberRepository.findByEmail(dto.getEmail());
             Member member;
@@ -201,6 +211,9 @@ public class AuthServiceImpl implements AuthService {
                         .phoneNumber(dto.getPhone_number())
                         .birthDate(parseBirth(dto.getBirthyear(), dto.getBirthday()))
                         .address(dto.getShipping_address())
+//                        .phoneNumber(dto.getPhone_number())
+//                        .birthDate(parseBirth(dto.getBirthyear(), dto.getBirthday()))
+//                        .address(dto.getShipping_address())
                         .socialType("KAKAO")
                         .socialId(dto.getKakaoId())
                         .password(null)

@@ -187,6 +187,19 @@ public class MemberService {
         memberRepository.save(member);
     }
 
+    @Transactional
+    public void updatePhoneNumber(String email, String phoneNumber) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+
+        if (!StringUtils.hasText(phoneNumber)) {
+            return;
+        }
+
+        member.setPhoneNumber(phoneNumber);
+        memberRepository.save(member);
+    }
+
 
     @Transactional
     public void updatePassword(String email, String password){

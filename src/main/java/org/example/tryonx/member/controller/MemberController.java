@@ -62,6 +62,15 @@ public class MemberController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PatchMapping("/phonenumber")
+    public ResponseEntity<String> updatePhoneNumber(
+            @RequestParam String email,
+            @RequestParam(required = false) String phoneNumber) {
+
+        memberService.updatePhoneNumber(email, phoneNumber);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PostMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "프로필 이미지 변경")
     public ResponseEntity<String> updateProfileImage(
