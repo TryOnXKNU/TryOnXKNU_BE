@@ -2,6 +2,7 @@ package org.example.tryonx.member.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.domain.Role;
 import org.example.tryonx.member.dto.*;
 import org.example.tryonx.member.service.MemberService;
@@ -63,13 +64,15 @@ public class MemberController {
     }
 
     @PatchMapping("/phonenumber")
-    public ResponseEntity<String> updatePhoneNumber(
-            @RequestParam String email,
-            @RequestParam(required = false) String phoneNumber) {
+    public ResponseEntity<String> updatePhoneNumber(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdatePhoneNumberDto updatePhoneNumberDto) {
+
+        String email = userDetails.getUsername();
+        String phoneNumber = updatePhoneNumberDto.getPhoneNumber();
 
         memberService.updatePhoneNumber(email, phoneNumber);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok("전화번호가 수정되었습니다.");
     }
+
 
     @PostMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "프로필 이미지 변경")

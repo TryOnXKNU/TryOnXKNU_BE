@@ -193,13 +193,12 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
 
         if (!StringUtils.hasText(phoneNumber)) {
-            return;
+            return; // 비어 있으면 수정하지 않음
         }
 
         member.setPhoneNumber(phoneNumber);
         memberRepository.save(member);
     }
-
 
     @Transactional
     public void updatePassword(String email, String password){
