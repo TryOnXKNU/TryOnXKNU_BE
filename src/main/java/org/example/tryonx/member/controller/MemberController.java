@@ -64,6 +64,7 @@ public class MemberController {
     }
 
     @PatchMapping("/phonenumber")
+    @Operation(summary = "전화번호 변경")
     public ResponseEntity<String> updatePhoneNumber(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdatePhoneNumberDto updatePhoneNumberDto) {
 
         String email = userDetails.getUsername();
