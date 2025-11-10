@@ -2,6 +2,7 @@ package org.example.tryonx.security.filter;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import io.jsonwebtoken.security.SignatureException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,37 +28,93 @@ public class JwtAuthFilter extends GenericFilter {
     @Value("${jwt.secretKey}")
     private String secretKey;
 
+//    @Override
+//    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+//        HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
+//        HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
+//        String token = httpServletRequest.getHeader("Authorization");
+//        try{
+//            if(token != null){
+//                if(!token.substring(0,7).equals("Bearer ")){
+//                    throw new AuthenticationServiceException("Bearer 형식이 아닙니다.");
+//                }
+//                String jwtToken = token.substring(7);
+//
+//
+//                Claims claims = Jwts.parserBuilder()
+//                        .setSigningKey(secretKey)
+//                        .build()
+//                        .parseClaimsJws(jwtToken)
+//                        .getBody();
+//
+//                List<GrantedAuthority> authorities = new ArrayList<>();
+//                authorities.add(new SimpleGrantedAuthority("ROLE_"+claims.get("role")));
+//                UserDetails userDetails = new User(claims.getSubject(),"",authorities);
+//                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+//                SecurityContextHolder.getContext().setAuthentication(authentication);
+//            }
+//            filterChain.doFilter(servletRequest, servletResponse);
+//        }catch (Exception e){
+//            e.printStackTrace();
+//            httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+//            httpServletResponse.setContentType("application/json");
+//            httpServletResponse.getWriter().write("invalid token");
+//        }
+//    }
+
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
+
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
+
         String token = httpServletRequest.getHeader("Authorization");
-        try{
-            if(token != null){
-                if(!token.substring(0,7).equals("Bearer ")){
-                    throw new AuthenticationServiceException("Bearer 형식이 아닙니다.");
-                }
-                String jwtToken = token.substring(7);
 
-
-                Claims claims = Jwts.parserBuilder()
-                        .setSigningKey(secretKey)
-                        .build()
-                        .parseClaimsJws(jwtToken)
-                        .getBody();
-
-                List<GrantedAuthority> authorities = new ArrayList<>();
-                authorities.add(new SimpleGrantedAuthority("ROLE_"+claims.get("role")));
-                UserDetails userDetails = new User(claims.getSubject(),"",authorities);
-                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            // 토큰이 없거나 Bearer 형식이 아닌 경우 통과시킴
+            if (token == null || !token.startsWith("Bearer ")) {
+                filterChain.doFilter(servletRequest, servletResponse);
+                return;
             }
+
+            // Bearer 제거
+            String jwtToken = token.substring(7);
+
+            // 형식 점검 (JWT는 마침표 2개 있어야 함: header.payload.signature)
+            if (!jwtToken.contains(".") || jwtToken.split("\\.").length != 3) {
+                filterChain.doFilter(servletRequest, servletResponse);
+                return;
+            }
+
+            // 정상 JWT 파싱
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(jwtToken)
+                    .getBody();
+
+            // 권한 설정
+            List<GrantedAuthority> authorities = new ArrayList<>();
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + claims.get("role")));
+
+            UserDetails userDetails = new User(claims.getSubject(), "", authorities);
+            Authentication authentication =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
             filterChain.doFilter(servletRequest, servletResponse);
-        }catch (Exception e){
+
+        } catch (MalformedJwtException | SignatureException e) {
+            // 잘못된 JWT 형식 or 서명 위조
+            httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+            httpServletResponse.setContentType("application/json");
+            httpServletResponse.getWriter().write("{\"error\": \"Invalid JWT format or signature\"}");
+        } catch (Exception e) {
             e.printStackTrace();
             httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
             httpServletResponse.setContentType("application/json");
-            httpServletResponse.getWriter().write("invalid token");
+            httpServletResponse.getWriter().write("{\"error\": \"Invalid token\"}");
         }
     }
 
