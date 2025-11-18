@@ -2,10 +2,7 @@ package org.example.tryonx.image.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.tryonx.member.domain.Member;
 
 import java.time.LocalDateTime;
@@ -21,10 +18,17 @@ public class MemberClothesImage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer imageId;
 
+    @Setter
+    @Column(unique = true, nullable = true)
+    private String memberClothesId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     @JsonIgnore
     private Member member;
+
+    @Column(nullable = false, length = 255)
+    private String name;
 
     @Column(nullable = false)
     private Integer categoryId;
@@ -38,4 +42,5 @@ public class MemberClothesImage {
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
+
 }
