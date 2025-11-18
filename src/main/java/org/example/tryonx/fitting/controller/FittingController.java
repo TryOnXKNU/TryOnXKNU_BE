@@ -41,7 +41,7 @@ public class FittingController {
 //    }
 
     @GetMapping
-    @Operation(summary = "체형 조회")
+    @Operation(summary = "피팅 페이지 조회")
     public ResponseEntity<?> fittingPageInfo(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         FittingResponse pageData = fittingService.getFittingPageData(email);
@@ -72,16 +72,56 @@ public class FittingController {
 //        return ResponseEntity.ok("https://tryonx.s3.ap-northeast-2.amazonaws.com/fitting/fittingRoom/" + filename);
 //    }
 
+//    @PostMapping("/try-on/dual")
+//    @Operation(summary = "AI 피팅")
+//    public ResponseEntity<String> generateMyFitting(
+//            @AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId1, @RequestParam(required = false) Integer productId2) throws Exception {
+//
+//        String email = userDetails.getUsername();
+//        Member member = memberRepository.findByEmail(email).orElseThrow();
+//
+//        // 1) ComfyUI 실행 → 파일명 얻기
+//        String filename = comfyUiService.executeFittingTwoClothesFlow(email, productId1, productId2);
+//
+//        // 2) URL 만들기
+//        String imageUrl = "https://tryonx.s3.ap-northeast-2.amazonaws.com/fitting/fittingRoom/" + filename;
+//
+//        // 3) DB 저장
+//        fittingImageService.saveFittingImage(member, imageUrl, productId1, productId2);
+//
+//        // 4) 응답
+//        return ResponseEntity.ok(imageUrl);
+//    }
+
     @PostMapping("/try-on/dual")
     @Operation(summary = "AI 피팅")
     public ResponseEntity<String> generateMyFitting(
-            @AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId1, @RequestParam(required = false) Integer productId2) throws Exception {
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Integer productId1,
+            @RequestParam(required = false) Integer productId2,
+            @RequestParam(required = false) String memberClothesId1,
+            @RequestParam(required = false) String memberClothesId2
+    ) throws Exception {
+        if (productId1 == null &&
+                productId2 == null &&
+                (memberClothesId1 == null || memberClothesId1.isBlank()) &&
+                (memberClothesId2 == null || memberClothesId2.isBlank())) {
 
+            throw new IllegalArgumentException(
+                    "productId1, productId2, memberClothesId1, memberClothesId2 중 최소 1개는 필요합니다."
+            );
+        }
         String email = userDetails.getUsername();
         Member member = memberRepository.findByEmail(email).orElseThrow();
 
         // 1) ComfyUI 실행 → 파일명 얻기
-        String filename = comfyUiService.executeFittingTwoClothesFlow(email, productId1, productId2);
+        String filename = comfyUiService.executeFittingUnified(
+                email,
+                productId1,
+                productId2,
+                memberClothesId1,
+                memberClothesId2
+        );
 
         // 2) URL 만들기
         String imageUrl = "https://tryonx.s3.ap-northeast-2.amazonaws.com/fitting/fittingRoom/" + filename;
@@ -94,25 +134,28 @@ public class FittingController {
     }
 
 
-    @PostMapping(value = "/try-on/custom/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "CUSTOM 피팅 의상 등록")
+    @PostMapping(value = "/custom/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "CUSTOM 의상 등록")
     public ResponseEntity<?> addMyClothes(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam Integer categoryId1,
-            @RequestParam(required = false) Integer categoryId2,
-            @RequestParam("myClothesImage1") MultipartFile myClothesImage1,
-            @RequestParam(value = "myClothesImage2", required = false) MultipartFile myClothesImage2
-    )throws Exception{
+            @RequestParam String name,
+            @RequestParam Integer categoryId,
+            @RequestParam("myClothesImage1") MultipartFile myClothesImage
+    ) {
         String email = userDetails.getUsername();
-        List<MemberClothesImage> memberClothesImages = fittingService.addMemberClothesImage(email, categoryId1, categoryId2, myClothesImage1, myClothesImage2);
-        return ResponseEntity.ok(memberClothesImages);
+        MemberClothesImage memberClothesImage = fittingService.addMemberClothesImage(email, name, categoryId, myClothesImage);
+        return ResponseEntity.ok(memberClothesImage);
     }
 
-    @PostMapping("/try-on/custom")
-    @Operation(summary = "CUSTOM 피팅")
-    public ResponseEntity<String> generateMyClothesFitting(@AuthenticationPrincipal UserDetails userDetails,@RequestParam Integer myClothesId1, @RequestParam(required = false)Integer myClothesId2) throws Exception {
+    @DeleteMapping("/custom/delete")
+    @Operation(summary = "CUSTOM 의상 삭제")
+    public ResponseEntity<String> deleteMyClothes(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String memberClothesId
+    ) {
         String email = userDetails.getUsername();
-        String filename = comfyUiService.executeFittingMyClothesFlow(email, myClothesId1, myClothesId2);
-        return ResponseEntity.ok("https://tryonx.s3.ap-northeast-2.amazonaws.com/fitting/fittingRoom/" + filename);
+        fittingService.deleteMemberClothesImage(email, memberClothesId);
+
+        return ResponseEntity.ok("삭제가 완료되었습니다.");
     }
 }

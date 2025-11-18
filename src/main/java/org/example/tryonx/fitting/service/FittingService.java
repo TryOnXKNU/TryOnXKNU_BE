@@ -6,10 +6,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
 import org.example.tryonx.category.CategoryRepository;
 import org.example.tryonx.enums.BodyShape;
-import org.example.tryonx.fitting.dto.BodyShapeRequest;
-import org.example.tryonx.fitting.dto.FittingMemberInfo;
-import org.example.tryonx.fitting.dto.FittingProductInfo;
-import org.example.tryonx.fitting.dto.FittingResponse;
+import org.example.tryonx.fitting.dto.*;
 import org.example.tryonx.image.domain.MemberClothesImage;
 import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.image.repository.MemberClothesImageRepository;
@@ -65,19 +62,26 @@ public class FittingService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
-    public FittingResponse getFittingPageData(String email){
+    public FittingResponse getFittingPageData(String email) {
+
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
+
+        // === memberInfo ===
         FittingMemberInfo memberInfo = getFittingMemberInfo(member);
+
+        // === 찜한 상품 productInfos ===
         List<FittingProductInfo> productInfos = likeRepository.findByMember(member)
                 .stream()
                 .map(Like::getProduct)
                 .distinct()
-                .map(p->{
+                .map(p -> {
                     String imgUrl = productImageRepository.findByProductAndIsThumbnailTrue(p)
                             .orElseThrow(() -> new RuntimeException("썸네일 이미지 없습니다."))
                             .getImageUrl();
-                    Boolean best = (member.getBodyShape() == p.getBodyShape());
+
+                    boolean best = (member.getBodyShape() == p.getBodyShape());
+
                     return new FittingProductInfo(
                             p.getProductId(),
                             p.getCategory().getCategoryId(),
@@ -85,13 +89,29 @@ public class FittingService {
                             imgUrl,
                             best
                     );
-                }).toList();
+                })
+                .toList();
 
+        // === 커스텀 의상 customClothesInfos ===
+        List<CustomClothesInfo> customClothesInfos =
+                memberClothesImageRepository.findByMember_MemberId(member.getMemberId())
+                        .stream()
+                        .map(img -> new CustomClothesInfo(
+                                img.getMemberClothesId(),  // clothesId (x15 같은 값)
+                                img.getCategoryId(),
+                                img.getName(),
+                                img.getImageUrl()
+                        ))
+                        .toList();
+
+        // === 최종 응답 ===
         return new FittingResponse(
                 memberInfo,
-                productInfos
+                productInfos,
+                customClothesInfos
         );
     }
+
 
     @NotNull
     private static FittingMemberInfo getFittingMemberInfo(Member member) {
@@ -113,43 +133,6 @@ public class FittingService {
         );
         return memberInfo;
     }
-
-//    public FittingResponse getFittingPageData(String email, Integer categoryId) {
-//        Member member = memberRepository.findByEmail(email)
-//                .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
-//
-//        FittingMemberInfo memberInfo = new FittingMemberInfo(
-//                member.getWeight(),
-//                member.getHeight(),
-//                member.getBodyShape()
-//        );
-//
-//        List<FittingProductInfo> productInfos = likeRepository.findByMember(member)
-//                .stream()
-//                .map(Like::getProduct)
-//                .filter(p -> categoryId == null ||
-//                        (p.getCategory() != null && p.getCategory().getCategoryId().equals(categoryId))) // 카테고리 필터링
-//                .distinct()
-//                .map(p -> {
-//                    String imgUrl = productImageRepository.findByProductAndIsThumbnailTrue(p)
-//                            .orElseThrow(() -> new RuntimeException("썸네일 이미지 없습니다."))
-//                            .getImageUrl();
-//                    Boolean best = (member.getBodyShape() == p.getBodyShape());
-//                    return new FittingProductInfo(
-//                            p.getProductId(),
-//                            p.getCategory().getCategoryId(),
-//                            p.getProductName(),
-//                            imgUrl,
-//                            best
-//                    );
-//                })
-//                .toList();
-//
-//        return new FittingResponse(
-//                memberInfo,
-//                productInfos
-//        );
-//    }
 
     @Transactional
     public BodyShape updateBodyShape(String email, BodyShapeRequest bodyShapeRequest) {
@@ -181,73 +164,55 @@ public class FittingService {
 
 
     @Transactional
-    public List<MemberClothesImage> addMemberClothesImage(
+    public MemberClothesImage addMemberClothesImage(
             String email,
-            Integer categoryId1,
-            Integer categoryId2,
-            MultipartFile myClothesImage1,
-            MultipartFile myClothesImage2
+            String name,
+            Integer categoryId,
+            MultipartFile myClothesImage
     ) {
 
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("Member not found."));
 
-        List<MemberClothesImage> savedImages = new ArrayList<>();
+        String originalFilename = myClothesImage.getOriginalFilename();
+        String uniqueFilename = UUID.randomUUID() + "_" + originalFilename;
 
-        // === 업로드 대상 목록 구성 ===
-        List<UploadTarget> uploadTargets = new ArrayList<>();
-        if (myClothesImage1 != null && categoryId1 != null) {
-            uploadTargets.add(new UploadTarget(myClothesImage1, categoryId1));
+        String s3Key = "member/" + member.getMemberId() + "/" + uniqueFilename;
+
+        try {
+            byte[] bytes = myClothesImage.getBytes();
+
+            // 1) S3 업로드
+            uploadToS3(bytes, myClothesImage.getContentType(), s3Key);
+
+            // 2) S3 URL
+            String s3Url = amazonS3.getUrl(bucketName, s3Key).toString();
+
+            // 3) Comfy 전송
+            sendToComfyServer(bytes, uniqueFilename);
+
+            MemberClothesImage image = MemberClothesImage.builder()
+                    .member(member)
+                    .name(name)
+                    .categoryId(categoryId)
+                    .imageUrl(s3Url)
+                    // memberClothesId 아직 없음
+                    .build();
+
+            memberClothesImageRepository.save(image);
+
+
+            String memberClothesId = "x" + image.getImageId();
+            image.setMemberClothesId(memberClothesId);
+
+            // 업데이트 저장
+            memberClothesImageRepository.save(image);
+
+            return image;
+
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 처리 실패: " + originalFilename, e);
         }
-        if (myClothesImage2 != null && categoryId2 != null) {
-            uploadTargets.add(new UploadTarget(myClothesImage2, categoryId2));
-        }
-
-        if (uploadTargets.isEmpty()) {
-            throw new IllegalArgumentException("업로드할 이미지/카테고리가 없습니다.");
-        }
-
-        // === 각 이미지 업로드 처리 ===
-        for (UploadTarget target : uploadTargets) {
-            MultipartFile file = target.file();
-            Integer categoryId = target.categoryId();
-
-            String originalFilename = file.getOriginalFilename();
-            String uniqueFilename = UUID.randomUUID() + "_" + originalFilename;
-
-            String s3Key = "member/" + member.getMemberId() + "/" + uniqueFilename;
-
-            try {
-                // 1. ByteArray 복사
-                byte[] bytes = file.getBytes();
-
-                // 2. S3 업로드
-                uploadToS3(bytes, file.getContentType(), s3Key);
-
-                // 3. S3 URL 생성
-                String s3Url = amazonS3.getUrl(bucketName, s3Key).toString();
-
-                // 4. Comfy 전송
-                sendToComfyServer(bytes, uniqueFilename);
-
-                // 5. DB 저장
-                MemberClothesImage image = MemberClothesImage.builder()
-                        .member(member)
-                        .categoryId(categoryId)
-                        .imageUrl(s3Url)
-                        .createdAt(LocalDateTime.now())
-                        .build();
-
-                savedImages.add(memberClothesImageRepository.save(image));
-
-                System.out.println("업로드 완료 → S3 URL: " + s3Url);
-
-            } catch (IOException e) {
-                throw new RuntimeException("이미지 처리 실패: " + originalFilename, e);
-            }
-        }
-
-        return savedImages;
     }
 
 
@@ -266,6 +231,30 @@ public class FittingService {
         }
     }
 
+    @Transactional
+    public void deleteMemberClothesImage(String email, String memberClothesId) {
+
+        // 1) Member 조회
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("해당 회원이 존재하지 않습니다."));
+
+        // 2) 이미지 조회 + 본인 소유인지 검증
+        MemberClothesImage image = memberClothesImageRepository
+                .findByMemberAndMemberClothesId(member, memberClothesId)
+                .orElseThrow(() -> new IllegalStateException("해당 옷 이미지가 존재하지 않거나 권한이 없습니다."));
+
+        // 3) S3 삭제
+        String imageUrl = image.getImageUrl();
+        String s3Key = extractS3KeyFromUrl(imageUrl);
+        amazonS3.deleteObject(bucketName, s3Key);
+
+        // 4) DB 삭제
+        memberClothesImageRepository.delete(image);
+    }
+    private String extractS3KeyFromUrl(String imageUrl) {
+        // URL 예: https://tryonx.s3.ap-northeast-2.amazonaws.com/member/2/abcd.png
+        return imageUrl.substring(imageUrl.indexOf("member/"));
+    }
 
     /**
      * Comfy 서버로 이미지 전달

@@ -10,4 +10,5 @@ import java.util.List;
 public class FittingResponse {
     private FittingMemberInfo memberInfo;
     private List<FittingProductInfo> productInfos;
+    private List<CustomClothesInfo> customClothesInfos;
 }
