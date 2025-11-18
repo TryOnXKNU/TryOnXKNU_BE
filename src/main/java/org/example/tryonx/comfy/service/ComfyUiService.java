@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.fitting.domain.ProductFitting;
 import org.example.tryonx.fitting.repository.ProductFittingRepository;
+import org.example.tryonx.image.domain.MemberClothesImage;
+import org.example.tryonx.image.repository.MemberClothesImageRepository;
 import org.example.tryonx.image.repository.ProductImageRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
@@ -39,6 +41,7 @@ public class ComfyUiService {
     private final MemberRepository memberRepository;
     private final ProductFittingRepository productFittingRepository;
     private final AmazonS3 amazonS3;
+    private final MemberClothesImageRepository memberClothesImageRepository;
 
     @Value("${ngrok.url}")
     private String baseUrl;
@@ -342,9 +345,301 @@ public class ComfyUiService {
         downloadImageToS3(fileName);
         return fileName;
     }
+    public String executeFittingMyClothesFlow(String email, Integer myClothesId1, Integer myClothesId2) throws IOException, InterruptedException {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+        BodyShape memberBodyShape = member.getBodyShape();
+        String model = null;
+
+        String prompt = null;
+        String prompt1 = null;
+        String prompt2 = null;
+
+        String imageName1 = null;
+        String imageName2 = null;
+
+        String defaultPrompt = null;
+        String requestPrompt = null;
+
+        String defaultImageName = null;
+        String requestImageName = null;
+
+        String fileNameOnly1 = null;
+        String fileNameOnly2 = null;
+
+        String workflowJson = null;
+
+        if (myClothesId1 == null && myClothesId2 == null)
+        {
+            throw new IllegalArgumentException("최소 1개 이상의 상품을 선택해야 합니다.");
+        }
+        else if (myClothesId1 != null && myClothesId2 == null)
+        {
+            MemberClothesImage memberClothesImage = memberClothesImageRepository.findById(myClothesId1)
+                    .orElseThrow(()->new IllegalArgumentException("등록되지 않은 의상 이미지 입니다."));
+
+            int categoryId = memberClothesImage.getCategoryId();
+
+            switch (categoryId) {
+                case 1:
+                    prompt = "short t-shirts";
+                    model = "STOPA.png";
+                    break;
+                case 2:
+                    prompt = "long t-shirts";
+                    model = "LSTOPA.png";
+                    break;
+                case 3:
+                    prompt = "gray t-shirts";
+                    model = "LWTOPA.png";
+                    break;
+                case 4:
+                    prompt = "short pants";
+                    model = "SPANTSA.png";
+                    break;
+                case 5:
+                    prompt = "long pants";
+                    model = "LSPANTSB.png";
+                    break;
+                case 6:
+                    prompt = "long wide pants";
+                    model = "LWPANTSC.png";
+                    break;
+                case 7:
+                    prompt = "cardigan";
+                    model = "SOUTERWEARB.png";
+                    break;
+                case 8:
+                    prompt = "cardigan";
+                    model = "LOUTERWEARB.png";
+                    break;
+                case 9:
+                    prompt = "short sleeve short dress";
+                    model = "SSDRESS.png";
+                    break;
+                case 10:
+                    prompt = "short sleeve long dress";
+                    model = "SLDRESS.png";
+                    break;
+                case 11:
+                    prompt = "long sleeve shore dress";
+                    model = "LSDRESS.png";
+                    break;
+                case 12:
+                    prompt = "long sleeve long dress";
+                    model = "LLDRESS.png";
+                    break;
+                case 13:
+                    prompt = "short skirt";
+                    model = "SSKIRTB.png";
+                    break;
+                case 14:
+                    prompt = "long skirt";
+                    model = "LSKIRTB.png";
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown categoryId: " + categoryId);
+            }
+
+            if (memberBodyShape == BodyShape.STRAIGHT) {
+                model = "1" + model;
+            } else if (memberBodyShape == BodyShape.NATURAL) {
+                model = "2" + model;
+            } else if (memberBodyShape == BodyShape.WAVE) {
+                model = "3" + model;
+            }
+
+
+            String imgName = memberClothesImage.getImageUrl();
+            imgName = stripPrefix(imgName, getMyCLothesPrefix(member.getMemberId()));
+
+            workflowJson = loadWorkflowFromResource("v2_one_person_one_clothes.json")
+                    .replace("{{imageName}}", imgName)
+                    .replace("{{modelImage}}", model)
+                    .replace("{{prompt}}", prompt);
+        }
+        else if (myClothesId1 != null && myClothesId2 != null)
+        {
+            MemberClothesImage memberClothesImage1 = memberClothesImageRepository.findById(myClothesId1)
+                    .orElseThrow(()->new IllegalArgumentException("등록되지 않은 의상 이미지 입니다."));
+            MemberClothesImage memberClothesImage2 = memberClothesImageRepository.findById(myClothesId2)
+                    .orElseThrow(()->new IllegalArgumentException("등록되지 않은 의상 이미지 입니다."));
+
+            Integer categoryId1 = memberClothesImage1.getCategoryId();
+            Integer categoryId2 = memberClothesImage2.getCategoryId();
+
+            // 동일 카테고리 / 드레스 / 그룹 중복 예외처리
+            if (categoryId1.equals(categoryId2)) {
+                throw new RuntimeException("같은 카테고리는 선택할 수 없습니다. ("
+                        + categoryId1 + " & " + categoryId2 + ")");
+            }
+
+            Set<Integer> dress = Set.of(9, 10, 11, 12);
+            if (dress.contains(categoryId1) || dress.contains(categoryId2)) {
+                throw new RuntimeException("드레스는 단일착용만 가능합니다. ("
+                        + categoryId1 + " & " + categoryId2 + ")");
+            }
+
+            Set<Integer> group1 = Set.of(1, 2, 3, 7, 8);
+            Set<Integer> group2 = Set.of(4, 5, 6, 13, 14);
+            if (group1.contains(categoryId1) && group1.contains(categoryId2)) {
+                throw new RuntimeException("같은 그룹(상의 그룹)에서 두 개를 선택할 수 없습니다. ("
+                        + categoryId1 + " & " + categoryId2 + ")");
+            }
+            if (group2.contains(categoryId1) && group2.contains(categoryId2)) {
+                throw new RuntimeException("같은 그룹(하의 그룹)에서 두 개를 선택할 수 없습니다. ("
+                        + categoryId1 + " & " + categoryId2 + ")");
+            }
+
+            // 하의(4,5,6,13.14) → prompt1 / 나머지 → prompt2 로 지정
+            Set<Integer> bottomCategories = Set.of(4, 5, 6, 13, 14);
+            MemberClothesImage prompt1Clothes;
+            MemberClothesImage prompt2Clothes;
+
+            if (bottomCategories.contains(categoryId1)) {
+                prompt1Clothes = memberClothesImage1;
+                prompt2Clothes = memberClothesImage2;
+            } else if (bottomCategories.contains(categoryId2)) {
+                prompt1Clothes = memberClothesImage2;
+                prompt2Clothes = memberClothesImage1;
+            } else {
+                // 둘 다 하의가 아닌 경우 기존 순서 유지
+                prompt1Clothes = memberClothesImage1;
+                prompt2Clothes = memberClothesImage2;
+            }
+
+            // prompt1 설정
+            prompt1 = switch (prompt1Clothes.getCategoryId()) {
+                case 1 -> "short t-shirts";
+                case 2 -> "long t-shirts";
+                case 3 -> "gray t-shirts";
+                case 4 -> "short pants";
+                case 5 -> "long pants";
+                case 6 -> "long wide pants";
+                case 7, 8 -> "cardigan";
+                case 9 -> "short sleeve short dress";
+                case 10 -> "short sleeve long dress";
+                case 11 -> "long sleeve shore dress";
+                case 12 -> "long sleeve long dress";
+                case 13 -> "short skirt";
+                case 14 -> "long skirt";
+                default -> "clothes";
+            };
+
+            // prompt2 설정
+            prompt2 = switch (prompt2Clothes.getCategoryId()) {
+                case 1 -> "short t-shirts";
+                case 2 -> "long t-shirts";
+                case 3 -> "gray t-shirts";
+                case 4 -> "short pants";
+                case 5 -> "long pants";
+                case 6 -> "long wide pants";
+                case 7, 8 -> "cardigan";
+                case 9 -> "short sleeve short dress";
+                case 10 -> "short sleeve long dress";
+                case 11 -> "long sleeve shore dress";
+                case 12 -> "long sleeve long dress";
+                case 13 -> "short skirt";
+                case 14 -> "long skirt";
+                default -> "clothes";
+            };
+
+            // model 설정
+            int first = Math.min(categoryId1, categoryId2);
+            int second = Math.max(categoryId1, categoryId2);
+
+            if (first == 1 && second == 4) model = "STOPC.png";
+            else if (first == 1 && second == 5) model = "STOPA.png";
+            else if (first == 1 && second == 6) model = "STOPB.png";
+            else if (first == 1 && second == 13) model = "SSKIRTA.png";
+            else if (first == 1 && second == 14) model = "LSKIRTA.png";
+
+            else if (first == 2 && second == 4) model = "LSTOPC.png";
+            else if (first == 2 && second == 5) model = "LSTOPA.png";
+            else if (first == 2 && second == 6) model = "LSTOPB.png";
+            else if (first == 2 && second == 13) model = "SSKIRTB.png";
+            else if (first == 2 && second == 14) model = "LSKIRTB.png";
+
+            else if (first == 3 && second == 4) model = "LWTOPC.png";
+            else if (first == 3 && second == 5) model = "LWTOPA.png";
+            else if (first == 3 && second == 6) model = "LWTOPB.png";
+            else if (first == 3 && second == 13) model = "SSKIRTC.png";
+            else if (first == 3 && second == 14) model = "LSKIRTC.png";
+
+            else if (first == 4 && (second == 7)) model = "SOUTERWEARA.png";
+            else if (first == 5 && (second == 7)) model = "SOUTERWEARB.png";
+            else if (first == 6 && (second == 7)) model = "SOUTERWEARC.png";
+
+            else if (first == 4 && (second == 8)) model = "LOUTERWEARA.png";
+            else if (first == 5 && (second == 8)) model = "LOUTERWEARB.png";
+            else if (first == 6 && (second == 8)) model = "LOUTERWEARC.png";
+
+            else if (first == 7 && (second == 13)) model = "SOUTERWEARE.png";
+            else if (first == 8 && (second == 13)) model = "LOUTERWEARE.png";
+
+            else if (first == 7 && (second == 14)) model = "SOUTERWEARD.png";
+            else if (first == 8 && (second == 14)) model = "LOUTERWEARD.png";
+
+            if (model != null) {
+                if (memberBodyShape == BodyShape.STRAIGHT) {
+                    model = "1" + model;
+                } else if (memberBodyShape == BodyShape.NATURAL) {
+                    model = "2" + model;
+                } else if (memberBodyShape == BodyShape.WAVE) {
+                    model = "3" + model;
+                }
+            }
+
+            // prompt1, prompt2 순서에 맞게 이미지 매칭
+            String imageNamePrompt1 = prompt1Clothes.getImageUrl();
+            String imageNamePrompt2 = prompt2Clothes.getImageUrl();
+
+            fileNameOnly1 = stripPrefix(imageNamePrompt1, getMyCLothesPrefix(member.getMemberId()));
+            fileNameOnly2 = stripPrefix(imageNamePrompt2, getMyCLothesPrefix(member.getMemberId()));
+
+            // 워크플로우 JSON 치환
+            workflowJson = loadWorkflowFromResource("v2_one_person_two_clothes.json")
+                    .replace("{{modelImage}}", model)
+                    .replace("{{imageName1}}", fileNameOnly1)
+                    .replace("{{imageName2}}", fileNameOnly2)
+                    .replace("{{prompt1}}", prompt1)
+                    .replace("{{prompt2}}", prompt2);
+        }
+        else
+        {
+            throw new IllegalArgumentException("상품 선택 옵션이 잘못되었습니다.");
+        }
+
+        // Google Drive 새로고침
+//        refreshGoogleDrive();
+
+        // 1. 워크플로우 실행
+        String promptId = sendWorkflow(workflowJson);
+
+        // 2. 완료 대기
+        waitUntilComplete(promptId);
+
+        List<String> generatedOutputImageFilenameList = getGeneratedOutputImageFilenameList(promptId);
+
+        String fileName = generatedOutputImageFilenameList.stream()
+                .max(Comparator.comparingInt(name -> {
+                    // "ComfyUI_숫자_.png" 에서 숫자만 추출
+                    int start = name.indexOf('_') + 1;
+                    int end = name.lastIndexOf('_');
+                    return Integer.parseInt(name.substring(start, end));
+                }))
+                .orElseThrow(() -> new IllegalArgumentException("파일명이 없습니다."));
+
+        downloadImageToS3(fileName);
+        return fileName;
+    }
 
     private String getProductPrefix(Product product) {
         return "https://tryonx.s3.ap-northeast-2.amazonaws.com/product/" + product.getProductCode() + "/";
+    }
+
+    private String getMyCLothesPrefix(Long memberId) {
+        return "https://tryonx.s3.ap-northeast-2.amazonaws.com/member/" + memberId + "/";
     }
 
     private String stripPrefix(String fileName, String prefix) {
