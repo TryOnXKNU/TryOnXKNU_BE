@@ -2,9 +2,13 @@ package org.example.tryonx.member.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.example.tryonx.fitting.domain.FittingImage;
+import org.example.tryonx.fitting.repository.FittingImageRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.domain.Role;
 import org.example.tryonx.member.dto.*;
+import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.member.service.MemberService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,14 +18,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
 @Tag(name = "Users API", description = "회원 API")
 public class MemberController {
     private final MemberService memberService;
-    public MemberController(MemberService memberService) {
-        this.memberService = memberService;
-    }
+    private final MemberRepository memberRepository;
+    private final FittingImageRepository fittingImageRepository;
 
     @GetMapping
     @Operation(summary = "마이페이지")
@@ -122,6 +128,21 @@ public class MemberController {
         String email = userDetails.getUsername();
         memberService.deleteMember(email);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/my/fitting")
+    @Operation(summary = "AI 피팅 이미지 보기")
+    public ResponseEntity<List<String>> getMyFittingImages(@AuthenticationPrincipal UserDetails userDetails) {
+
+        Member member = memberRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+
+        List<FittingImage> images = fittingImageRepository.findByMemberOrderByCreatedAtDesc(member);
+
+        List<String> urls = images.stream()
+                .map(FittingImage::getImageUrl)
+                .toList();
+
+        return ResponseEntity.ok(urls);
     }
 
 }
