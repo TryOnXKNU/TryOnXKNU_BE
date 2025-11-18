@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.exchange.domain.Exchange;
+import org.example.tryonx.image.domain.MemberClothesImage;
+import org.example.tryonx.image.domain.ProductImage;
 import org.example.tryonx.member.dto.UpdateMemberRequestDto;
 import org.example.tryonx.orders.order.domain.Order;
 import org.example.tryonx.orders.order.domain.OrderItem;
@@ -125,5 +127,8 @@ public class Member {
 
     @Column(nullable = true, unique = true, length = 20)
     private String memberNum;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemberClothesImage> images;
 
 }

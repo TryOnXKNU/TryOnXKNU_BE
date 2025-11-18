@@ -7,11 +7,16 @@ import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.fitting.dto.BodyShapeRequest;
 import org.example.tryonx.fitting.dto.FittingResponse;
 import org.example.tryonx.fitting.service.FittingService;
+import org.example.tryonx.image.domain.MemberClothesImage;
 import org.example.tryonx.member.service.MemberService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/fitting")
@@ -56,6 +61,28 @@ public class FittingController {
     public ResponseEntity<String> generateMyFitting(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Integer productId1, @RequestParam(required = false) Integer productId2) throws Exception {
         String email = userDetails.getUsername();
         String filename = comfyUiService.executeFittingTwoClothesFlow(email, productId1, productId2);
+        return ResponseEntity.ok("https://tryonx.s3.ap-northeast-2.amazonaws.com/fitting/fittingRoom/" + filename);
+    }
+
+    @PostMapping(value = "/try-on/custom/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "CUSTOM 피팅 의상 등록")
+    public ResponseEntity<?> addMyClothes(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam Integer categoryId1,
+            @RequestParam(required = false) Integer categoryId2,
+            @RequestParam("myClothesImage1") MultipartFile myClothesImage1,
+            @RequestParam(value = "myClothesImage2", required = false) MultipartFile myClothesImage2
+    )throws Exception{
+        String email = userDetails.getUsername();
+        List<MemberClothesImage> memberClothesImages = fittingService.addMemberClothesImage(email, categoryId1, categoryId2, myClothesImage1, myClothesImage2);
+        return ResponseEntity.ok(memberClothesImages);
+    }
+
+    @PostMapping("/try-on/custom")
+    @Operation(summary = "CUSTOM 피팅")
+    public ResponseEntity<String> generateMyClothesFitting(@AuthenticationPrincipal UserDetails userDetails,@RequestParam Integer myClothesId1, @RequestParam(required = false)Integer myClothesId2) throws Exception {
+        String email = userDetails.getUsername();
+        String filename = comfyUiService.executeFittingMyClothesFlow(email, myClothesId1, myClothesId2);
         return ResponseEntity.ok("https://tryonx.s3.ap-northeast-2.amazonaws.com/fitting/fittingRoom/" + filename);
     }
 }
