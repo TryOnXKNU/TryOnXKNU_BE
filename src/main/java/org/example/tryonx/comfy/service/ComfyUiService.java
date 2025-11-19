@@ -30,10 +30,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RequiredArgsConstructor
 @Service
 public class ComfyUiService {
+
+    private static final Logger log = LoggerFactory.getLogger(ComfyUiService.class);
 
     private final RestTemplate restTemplate;
     private final ProductImageRepository productImageRepository;
@@ -325,10 +329,14 @@ public class ComfyUiService {
         if (raw == null || raw.isBlank()) return null;
 
         raw = raw.trim();
-        if (raw.startsWith("x") || raw.startsWith("X"))
-            raw = raw.substring(1);
+        if (raw.startsWith("x") || raw.startsWith("X")) raw = raw.substring(1);
 
-        return Integer.parseInt(raw);
+        try {
+            return Integer.parseInt(raw);
+        } catch (NumberFormatException e) {
+            log.warn("parseMemberClothesId: invalid memberClothesId='{}' -> returning null", raw);
+            return null;
+        }
     }
 
 

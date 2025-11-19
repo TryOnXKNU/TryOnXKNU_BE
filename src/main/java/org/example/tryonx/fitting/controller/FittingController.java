@@ -102,35 +102,42 @@ public class FittingController {
             @RequestParam(required = false) String memberClothesId1,
             @RequestParam(required = false) String memberClothesId2
     ) throws Exception {
-        if (productId1 == null &&
-                productId2 == null &&
-                (memberClothesId1 == null || memberClothesId1.isBlank()) &&
-                (memberClothesId2 == null || memberClothesId2.isBlank())) {
+        try {
+            if (productId1 == null &&
+                    productId2 == null &&
+                    (memberClothesId1 == null || memberClothesId1.isBlank()) &&
+                    (memberClothesId2 == null || memberClothesId2.isBlank())) {
 
-            throw new IllegalArgumentException(
-                    "productId1, productId2, memberClothesId1, memberClothesId2 중 최소 1개는 필요합니다."
+                return ResponseEntity.badRequest().body("productId1, productId2, memberClothesId1, memberClothesId2 중 최소 1개는 필요합니다.");
+            }
+
+            String email = userDetails.getUsername();
+            Member member = memberRepository.findByEmail(email).orElseThrow();
+
+            // 1) ComfyUI 실행 → 파일명 얻기
+            String filename = comfyUiService.executeFittingUnified(
+                    email,
+                    productId1,
+                    productId2,
+                    memberClothesId1,
+                    memberClothesId2
             );
+
+            // 2) URL 만들기
+            String imageUrl = "https://tryonx.s3.ap-northeast-2.amazonaws.com/fitting/fittingRoom/" + filename;
+
+            // 3) DB 저장
+            fittingImageService.saveFittingImage(member, imageUrl, productId1, productId2);
+
+            // 4) 응답
+            return ResponseEntity.ok(imageUrl);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid parameters: " + e.getMessage());
+        } catch (Exception e) {
+            // 로그 출력 후 500으로 응답
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("서버 오류: " + e.getMessage());
         }
-        String email = userDetails.getUsername();
-        Member member = memberRepository.findByEmail(email).orElseThrow();
-
-        // 1) ComfyUI 실행 → 파일명 얻기
-        String filename = comfyUiService.executeFittingUnified(
-                email,
-                productId1,
-                productId2,
-                memberClothesId1,
-                memberClothesId2
-        );
-
-        // 2) URL 만들기
-        String imageUrl = "https://tryonx.s3.ap-northeast-2.amazonaws.com/fitting/fittingRoom/" + filename;
-
-        // 3) DB 저장
-        fittingImageService.saveFittingImage(member, imageUrl, productId1, productId2);
-
-        // 4) 응답
-        return ResponseEntity.ok(imageUrl);
     }
 
 
