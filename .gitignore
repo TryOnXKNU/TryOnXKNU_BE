@@ -1,4 +1,5 @@
 application.properties
+AuthKey_6JQR8MS44G.p8
 dump.rdb
 
 HELP.md
@@ -53,3 +54,4 @@ upload/profile/*
 
 upload/fitting/*
 !upload/fitting/.gitkeep
+

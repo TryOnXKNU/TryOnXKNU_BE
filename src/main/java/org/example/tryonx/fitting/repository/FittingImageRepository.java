@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface FittingImageRepository extends JpaRepository<FittingImage, Long> {
     List<FittingImage> findByMemberOrderByCreatedAtDesc(Member member);
+    void deleteAllByMember(Member member);
 }

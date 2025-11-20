@@ -17,7 +17,6 @@ public class MemberInfoDto {
     private Long memberId;
     private String nickname;
     private String phoneNumber;
-    private LocalDate birthday;
     private String address;
     private String email;
     private BodyShape bodyShape;

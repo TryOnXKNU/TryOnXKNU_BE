@@ -43,7 +43,7 @@ public class Member {
 
     private String password;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = true, unique = true, length = 100)
     private String phoneNumber;
 
     private Integer height;
@@ -52,8 +52,6 @@ public class Member {
 
     @Enumerated(EnumType.STRING)
     private BodyShape bodyShape;
-
-    private LocalDate birthDate;
 
     private String address;
 

@@ -10,6 +10,7 @@ import org.example.tryonx.ask.repository.AskRepository;
 import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.enums.BodyShape;
 import org.example.tryonx.exchange.repository.ExchangeRepository;
+import org.example.tryonx.fitting.repository.FittingImageRepository;
 import org.example.tryonx.image.repository.ReviewImageRepository;
 import org.example.tryonx.like.repository.LikeRepository;
 import org.example.tryonx.member.domain.Member;
@@ -64,6 +65,7 @@ public class MemberService {
     private final PaymentRepository paymentRepository;
     private final NotificationRepository notificationRepository;
     private final PointHistoryRepository pointHistoryRepository;
+    private final FittingImageRepository fittingImageRepository;
     private static final long EXPIRE_TIME = 3 * 60;
     private final AmazonS3 amazonS3;
 
@@ -99,7 +101,6 @@ public class MemberService {
                 .memberId(member.getMemberId())
                 .nickname(member.getNickname())
                 .phoneNumber(member.getPhoneNumber())
-                .birthday(member.getBirthDate())
                 .address(member.getAddress())
                 .email(member.getEmail())
                 .bodyShape(member.getBodyShape())
@@ -119,7 +120,6 @@ public class MemberService {
                 member.getNickname(),
                 member.getProfileUrl(),
                 member.getPhoneNumber(),
-                member.getBirthDate(),
                 member.getAddress(),
                 member.getEmail(),
                 member.getBodyShape(),
@@ -365,6 +365,7 @@ public class MemberService {
         List<org.example.tryonx.member.domain.PointHistory> pointHistories = pointHistoryRepository.findByMemberOrderByCreatedAtDesc(member);
         pointHistoryRepository.deleteAll(pointHistories);
 
+        fittingImageRepository.deleteAllByMember(member);
         // 12. 회원 삭제
         memberRepository.delete(member);
     }
