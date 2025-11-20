@@ -6,6 +6,7 @@ import org.example.tryonx.enums.BodyShape;
 @Data
 public class UpdateMemberRequestDto {
     private String nickname;
+    private String name;
 
     private String address;
 
@@ -16,4 +17,5 @@ public class UpdateMemberRequestDto {
     private Integer weight;
 
     private BodyShape bodyShape;
+    private String phoneNumber;
 }

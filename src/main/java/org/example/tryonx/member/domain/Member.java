@@ -75,6 +75,12 @@ public class Member {
     private LocalDateTime updatedAt;
 
     public void update(UpdateMemberRequestDto request){
+        if(request.getName() != null){
+            this.name = request.getName();
+        }
+        if(request.getPhoneNumber() != null){
+            this.phoneNumber = request.getPhoneNumber();
+        }
         if(request.getNickname() != null){
             this.nickname = request.getNickname();
         }
