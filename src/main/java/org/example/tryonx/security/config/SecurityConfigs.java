@@ -37,6 +37,7 @@ public class SecurityConfigs {
                         .requestMatchers(HttpMethod.POST, "/api/v1/products").hasRole("ADMIN")
                         .requestMatchers(
                         "/login",
+                                "/login/getAppleAuthUrl",
                                 "/ws/**",
                         "/index.html",
                         "/api/v1/auth/signup",
@@ -58,6 +59,8 @@ public class SecurityConfigs {
                         "/v3/api-docs/**",                 // swagger JSON endpoint
                         "/swagger-resources/**",           // swagger resource
                         "/api/v1/auth/kakao",
+                        "/api/v1/auth/apple",
+                        "/api/v1/auth/apple/code",
                         "/api/v1/main/similar-styles",
                         "/api/v1/main/popular-styles",
                         "/api/v1/products",

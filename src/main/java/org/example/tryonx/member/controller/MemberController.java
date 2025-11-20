@@ -130,6 +130,14 @@ public class MemberController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/me")
+    @Operation(summary = "회원 정보(프로필) 업데이트 (이름, 닉네임, 휴대폰, 체형, 키, 몸무게 등)")
+    public ResponseEntity<?> updateMe(@AuthenticationPrincipal UserDetails userDetails, @RequestBody org.example.tryonx.member.dto.UpdateMemberRequestDto dto) {
+        String email = userDetails.getUsername();
+        memberService.updateMember(email, dto);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/my/fitting")
     @Operation(summary = "AI 피팅 이미지 보기")
     public ResponseEntity<List<String>> getMyFittingImages(@AuthenticationPrincipal UserDetails userDetails) {

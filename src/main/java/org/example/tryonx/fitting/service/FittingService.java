@@ -19,6 +19,7 @@ import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.product.domain.Product;
 import org.example.tryonx.product.repository.ProductRepository;
 import org.jetbrains.annotations.NotNull;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -117,12 +118,15 @@ public class FittingService {
     private static FittingMemberInfo getFittingMemberInfo(Member member) {
         BodyShape bodyShape = member.getBodyShape();
         String modelImage = null;
-        if(bodyShape.equals(BodyShape.STRAIGHT))
-            modelImage = "upload/model/straight.png";
-        if(bodyShape.equals(BodyShape.WAVE))
-            modelImage = "upload/model/wave.png";
-        if(bodyShape.equals(BodyShape.NATURAL))
-            modelImage = "upload/model/natural.png";
+
+        if (bodyShape != null) {
+            if (bodyShape.equals(BodyShape.STRAIGHT))
+                modelImage = "upload/model/straight.png";
+            else if (bodyShape.equals(BodyShape.WAVE))
+                modelImage = "upload/model/wave.png";
+            else if (bodyShape.equals(BodyShape.NATURAL))
+                modelImage = "upload/model/natural.png";
+        }
 
         FittingMemberInfo memberInfo = new FittingMemberInfo(
                 member.getMemberId(),
@@ -139,7 +143,7 @@ public class FittingService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("해당 이메일의 사용자가 없습니다."));
         BodyShape bodyShape = bodyShapeRequest.bodyShape();
-        if(bodyShape != null && !member.getBodyShape().equals(bodyShape)){
+        if (bodyShape != null && !Objects.equals(member.getBodyShape(), bodyShape)) {
             member.setBodyShape(bodyShape);
             memberRepository.save(member);
         }

@@ -44,6 +44,9 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
+    // Nimbus JOSE JWT for Apple Sign In client_secret and id_token verification
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.31'
+
     implementation 'org.mariadb.jdbc:mariadb-java-client:3.3.1'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 
