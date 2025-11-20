@@ -19,8 +19,6 @@ public class MyInfoResponseDto {
 
     private String phoneNumber;
 
-    private LocalDate birthDate;
-
     private String address;
 
     private String email;

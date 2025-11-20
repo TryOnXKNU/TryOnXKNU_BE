@@ -94,7 +94,6 @@ public class AppleAuthController {
 					.nickname(nickname)
 					.profileUrl("")
 					.phoneNumber(phoneNumber)
-					.birthDate(null)
 					.address(null)
 					.socialType("APPLE")
 					.socialId(socialId)

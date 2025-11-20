@@ -52,7 +52,6 @@ public class LocalAuthService {
                 .height(dto.getHeight())
                 .weight(dto.getWeight())
                 .bodyShape(dto.getBodyShape())
-                .birthDate(dto.getBirthDate())
                 .point(0)
                 .build();
 

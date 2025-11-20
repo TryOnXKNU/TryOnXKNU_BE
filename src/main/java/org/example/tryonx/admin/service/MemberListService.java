@@ -9,6 +9,7 @@ import org.example.tryonx.admin.dto.MemberSearchRequest;
 import org.example.tryonx.admin.specification.MemberSpecification;
 import org.example.tryonx.cart.repository.CartItemRepository;
 import org.example.tryonx.exchange.repository.ExchangeRepository;
+import org.example.tryonx.fitting.repository.FittingImageRepository;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.orders.order.domain.Order;
@@ -41,6 +42,7 @@ public class MemberListService {
     private final ReviewRepository reviewRepository;
     private final ExchangeRepository exchangeRepository;
     private final ReturnRepository returnRepository;
+    private final FittingImageRepository fittingImageRepository;
 
     /* 멤버 전체 */
     @Transactional
@@ -69,7 +71,6 @@ public class MemberListService {
                 .memberId(member.getMemberId())
                 .nickname(member.getNickname())
                 .phoneNumber(member.getPhoneNumber())
-                .birthday(member.getBirthDate())
                 .address(member.getAddress())
                 .email(member.getEmail())
                 .bodyShape(member.getBodyShape())
@@ -118,7 +119,7 @@ public class MemberListService {
 
             orderRepository.delete(order);
         }
-
+        fittingImageRepository.deleteAllByMember(member);
         memberRepository.delete(member);
     }
 
