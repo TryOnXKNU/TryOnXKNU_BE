@@ -61,6 +61,7 @@ public class SecurityConfigs {
                         "/api/v1/auth/kakao",
                         "/api/v1/auth/apple",
                         "/api/v1/auth/apple/code",
+                        "/api/v1/fitting/validate",
                         "/api/v1/main/similar-styles",
                         "/api/v1/main/popular-styles",
                         "/api/v1/products",

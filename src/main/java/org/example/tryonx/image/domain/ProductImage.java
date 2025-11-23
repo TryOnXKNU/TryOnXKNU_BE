@@ -28,6 +28,7 @@ public class ProductImage {
 
     @Column(nullable = false)
     @Setter
+    @Builder.Default
     private Boolean isThumbnail = false;
 
     private LocalDateTime createdAt;
