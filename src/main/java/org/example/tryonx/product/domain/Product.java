@@ -42,7 +42,8 @@ public class Product {
     private BigDecimal price;
 
     @Column(precision = 5, scale = 2)
-    private BigDecimal discountRate = BigDecimal.ZERO;
+        @Builder.Default
+        private BigDecimal discountRate = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     private BodyShape bodyShape;
@@ -51,8 +52,9 @@ public class Product {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+        @Column(name = "created_at")
+        @Builder.Default
+        private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductItem> items;
@@ -86,10 +88,12 @@ public class Product {
                 .ifPresent(newCategory -> this.category = newCategory);
     }
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductItem> productItems = new ArrayList<>();
+        @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+        @Builder.Default
+        private List<ProductItem> productItems = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Like> likes = new ArrayList<>();
+        @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+        @Builder.Default
+        private List<Like> likes = new ArrayList<>();
 
 }

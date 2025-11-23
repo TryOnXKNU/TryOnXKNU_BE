@@ -22,12 +22,17 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/fitting")
 @Tag(name = "User AI Fitting API", description = "회원 AI 피팅 API")
 public class FittingController {
+    private static final Logger logger = LoggerFactory.getLogger(FittingController.class);
+    private static final double LOG_CONFIDENCE_THRESHOLD = 0.2;
     private final MemberService memberService;
     private final FittingService fittingService;
     private final ComfyUiService comfyUiService;
@@ -150,8 +155,39 @@ public class FittingController {
             @RequestParam("myClothesImage1") MultipartFile myClothesImage
     ) {
         String email = userDetails.getUsername();
-        MemberClothesImage memberClothesImage = fittingService.addMemberClothesImage(email, name, categoryId, myClothesImage);
-        return ResponseEntity.ok(memberClothesImage);
+        try {
+            // 서버 측 유효성 검사: 이미지를 분석하고 의류가 아닌 경우 거부
+            byte[] bytes = myClothesImage.getBytes();
+            Map<String, Object> analysis = org.example.tryonx.fitting.service.ImageValidationUtil.analyze(bytes);
+            if (analysis.containsKey("error")) {
+                logger.info("Image validation error for user={}, file={} size={} -> {}", email, myClothesImage.getOriginalFilename(), myClothesImage.getSize(), analysis);
+                return ResponseEntity.badRequest().body(analysis);
+            }
+            boolean isClothing = Boolean.TRUE.equals(analysis.get("isClothing"));
+            double confidence = 0.0;
+            try {
+                Object cf = analysis.get("confidence");
+                if (cf instanceof Number) confidence = ((Number) cf).doubleValue();
+                else if (cf instanceof String) confidence = Double.parseDouble((String) cf);
+            } catch (Exception ignored) {}
+
+            // 의류가 아니거나 신뢰도가 임계값 미만인 경우 WARN 로그를, 그렇지 않은 경우 INFO 로그를 남깁니다.
+            if (!isClothing || confidence < LOG_CONFIDENCE_THRESHOLD) {
+                logger.warn("Image validation for user={}, file={} size={} -> isClothing={} confidence={} analysis={}", email, myClothesImage.getOriginalFilename(), myClothesImage.getSize(), isClothing, confidence, analysis);
+            } else {
+                logger.info("Image validation for user={}, file={} size={} -> isClothing={} confidence={} analysis={}", email, myClothesImage.getOriginalFilename(), myClothesImage.getSize(), isClothing, confidence, analysis);
+            }
+
+            if (!isClothing) {
+                return ResponseEntity.status(400).body(analysis);
+            }
+
+            MemberClothesImage memberClothesImage = fittingService.addMemberClothesImage(email, name, categoryId, myClothesImage);
+            return ResponseEntity.ok(memberClothesImage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("서버 오류: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/custom/delete")

@@ -43,12 +43,15 @@ public class OrderItem {
     private BigDecimal price;
 
     @Column(precision = 5, scale = 2)
+    @Builder.Default
     private BigDecimal discountRate = BigDecimal.ZERO;
 
     @Column
+    @Builder.Default
     private Integer usedPoints = 0;
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private AfterServiceStatus afterServiceStatus = AfterServiceStatus.NONE;
 
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.REMOVE, orphanRemoval = true)

@@ -33,6 +33,7 @@ public class ProductItem {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Setter
+    @Builder.Default
     private ProductStatus status = ProductStatus.SOLDOUT;
 
     @OneToOne(mappedBy = "productItem", cascade = CascadeType.ALL, orphanRemoval = true)
