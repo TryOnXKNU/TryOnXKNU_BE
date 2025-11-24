@@ -19,4 +19,5 @@ public interface MemberRepository extends JpaRepository<Member, Long>, JpaSpecif
     List<Member> findByCreatedAtAfter(LocalDateTime dateTime);
     long countByCreatedAtAfter(LocalDateTime dateTime);
     long count();
+    boolean existsByPhoneNumberAndMemberIdNot(String phoneNumber, Long memberId);
 }
