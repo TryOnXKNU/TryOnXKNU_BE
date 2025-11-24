@@ -1,5 +1,6 @@
 package org.example.tryonx.orders.order.repository;
 
+import org.example.tryonx.enums.DeliveryStatus;
 import org.example.tryonx.enums.OrderStatus;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.orders.order.domain.Order;
@@ -20,5 +21,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 //    List<Order> findByStatusAndOrderedAtBetween(OrderStatus status, LocalDateTime start, LocalDateTime end);
     List<Order> findByStatusInAndOrderedAtBetween(List<OrderStatus> statuses, LocalDateTime start, LocalDateTime end);
     List<Order> findByStatusIn(List<OrderStatus> statuses);
+    List<Order> findByDeliveryStatus(DeliveryStatus deliveryStatus);
 
 }
