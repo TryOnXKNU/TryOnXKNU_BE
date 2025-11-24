@@ -233,20 +233,20 @@ public class OrderService {
                     PointHistory.use(member, usedPoints, "[" + productSummary + "] 주문 결제 중 적립금 사용으로 인한 차감"));
         }
 
-        int savePoints = 0;
-        if(usedPoints == 0){
-            savePoints = savedOrder.getFinalAmount()
-                    .multiply(BigDecimal.valueOf(0.01))
-                    .setScale(0, RoundingMode.DOWN)
-                    .intValue();
-            member.savePoint(savePoints);
-            memberRepository.save(member);
-        }
-
-        if (savePoints > 0) {
-            pointHistoryRepository.save(
-                    PointHistory.earn(member, savePoints, "[" + productSummary + "] 주문 적립 적립금 지급"));
-        }
+//        int savePoints = 0;
+//        if(usedPoints == 0){
+//            savePoints = savedOrder.getFinalAmount()
+//                    .multiply(BigDecimal.valueOf(0.01))
+//                    .setScale(0, RoundingMode.DOWN)
+//                    .intValue();
+//            member.savePoint(savePoints);
+//            memberRepository.save(member);
+//        }
+//
+//        if (savePoints > 0) {
+//            pointHistoryRepository.save(
+//                    PointHistory.earn(member, savePoints, "[" + productSummary + "] 주문 적립 적립금 지급"));
+//        }
 
         Notification notification = Notification.builder()
                 .member(member)
