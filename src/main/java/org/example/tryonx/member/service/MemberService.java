@@ -196,6 +196,11 @@ public class MemberService {
             return; // 비어 있으면 수정하지 않음
         }
 
+        // 중복 체크 (본인 제외)
+        if (memberRepository.existsByPhoneNumberAndMemberIdNot(phoneNumber, member.getMemberId())) {
+            throw new IllegalArgumentException("이미 사용 중인 전화번호입니다.");
+        }
+
         member.setPhoneNumber(phoneNumber);
         memberRepository.save(member);
     }
