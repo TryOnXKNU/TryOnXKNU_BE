@@ -57,6 +57,13 @@ public class LocalAuthController {
         return ResponseEntity.ok().body(available);
     }
 
+    @GetMapping("/validate")
+    @Operation(summary = "액세스 토큰 유효성 검사(간단)")
+    public ResponseEntity<?> validateToken() {
+        // JwtAuthFilter가 인증 정보를 넣어주므로, 이 엔드포인트가 호출되면 인증이 통과된 것으로 간주
+        return ResponseEntity.ok().body("ok");
+    }
+
     @PostMapping("/find-id")
     @Operation(summary = "아이디 찾기")
     public ResponseEntity<?> findUserId(@RequestBody FindUserIdRequest findUserIdRequest) {
