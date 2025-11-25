@@ -1534,7 +1534,7 @@
     },
     "753": {
       "inputs": {
-        "lora_name": "body_type_lora-9.safetensors",
+        "lora_name": "body_type_lora-10.safetensors",
         "strength_model": 1,
         "strength_clip": 1,
         "model": [

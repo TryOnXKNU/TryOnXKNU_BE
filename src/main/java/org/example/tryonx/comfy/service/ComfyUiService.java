@@ -53,9 +53,11 @@ public class ComfyUiService {
     private String bucket;
 
     private enum BodySize {
-        SLIM,   // 마름
-        NORMAL, // 보통
-        CHUBBY  // 뚱뚱
+        UNDERWEIGHT,  // 완전 마른
+        SLIM,         // 마른
+        NORMAL,       // 정상
+        OVERWEIGHT,   // 통통한
+        OBESE         // 뚱뚱한
     }
 
     // =============================
@@ -137,16 +139,25 @@ public class ComfyUiService {
         String weightBody = null;
 
         switch (bodySize) {
+            case UNDERWEIGHT -> {
+                workflowFile = "lora_one_person_one_clothes.json";
+                weightBody = "underweight_body";
+            }
             case SLIM -> {
-                workflowFile = "v2_one_person_one_clothes.json"; // 기존 로직
+                workflowFile = "lora_one_person_one_clothes.json";
+                weightBody = "slim_body";
             }
             case NORMAL -> {
                 workflowFile = "lora_one_person_one_clothes.json";
                 weightBody = "normal_body";
             }
-            case CHUBBY -> {
+            case OVERWEIGHT -> {
                 workflowFile = "lora_one_person_one_clothes.json";
-                weightBody = "fat_body";
+                weightBody = "overweight_body";
+            }
+            case OBESE -> {
+                workflowFile = "lora_one_person_one_clothes.json";
+                weightBody = "obese_body";
             }
             default -> throw new IllegalStateException("Unexpected value: " + bodySize);
         }
@@ -244,19 +255,29 @@ public class ComfyUiService {
         String weightBody = null;
 
         switch (bodySize) {
+            case UNDERWEIGHT -> {
+                workflowFile = "lora_one_person_two_clothes.json";
+                weightBody = "underweight_body";
+            }
             case SLIM -> {
-                workflowFile = "v2_one_person_two_clothes.json"; // 기존 로직
+                workflowFile = "lora_one_person_two_clothes.json";
+                weightBody = "slim_body";
             }
             case NORMAL -> {
                 workflowFile = "lora_one_person_two_clothes.json";
                 weightBody = "normal_body";
             }
-            case CHUBBY -> {
+            case OVERWEIGHT -> {
                 workflowFile = "lora_one_person_two_clothes.json";
-                weightBody = "fat_body";
+                weightBody = "overweight_body";
+            }
+            case OBESE -> {
+                workflowFile = "lora_one_person_two_clothes.json";
+                weightBody = "obese_body";
             }
             default -> throw new IllegalStateException("Unexpected value: " + bodySize);
         }
+
 
         String workflowJson = loadWorkflowFromResource(workflowFile)
                 .replace("{{modelImage}}", model)
@@ -671,12 +692,20 @@ public class ComfyUiService {
      * - 뚱뚱 : BMI >= 23.0
      * height 또는 weight 가 없으면 보통으로 처리
      */
+    /**
+     * BMI 기준 5단계 분류:
+     * UNDERWEIGHT : BMI < 18.5
+     * SLIM        : 18.5 ≤ BMI < 21.0
+     * NORMAL      : 21.0 ≤ BMI < 23.0
+     * OVERWEIGHT  : 23.0 ≤ BMI < 27.0
+     * OBESE       : BMI ≥ 27.0
+     */
     private BodySize classifyBodySize(Member member) {
         Integer h = member.getHeight();  // cm
         Integer w = member.getWeight();  // kg
 
         if (h == null || w == null || h == 0) {
-            log.warn("height/weight 가 비어있어 기본값 NORMAL 로 처리합니다. memberId={}", member.getMemberId());
+            log.warn("height/weight null → NORMAL 처리 (memberId={})", member.getMemberId());
             return BodySize.NORMAL;
         }
 
@@ -685,11 +714,15 @@ public class ComfyUiService {
 
         BodySize result;
         if (bmi < 18.5) {
+            result = BodySize.UNDERWEIGHT;
+        } else if (bmi < 21.0) {
             result = BodySize.SLIM;
         } else if (bmi < 23.0) {
             result = BodySize.NORMAL;
+        } else if (bmi < 27.0) {
+            result = BodySize.OVERWEIGHT;
         } else {
-            result = BodySize.CHUBBY;
+            result = BodySize.OBESE;
         }
 
         log.info("memberId={} height={} weight={} bmi={} -> bodySize={}",
@@ -697,4 +730,5 @@ public class ComfyUiService {
 
         return result;
     }
+
 }
