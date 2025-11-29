@@ -1,321 +1,494 @@
 <!doctype html>
 <meta charset="utf-8" />
-<title>Pose Test + Drag</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TryOnX — Camera</title>
 <style>
-    html, body {
+    :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --muted: #6b7280;
+        --accent: #0f62ff;
+        --success: #10b981
+    }
+
+    * {
+        box-sizing: border-box
+    }
+
+    html,
+    body {
         height: 100%;
         margin: 0;
-        padding: 0;
-        background: #111;
-        color: #fff;
-        font-family: system-ui, sans-serif;
+        font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial
     }
+
     body {
+        background: var(--bg);
+        color: #07203a;
         display: flex;
-        flex-direction: column;
-        height: 100vh;
-        overflow: hidden;
-    }
-    .camera-area {
-        flex: 0 0 82vh;
-        display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: #111;
-        position: relative;
+        padding: 20px
     }
-    #canvas {
-        width: 98vw;
-        max-width: 900px;
-        height: 70vh;
-        max-height: 80vh;
-        background: #000;
-        border-radius: 18px;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.3);
-        margin-top: 8px;
+
+    .wrap {
+        width: 100%;
+        max-width: 980px
     }
-    .status-bar {
-        position: absolute;
-        top: 12px;
-        left: 24px;
-        font-size: 1.1em;
-        background: rgba(0,0,0,0.5);
-        padding: 6px 16px;
+
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px
+    }
+
+    .title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #07203a
+    }
+
+    .subtitle {
+        font-size: 13px;
+        color: var(--muted)
+    }
+
+    .card {
+        background: var(--card);
         border-radius: 12px;
-        font-weight: 600;
-        letter-spacing: 1px;
+        padding: 14px;
+        box-shadow: 0 8px 32px rgba(16, 24, 40, 0.06);
+        border: 1px solid rgba(10, 20, 40, 0.04)
     }
-    .log-area {
-        flex: 1 1 0;
-        background: #181818;
-        border-top-left-radius: 24px;
-        border-top-right-radius: 24px;
-        box-shadow: 0 -2px 12px rgba(0,0,0,0.2);
-        padding: 12px 10px 20px 10px;
-        overflow-y: auto;
-        min-height: 60px;
-        max-height: 18vh;
+
+    .cameraArea {
+        position: relative;
         display: flex;
         flex-direction: column;
-        align-items: stretch;
+        align-items: center
     }
-    .log-title {
-        font-size: 1em;
-        font-weight: bold;
-        margin-bottom: 4px;
-        color: #ffe169;
-        letter-spacing: 1px;
-    }
-    #log {
-        font-size: 0.95em;
-        background: #222;
+
+    canvas {
+        width: 100%;
+        height: auto;
+        background: #000;
         border-radius: 10px;
-        padding: 8px;
-        max-height: 12vh;
-        overflow-y: auto;
-        margin-bottom: 4px;
-        color: #eee;
-        font-family: 'Fira Mono', 'Consolas', monospace;
+        display: block
     }
-    .recent-rest {
-        font-size: 0.92em;
-        color: #aaa;
-        margin-top: 2px;
-        word-break: break-all;
+
+    .status {
+        position: absolute;
+        left: 14px;
+        top: 14px;
+        background: #eef6ff;
+        color: #07203a;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-weight: 700;
+        border-left: 4px solid var(--accent)
     }
-    video { display: none; }
+
+    .badge {
+        position: absolute;
+        right: 14px;
+        top: 14px;
+        background: linear-gradient(90deg, var(--accent), #00c3a6);
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 16px;
+        box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06)
+    }
+
+    .noticeTop {
+        width: 100%;
+        max-width: 980px;
+        margin: 0 auto 12px;
+        display: flex;
+        gap: 12px;
+        flex-direction: column
+    }
+
+    .noticeTop .item {
+        background: #fff3e8;
+        border-left: 4px solid #ff8a00;
+        padding: 12px 14px;
+        border-radius: 10px;
+        color: #7a2b00;
+        font-weight: 700
+    }
+
+    .noticeTop .item.privacy {
+        background: #eefef7;
+        border-left-color: #00bfa6;
+        color: #064e3b;
+        font-weight: 600
+    }
+
+    .resultOverlay {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(2, 6, 23, 0.45);
+        z-index: 999
+    }
+
+    .resultCard {
+        background: #fff;
+        border-radius: 14px;
+        padding: 28px 32px;
+        min-width: 320px;
+        max-width: 420px;
+        text-align: center;
+        box-shadow: 0 12px 40px rgba(2, 6, 23, 0.25)
+    }
+
+    .resultTitle {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 8px
+    }
+
+    .resultType {
+        font-size: 36px;
+        font-weight: 900;
+        color: #07203a;
+        margin-bottom: 6px
+    }
+
+    .resultSub {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 14px
+    }
+
+    .resultClose {
+        background: var(--accent);
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 0;
+        cursor: pointer;
+        font-weight: 700
+    }
+
+    .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 12px
+    }
+
+    .btn {
+        background: var(--accent);
+        color: #fff;
+        padding: 9px 14px;
+        border-radius: 999px;
+        border: 0;
+        cursor: pointer;
+        font-weight: 700
+    }
+
+    .btn.ghost {
+        background: transparent;
+        border: 1px solid rgba(10, 20, 40, 0.06);
+        color: var(--muted)
+    }
+
+    .note {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 10px
+    }
+
+    .error {
+        display: none;
+        background: #fff6f4;
+        border: 1px solid #ffb4a2;
+        color: #7a2719;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 12px
+    }
+
+    video {
+        display: none
+    }
+
+    @media(max-width:760px) {
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px
+        }
+    }
 </style>
 
-<div class="camera-area">
-    <span class="status-bar" id="status">idle</span>
-    <canvas id="canvas"></canvas>
+<div class="wrap">
+    <!-- <div class="header">
+        <div>
+            <div class="title">TryOnX</div>
+            <div class="subtitle">체형 측정용 카메라 — 간단하고 빠르게</div>
+        </div>
+        <div class="subtitle">memberId: <strong id="memberIdDisp">-</strong></div>
+    </div> -->
+
+    <!-- Top Notices (prominent) -->
+    <div class="noticeTop" aria-hidden="false">
+        <div class="item">체형 인식할 수 있게 <strong>타이트한 옷</strong>을 입고 진행해주세요.</div>
+        <div class="item privacy">사진은 저장되지 않으며, 개인정보로 활용되지 않습니다.</div>
+    </div>
+
+    <div class="card">
+        <div class="cameraArea">
+            <div class="status" id="status">대기중</div>
+            <div class="badge" id="bodyBadge">—</div>
+            <canvas id="canvas"></canvas>
+            <div class="controls">
+                <button id="retryBtn" class="btn">다시 분석하기</button>
+                <div style="flex:1"></div>
+            </div>
+            <div id="cameraError" class="error" role="alert">카메라 접근에 실패했습니다. 권한·설정 확인 후 새로고침 해주세요.</div>
+        </div>
+    </div>
+
+    <!-- Final result overlay -->
+    <div id="resultOverlay" class="resultOverlay" role="dialog" aria-modal="true">
+        <div class="resultCard">
+            <div class="resultTitle">최종 체형 결과</div>
+            <div id="resultType" class="resultType">—</div>
+            <!-- <div class="resultSub">AI피팅</div> -->
+            <button id="resultClose" class="resultClose">확인</button>
+        </div>
+    </div>
 </div>
-<div class="log-area">
-    <div class="log-title">로그</div>
-    <pre id="log"></pre>
-    <div class="recent-rest">최근 결과 REST: <code>/api/v1/bodytype/latest</code></div>
-</div>
+
 <script type="module" th:inline="javascript">
-    // 서버가 주입하는 값
-    const memberId = /*[[${memberId}]]*/ null; // ← 이 줄 유지
-    // WS 스킴 자동
-    const wsScheme = location.protocol === 'https:' ? 'wss' : 'ws';
-    // openWS에서 사용: new WebSocket(`${wsScheme}://${location.host}/ws/pose`);
+    const memberId = /*[[${memberId}]]*/ null;
+    const memberIdDisp = document.getElementById('memberIdDisp');
+    if (memberIdDisp) memberIdDisp.textContent = String(memberId ?? '-');
+
     import { PoseLandmarker, FilesetResolver, DrawingUtils }
         from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
 
+    // fallback POSE connections (MediaPipe default) in case PoseLandmarker.POSE_CONNECTIONS is unavailable
+    const POSE_CONNECTIONS_FALLBACK = [
+        [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8], [9, 10], [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [15, 17], [16, 18], [17, 19], [18, 20], [11, 23], [12, 24], [23, 24], [23, 25], [24, 26], [25, 27], [26, 28], [27, 29], [28, 30], [29, 31], [30, 32], [31, 32]
+    ];
+
     const statusEl = document.getElementById('status');
+    const badgeEl = document.getElementById('bodyBadge');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const logEl = document.getElementById('log');
+    const cameraErrorEl = document.getElementById('cameraError');
+
+    const retryBtn = document.getElementById('retryBtn');
+    const resultOverlay = document.getElementById('resultOverlay');
+    const resultTypeEl = document.getElementById('resultType');
+    const resultCloseBtn = document.getElementById('resultClose');
 
     const video = document.createElement('video');
-    video.setAttribute('playsinline','');
+    video.setAttribute('playsinline', '');
     video.muted = true;
     document.body.appendChild(video);
 
-    let landmarker, ws, running = false, lastSend = 0;
+    let landmarker, ws, running = false, processing = false, lastSend = 0;
     const SEND_FPS = 5;
-    let processing = false;
+    let currentLm = [], selectedIndex = null, isDragging = false;
+    const bodyCounts = { STRAIGHT: 0, NATURAL: 0, WAVE: 0, UNKNOWN: 0 };
+    const MEASURE_MS = 10_000; let startAt = 0;
 
-    let currentLm = [];
-    let selectedIndex = null;
-    let isDragging = false;
-
-    const MEASURE_MS = 10_000;
-    let startAt = 0;
-
-    // 전역 에러/프로미스 에러도 화면에 찍기
-    window.addEventListener('error', (e) => log('window error: ' + (e?.message || e)));
-    window.addEventListener('unhandledrejection', (e) => log('unhandled: ' + (e?.reason || e)));
-
-    function stopCamera() {
-        try {
-            const stream = video.srcObject;
-            if (stream) stream.getTracks().forEach(t => t.stop());
-        } catch (e) { console.warn(e); }
-    }
-
-    function log(msg) {
-        logEl.textContent = `[${new Date().toISOString()}] ${msg}\n` + logEl.textContent;
-        console.log(msg);
-    }
+    function log(msg) { console.log(msg); }
 
     async function initModel() {
-        try {
-            statusEl.textContent = 'loading model...';
-            log('initModel: start');
-            const resolver = await FilesetResolver.forVisionTasks(
-                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
-            );
-            landmarker = await PoseLandmarker.createFromOptions(resolver, {
-                baseOptions: {
-                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
-                },
-                runningMode: "VIDEO",
-                numPoses: 1
-            });
-            statusEl.textContent = 'model loaded';
-            log('initModel: done');
-        } catch (e) {
-            log('initModel error: ' + (e?.message || e));
-            throw e;
-        }
+        statusEl.textContent = 'loading model...';
+        const resolver = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+        landmarker = await PoseLandmarker.createFromOptions(resolver, {
+            baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task" },
+            runningMode: 'VIDEO', numPoses: 1
+        });
+        statusEl.textContent = 'model loaded';
     }
 
     function openWS() {
-        const wsScheme = location.protocol === 'https:' ? 'wss' : 'ws';
-        const url = `${wsScheme}://${location.host}/ws/pose`;
-        log('WS connect: ' + url);
-        ws = new WebSocket(url);
-        ws.onopen = () => log('WS connected');
-        ws.onerror = (e) => log('WS error');
-        ws.onclose = (e) => log('WS closed: code=' + e.code);
-        ws.onmessage = (e) => { /* 서버 {"ok":true} 응답 등 필요시 log */ };
+        try { const wsScheme = location.protocol === 'https:' ? 'wss' : 'ws'; ws = new WebSocket(`${wsScheme}://${location.host}/ws/pose`); ws.onopen = () => log('WS connected'); } catch (e) { console.warn(e) }
     }
 
     async function startCamera() {
         try {
-            log('startCamera: requesting getUserMedia');
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 640, height: 480, facingMode: 'user' },
-                audio: false
-            });
-            log('startCamera: granted');
-            video.srcObject = stream;
-            await video.play();
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            running = true;
-            requestAnimationFrame(loop);
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+            video.srcObject = stream; await video.play();
+
+            // use actual video dimensions for canvas internal size for precise mapping
+            const vw = video.videoWidth || Math.round(window.innerWidth * (window.devicePixelRatio || 1));
+            const vh = video.videoHeight || Math.round(window.innerHeight * (window.devicePixelRatio || 1));
+
+            // compute display width to fit mobile viewport (respect body padding and parent width)
+            const parentWidth = canvas.parentElement ? canvas.parentElement.clientWidth : window.innerWidth;
+            const viewportPadding = 40; // body has ~20px padding each side
+            const maxViewportWidth = Math.max(0, window.innerWidth - viewportPadding);
+            const displayWidth = Math.min(parentWidth, maxViewportWidth);
+            const displayHeight = Math.round(displayWidth * (vh / vw));
+
+            // set canvas internal pixel size to video resolution and limit CSS display size to viewport
+            canvas.width = vw;
+            canvas.height = vh;
+            canvas.style.maxWidth = '100%';
+            canvas.style.width = displayWidth + 'px';
+            canvas.style.height = displayHeight + 'px';
+
+            // reset runtime flags so a restarted session actually processes frames
+            processing = false; // allow the loop to run detectForVideo again
+            lastSend = 0;
+            selectedIndex = null;
+            currentLm = [];
+
+            running = true; startAt = performance.now(); requestAnimationFrame(loop);
+            cameraErrorEl && (cameraErrorEl.style.display = 'none');
+            statusEl.textContent = '체형분석중';
         } catch (e) {
-            log('camera error: ' + (e?.name || e));
-            alert('카메라 접근 실패: 권한/HTTPS/기기 설정을 확인하세요.\n' + (e?.message || e));
+            console.error(e);
+            cameraErrorEl && (cameraErrorEl.style.display = 'block');
+            statusEl.textContent = 'camera error';
             throw e;
         }
     }
 
+    function stopCamera() { try { const s = video.srcObject; if (s) s.getTracks().forEach(t => t.stop()); } catch (e) { } running = false; statusEl.textContent = '대기중'; }
+
     function classifyBodyType(lm) {
         if (!lm || lm.length < 33) return 'UNKNOWN';
         const dist = (a, b) => Math.abs(lm[a].x - lm[b].x);
-        const shoulder = dist(11, 12);
-        const hip = dist(23, 24);
+        const shoulder = dist(11, 12); const hip = dist(23, 24);
         const waistY = (lm[23].y + lm[24].y) / 2 - 0.05;
-        const leftWaist = lm.reduce((prev, cur) =>
-            cur.x < 0.5 && Math.abs(cur.y - waistY) < Math.abs(prev.y - waistY) ? cur : prev
-        );
-        const rightWaist = lm.reduce((prev, cur) =>
-            cur.x > 0.5 && Math.abs(cur.y - waistY) < Math.abs(prev.y - waistY) ? cur : prev
-        );
-        const waist = Math.abs(leftWaist.x - rightWaist.x);
-        const avg = (shoulder + waist + hip) / 3;
-        const isClose = (a, b) => Math.abs(a - b) / avg < 0.05;
-        if (isClose(shoulder, waist) && isClose(waist, hip)) return 'STRAIGHT';
-        if (shoulder > waist && shoulder > hip) return 'NATURAL';
-        if (hip > waist && hip > shoulder) return 'WAVE';
-        return 'STRAIGHT';
+        const leftWaist = lm.reduce((prev, cur) => cur.x < 0.5 && Math.abs(cur.y - waistY) < Math.abs(prev.y - waistY) ? cur : prev);
+        const rightWaist = lm.reduce((prev, cur) => cur.x > 0.5 && Math.abs(cur.y - waistY) < Math.abs(prev.y - waistY) ? cur : prev);
+        const waist = Math.abs(leftWaist.x - rightWaist.x); const avg = (shoulder + waist + hip) / 3; const isClose = (a, b) => Math.abs(a - b) / avg < 0.05;
+        if (isClose(shoulder, waist) && isClose(waist, hip)) return 'STRAIGHT'; if (shoulder > waist && shoulder > hip) return 'NATURAL'; if (hip > waist && hip > shoulder) return 'WAVE'; return 'STRAIGHT';
     }
 
-    function updateLandmarks(newLm) {
-        if (currentLm.length === 0) {
-            currentLm = newLm.map(p => ({ ...p }));
-        } else {
-            newLm.forEach((p, i) => {
-                if (!(isDragging && selectedIndex === i)) currentLm[i] = { ...p };
-            });
-        }
-    }
+    function updateLandmarks(newLm) { if (currentLm.length === 0) currentLm = newLm.map(p => ({ ...p })); else newLm.forEach((p, i) => { if (!(isDragging && selectedIndex === i)) currentLm[i] = { ...p }; }); }
 
-    function toCanvasCoords(lmPoint) {
-        return { x: lmPoint.x * canvas.width, y: lmPoint.y * canvas.height };
-    }
+    // canvas coordinate mapping (no mirror) -> map normalized landmarks to canvas pixels
+    function toCanvasCoords(lmPoint) { return { x: lmPoint.x * canvas.width, y: lmPoint.y * canvas.height }; }
 
     canvas.addEventListener('mousedown', (e) => {
         const rect = canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-        selectedIndex = currentLm.findIndex(p => {
-            const { x, y } = toCanvasCoords(p);
-            return Math.hypot(mx - x, my - y) < 10;
-        });
+        const mx = e.clientX - rect.left; const my = e.clientY - rect.top;
+        const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
+        const ix = mx * scaleX; const iy = my * scaleY;
+        selectedIndex = currentLm.findIndex(p => { const { x, y } = toCanvasCoords(p); return Math.hypot(ix - x, iy - y) < 10; });
         if (selectedIndex !== -1) isDragging = true;
     });
     canvas.addEventListener('mousemove', (e) => {
         if (isDragging && selectedIndex !== null && selectedIndex !== -1) {
-            const rect = canvas.getBoundingClientRect();
-            const mx = e.clientX - rect.left;
-            const my = e.clientY - rect.top;
-            currentLm[selectedIndex].x = mx / canvas.width;
-            currentLm[selectedIndex].y = my / canvas.height;
+            const rect = canvas.getBoundingClientRect(); const mx = e.clientX - rect.left; const my = e.clientY - rect.top;
+            currentLm[selectedIndex].x = mx / rect.width; currentLm[selectedIndex].y = my / rect.height;
         }
     });
     canvas.addEventListener('mouseup', () => { isDragging = false; selectedIndex = null; });
     canvas.addEventListener('mouseleave', () => { isDragging = false; selectedIndex = null; });
 
     async function loop() {
-        if (!running) return;
-
-        const now = performance.now();
-        if (now - startAt >= MEASURE_MS) {
-            running = false;
-            statusEl.textContent = 'done (10s)';
-            log('measurement finished (10s)');
-            try { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); } catch(e) { console.warn(e); }
-            stopCamera();
-            return;
-        }
-
+        if (!running) return; const now = performance.now();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // draw video normally (no mirror) and then draw landmarks so they align
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
         if (!processing) {
-            processing = true;
-            const res = await landmarker.detectForVideo(video, now);
-            if (res?.landmarks?.[0]) updateLandmarks(res.landmarks[0]);
-
+            processing = true; const res = await landmarker.detectForVideo(video, now); if (res?.landmarks?.[0]) updateLandmarks(res.landmarks[0]);
             if (currentLm.length > 0) {
-                const d = new DrawingUtils(ctx);
-                d.drawLandmarks(currentLm);
-                d.drawConnectors(currentLm, PoseLandmarker.POSE_CONNECTIONS);
+                // draw landmarks and connectors in pixel coordinates so they match the flipped video
+                try {
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+                    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                    const connections = (typeof PoseLandmarker !== 'undefined' && PoseLandmarker.POSE_CONNECTIONS) ? PoseLandmarker.POSE_CONNECTIONS : POSE_CONNECTIONS_FALLBACK;
+                    // prefer DrawingUtils for consistent original appearance
+                    if (typeof DrawingUtils !== 'undefined') {
+                        try {
+                            const d = new DrawingUtils(ctx);
+                            d.drawConnectors(currentLm, connections);
+                            d.drawLandmarks(currentLm);
+                        } catch (e) {
+                            // fallback to manual draw below
+                            console.warn('DrawingUtils failed, falling back', e);
+                            for (const conn of connections) {
+                                const a = currentLm[conn[0]]; const b = currentLm[conn[1]]; if (!a || !b) continue;
+                                if ((a.visibility != null && a.visibility < 0.15) || (b.visibility != null && b.visibility < 0.15)) continue;
+                                const pa = toCanvasCoords(a); const pb = toCanvasCoords(b);
+                                ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.strokeStyle = 'rgba(15,98,255,0.95)'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.stroke();
+                            }
+                            for (const p of currentLm) { const pt = toCanvasCoords(p); ctx.beginPath(); ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 2; ctx.stroke(); }
+                        }
+                    } else {
+                        // manual draw if DrawingUtils not available
+                        for (const conn of connections) {
+                            const a = currentLm[conn[0]]; const b = currentLm[conn[1]]; if (!a || !b) continue;
+                            if ((a.visibility != null && a.visibility < 0.15) || (b.visibility != null && b.visibility < 0.15)) continue;
+                            const pa = toCanvasCoords(a); const pb = toCanvasCoords(b);
+                            ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.strokeStyle = 'rgba(15,98,255,0.95)'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.stroke();
+                        }
+                        for (const p of currentLm) { const pt = toCanvasCoords(p); ctx.beginPath(); ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 2; ctx.stroke(); }
+                        // overlay small dots to ensure consistent small landmark appearance
+                        for (const p of currentLm) { try { const pt = toCanvasCoords(p); ctx.beginPath(); ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke(); } catch (e) { } }
+                    }
+                } catch (e) { console.warn('draw landmarks failed', e); }
             }
 
             const msPerSend = 1000 / SEND_FPS;
             if (ws && ws.readyState === WebSocket.OPEN && (now - lastSend) >= msPerSend) {
                 lastSend = now;
                 const bodyType = classifyBodyType(currentLm);
-                const flat = currentLm.map(p => ({
-                    x: +p.x.toFixed(6),
-                    y: +p.y.toFixed(6),
-                    z: +(p.z ?? 0).toFixed(6),
-                    visibility: p.visibility != null ? +p.visibility.toFixed(3) : null
-                }));
-
-                ws.send(JSON.stringify({
-                    frameTs: Date.now(),
-                    memberId: memberId,
-                    bodyType,
-                    landmarks: flat
-                }));
-                log(`sent ${bodyType} (memberId=${memberId})`);
+                // local aggregation for final decision
+                if (bodyType && bodyCounts.hasOwnProperty(bodyType)) bodyCounts[bodyType]++;
+                const flat = currentLm.map(p => ({ x: +p.x.toFixed(6), y: +p.y.toFixed(6), z: +(p.z ?? 0).toFixed(6), visibility: p.visibility != null ? +p.visibility.toFixed(3) : null }));
+                try { ws.send(JSON.stringify({ frameTs: Date.now(), memberId: memberId, bodyType, landmarks: flat })); log(`sent ${bodyType} (memberId=${memberId})`); } catch (e) { }
+                if (badgeEl) badgeEl.textContent = typeof bodyType === 'string' ? bodyType : '—';
+            }
+            if (now - startAt >= MEASURE_MS) {
+                running = false;
+                // determine final body type by majority
+                let finalType = 'UNKNOWN';
+                try {
+                    const entries = Object.entries(bodyCounts).sort((a, b) => b[1] - a[1]);
+                    if (entries.length > 0 && entries[0][1] > 0) finalType = entries[0][0];
+                } catch (e) { console.warn(e); }
+                statusEl.textContent = `done: ${finalType}`;
+                if (badgeEl) badgeEl.textContent = finalType;
+                log('measurement finished (10s). final: ' + finalType + ' counts=' + JSON.stringify(bodyCounts));
+                try { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); } catch (e) { }
+                // show final result overlay (and send to RN if available)
+                if (resultTypeEl) resultTypeEl.textContent = finalType;
+                if (resultOverlay) resultOverlay.style.display = 'flex';
+                try { if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'bodyResult', bodyType: finalType })); } catch (e) { }
+                stopCamera();
+                return;
             }
             processing = false;
         }
         requestAnimationFrame(loop);
     }
 
-    // iOS/모바일에서 사용자 제스처 필요할 수 있으니 버튼 시작도 고려 가능
-    window.onload = async () => {
+    if (retryBtn) retryBtn.addEventListener('click', async () => {
         try {
-            log('page onload');
-            await initModel();
+            // reset counts and UI
+            for (const k of Object.keys(bodyCounts)) bodyCounts[k] = 0;
+            if (badgeEl) badgeEl.textContent = '—';
+            statusEl.textContent = '대기중';
+            if (!landmarker) await initModel();
             openWS();
             await startCamera();
-            startAt = performance.now();
-            statusEl.textContent = 'running';
-            log('all started');
-        } catch (e) {
-            // 이미 각 함수에서 alert/log 처리함
-        }
-    };
+        } catch (e) { console.warn(e); }
+    });
+    if (resultCloseBtn) resultCloseBtn.addEventListener('click', () => { if (resultOverlay) resultOverlay.style.display = 'none'; });
+
+    // auto start on load where possible
+    window.onload = async () => { try { await initModel(); openWS(); await startCamera(); } catch (e) { console.warn('auto start failed', e); } };
 </script>
