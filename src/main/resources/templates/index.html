@@ -361,7 +361,16 @@
         }
     }
 
-    function stopCamera() { try { const s = video.srcObject; if (s) s.getTracks().forEach(t => t.stop()); } catch (e) { } running = false; statusEl.textContent = '대기중'; }
+    function stopCamera() {
+        try {
+            const s = video.srcObject;
+            if (s) s.getTracks().forEach(t => t.stop());
+        } catch (e) { }
+        running = false;
+        if (!keepStatus) {
+            statusEl.textContent = '대기중';
+        }
+    }
 
     function classifyBodyType(lm) {
         if (!lm || lm.length < 33) return 'UNKNOWN';
@@ -460,7 +469,7 @@
                     const entries = Object.entries(bodyCounts).sort((a, b) => b[1] - a[1]);
                     if (entries.length > 0 && entries[0][1] > 0) finalType = entries[0][0];
                 } catch (e) { console.warn(e); }
-                statusEl.textContent = `done: ${finalType}`;
+                statusEl.textContent = '측정 완료';
                 if (badgeEl) badgeEl.textContent = finalType;
                 log('measurement finished (10s). final: ' + finalType + ' counts=' + JSON.stringify(bodyCounts));
                 try { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); } catch (e) { }
@@ -468,7 +477,7 @@
                 if (resultTypeEl) resultTypeEl.textContent = finalType;
                 if (resultOverlay) resultOverlay.style.display = 'flex';
                 try { if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'bodyResult', bodyType: finalType })); } catch (e) { }
-                stopCamera();
+                stopCamera(true);
                 return;
             }
             processing = false;
