@@ -229,6 +229,7 @@
             gap: 8px
         }
     }
+
 </style>
 
 <div class="wrap">
@@ -301,9 +302,41 @@
 
     let landmarker, ws, running = false, processing = false, lastSend = 0;
     const SEND_FPS = 5;
-    let currentLm = [], selectedIndex = null, isDragging = false;
+    let currentLm = [], smoothLm = [], selectedIndex = null, isDragging = false;
     const bodyCounts = { STRAIGHT: 0, NATURAL: 0, WAVE: 0, UNKNOWN: 0 };
     const MEASURE_MS = 10_000; let startAt = 0;
+    const SMOOTH = 0.32;
+
+    function smoothLandmarks(raw) {
+        if (!smoothLm.length) {
+            smoothLm = raw.map(p => ({ ...p }));
+            return smoothLm;
+        }
+        raw.forEach((p, i) => {
+            smoothLm[i].x = smoothLm[i].x * (1 - SMOOTH) + p.x * SMOOTH;
+            smoothLm[i].y = smoothLm[i].y * (1 - SMOOTH) + p.y * SMOOTH;
+            smoothLm[i].z = smoothLm[i].z * (1 - SMOOTH) + (p.z ?? 0) * SMOOTH;
+        });
+        return smoothLm;
+    }
+    function isFrontPose(lm) {
+        const sDiff = Math.abs(lm[11].y - lm[12].y);
+        const hDiff = Math.abs(lm[23].y - lm[24].y);
+        const noseCenter = Math.abs(lm[0].x - 0.5);
+
+        return (sDiff < 0.05 && hDiff < 0.05 && noseCenter < 0.18);
+    }
+    function widthAtY(lm, y) {
+        const left = lm.filter(p => p.x < 0.5)
+            .reduce((a, b) => Math.abs(b.y - y) < Math.abs(a.y - y) ? b : a);
+
+        const right = lm.filter(p => p.x > 0.5)
+            .reduce((a, b) => Math.abs(b.y - y) < Math.abs(a.y - y) ? b : a);
+
+        return Math.abs(left.x - right.x);
+    }
+
+
 
     function log(msg) { console.log(msg); }
 
@@ -372,18 +405,89 @@
         }
     }
 
+    // function classifyBodyType(lm) {
+    //     if (!lm || lm.length < 33) return 'UNKNOWN';
+    //     const dist = (a, b) => Math.abs(lm[a].x - lm[b].x);
+    //     const shoulder = dist(11, 12); const hip = dist(23, 24);
+    //     const waistY = (lm[23].y + lm[24].y) / 2 - 0.05;
+    //     const leftWaist = lm.reduce((prev, cur) => cur.x < 0.5 && Math.abs(cur.y - waistY) < Math.abs(prev.y - waistY) ? cur : prev);
+    //     const rightWaist = lm.reduce((prev, cur) => cur.x > 0.5 && Math.abs(cur.y - waistY) < Math.abs(prev.y - waistY) ? cur : prev);
+    //     const waist = Math.abs(leftWaist.x - rightWaist.x); const avg = (shoulder + waist + hip) / 3; const isClose = (a, b) => Math.abs(a - b) / avg < 0.05;
+    //     if (isClose(shoulder, waist) && isClose(waist, hip)) return 'STRAIGHT'; if (shoulder > waist && shoulder > hip) return 'NATURAL'; if (hip > waist && hip > shoulder) return 'WAVE'; return 'STRAIGHT';
+    // }
+
+    // function classifyBodyType(lm) {
+    //     if (!lm || lm.length < 33) return "UNKNOWN";
+    //     if (!isFrontPose(lm)) return "UNKNOWN";
+    //
+    //     const shoulder = Math.abs(lm[11].x - lm[12].x);
+    //     const hip = Math.abs(lm[23].x - lm[24].x);
+    //
+    //     const waistY = (lm[11].y + lm[12].y + lm[23].y + lm[24].y) / 4;
+    //     const waist = widthAtY(lm, waistY);
+    //
+    //     const avg = (shoulder + waist + hip) / 3;
+    //     const close = (a, b) => Math.abs(a - b) / avg < 0.06;
+    //
+    //     if (close(shoulder, waist) && close(waist, hip)) return "STRAIGHT";
+    //     if (shoulder > waist && shoulder > hip) return "NATURAL";
+    //     if (hip > waist && hip > shoulder) return "WAVE";
+    //
+    //     return "STRAIGHT";
+    // }
     function classifyBodyType(lm) {
-        if (!lm || lm.length < 33) return 'UNKNOWN';
-        const dist = (a, b) => Math.abs(lm[a].x - lm[b].x);
-        const shoulder = dist(11, 12); const hip = dist(23, 24);
-        const waistY = (lm[23].y + lm[24].y) / 2 - 0.05;
-        const leftWaist = lm.reduce((prev, cur) => cur.x < 0.5 && Math.abs(cur.y - waistY) < Math.abs(prev.y - waistY) ? cur : prev);
-        const rightWaist = lm.reduce((prev, cur) => cur.x > 0.5 && Math.abs(cur.y - waistY) < Math.abs(prev.y - waistY) ? cur : prev);
-        const waist = Math.abs(leftWaist.x - rightWaist.x); const avg = (shoulder + waist + hip) / 3; const isClose = (a, b) => Math.abs(a - b) / avg < 0.05;
-        if (isClose(shoulder, waist) && isClose(waist, hip)) return 'STRAIGHT'; if (shoulder > waist && shoulder > hip) return 'NATURAL'; if (hip > waist && hip > shoulder) return 'WAVE'; return 'STRAIGHT';
+        if (!lm || lm.length < 33) return "UNKNOWN";
+        if (!isFrontPose(lm)) return "UNKNOWN";
+
+        // 기본 너비 계산
+        const shoulder = Math.abs(lm[11].x - lm[12].x);
+        const hip = Math.abs(lm[23].x - lm[24].x);
+
+        // 허리 Y 지점 = 어깨/골반의 중간
+        const waistY = (lm[11].y + lm[12].y + lm[23].y + lm[24].y) / 4;
+        const waist = widthAtY(lm, waistY);
+
+        // 가슴 Y 지점 (어깨보다 약간 아래)
+        const chestY = (lm[11].y + lm[12].y) / 2 + 0.05;
+        const chest = widthAtY(lm, chestY);
+
+        // 곡률(허리가 얼마나 들어갔는지)
+        const curvature = chest - waist;
+
+        // 평균값
+        const avg = (shoulder + waist + hip) / 3;
+        const close = (a, b, tol = 0.06) => Math.abs(a - b) / avg < tol;
+
+        // --- STRAIGHT ---
+        // 전체 폭이 비슷 + 허리 굴곡 적음
+        if (close(shoulder, waist) && close(waist, hip) && curvature < avg * 0.05) {
+            return "STRAIGHT";
+        }
+
+        // --- WAVE ---
+        // 골반이 가장 넓고 허리가 들어간 곡선형
+        if (hip > shoulder && hip > chest && curvature > avg * 0.04) {
+            return "WAVE";
+        }
+
+        // --- NATURAL ---
+        // 어깨가 가장 넓고 허리 굴곡은 적당함
+        if (shoulder > hip && curvature <= avg * 0.08) {
+            return "NATURAL";
+        }
+
+        // 기본 fallback
+        return "STRAIGHT";
     }
 
-    function updateLandmarks(newLm) { if (currentLm.length === 0) currentLm = newLm.map(p => ({ ...p })); else newLm.forEach((p, i) => { if (!(isDragging && selectedIndex === i)) currentLm[i] = { ...p }; }); }
+    function updateLandmarks(newLm) {if (currentLm.length === 0)
+        currentLm = newLm.map(p => ({ x: 1 - p.x, y: p.y, z: p.z, visibility: p.visibility }));
+    else
+        newLm.forEach((p, i) => {
+            if (!(isDragging && selectedIndex === i))
+                currentLm[i] = { x: 1 - p.x, y: p.y, z: p.z, visibility: p.visibility };
+        });
+    }
 
     // canvas coordinate mapping (no mirror) -> map normalized landmarks to canvas pixels
     function toCanvasCoords(lmPoint) { return { x: lmPoint.x * canvas.width, y: lmPoint.y * canvas.height }; }
@@ -393,13 +497,14 @@
         const mx = e.clientX - rect.left; const my = e.clientY - rect.top;
         const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
         const ix = mx * scaleX; const iy = my * scaleY;
-        selectedIndex = currentLm.findIndex(p => { const { x, y } = toCanvasCoords(p); return Math.hypot(ix - x, iy - y) < 10; });
+        selectedIndex = smoothLm.findIndex(p => { const { x, y } = toCanvasCoords(p); return Math.hypot(ix - x, iy - y) < 10; });
         if (selectedIndex !== -1) isDragging = true;
     });
     canvas.addEventListener('mousemove', (e) => {
         if (isDragging && selectedIndex !== null && selectedIndex !== -1) {
             const rect = canvas.getBoundingClientRect(); const mx = e.clientX - rect.left; const my = e.clientY - rect.top;
-            currentLm[selectedIndex].x = mx / rect.width; currentLm[selectedIndex].y = my / rect.height;
+            smoothLm[selectedIndex].x = 1 - (mx / rect.width);
+            smoothLm[selectedIndex].y = my / rect.height;
         }
     });
     canvas.addEventListener('mouseup', () => { isDragging = false; selectedIndex = null; });
@@ -409,7 +514,12 @@
         if (!running) return; const now = performance.now();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         // draw video normally (no mirror) and then draw landmarks so they align
+        // ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.translate(-canvas.width, 0);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
         if (!processing) {
             processing = true; const res = await landmarker.detectForVideo(video, now); if (res?.landmarks?.[0]) updateLandmarks(res.landmarks[0]);
             if (currentLm.length > 0) {
@@ -454,7 +564,10 @@
             const msPerSend = 1000 / SEND_FPS;
             if (ws && ws.readyState === WebSocket.OPEN && (now - lastSend) >= msPerSend) {
                 lastSend = now;
-                const bodyType = classifyBodyType(currentLm);
+                // const bodyType = classifyBodyType(currentLm);
+                const lmForType = smoothLm.length ? smoothLm : currentLm;
+                const bodyType = classifyBodyType(lmForType);
+
                 // local aggregation for final decision
                 if (bodyType && bodyCounts.hasOwnProperty(bodyType)) bodyCounts[bodyType]++;
                 const flat = currentLm.map(p => ({ x: +p.x.toFixed(6), y: +p.y.toFixed(6), z: +(p.z ?? 0).toFixed(6), visibility: p.visibility != null ? +p.visibility.toFixed(3) : null }));
@@ -465,10 +578,19 @@
                 running = false;
                 // determine final body type by majority
                 let finalType = 'UNKNOWN';
+                // try {
+                //     const entries = Object.entries(bodyCounts).sort((a, b) => b[1] - a[1]);
+                //     if (entries.length > 0 && entries[0][1] > 0) finalType = entries[0][0];
+                // } catch (e) { console.warn(e); }
                 try {
-                    const entries = Object.entries(bodyCounts).sort((a, b) => b[1] - a[1]);
-                    if (entries.length > 0 && entries[0][1] > 0) finalType = entries[0][0];
+                    const weights = { STRAIGHT: 1, NATURAL: 1, WAVE: 1, UNKNOWN: 0.2 };
+
+                    finalType =
+                        Object.entries(bodyCounts)
+                            .sort((a, b) => (b[1] * weights[b[0]]) - (a[1] * weights[a[0]]))[0][0];
+
                 } catch (e) { console.warn(e); }
+
                 statusEl.textContent = '측정 완료';
                 if (badgeEl) badgeEl.textContent = finalType;
                 log('measurement finished (10s). final: ' + finalType + ' counts=' + JSON.stringify(bodyCounts));
