@@ -317,6 +317,12 @@
             return smoothLm;
         }
         raw.forEach((p, i) => {
+            if (i === 23 || i === 24) {
+                smoothLm[i] = { ...p };
+                return;
+            }
+
+            // normal smoothing
             smoothLm[i].x = smoothLm[i].x * (1 - SMOOTH) + p.x * SMOOTH;
             smoothLm[i].y = smoothLm[i].y * (1 - SMOOTH) + p.y * SMOOTH;
             smoothLm[i].z = smoothLm[i].z * (1 - SMOOTH) + (p.z ?? 0) * SMOOTH;
@@ -546,8 +552,14 @@
             currentLm = newLm.map(p => ({ x: 1 - p.x, y: p.y, z: p.z, visibility: p.visibility }));
         else
             newLm.forEach((p, i) => {
-                if (!(isDragging && selectedIndex === i))
-                    currentLm[i] = { x: 1 - p.x, y: p.y, z: p.z, visibility: p.visibility };
+                if (isDragging && selectedIndex === i) return;
+
+                currentLm[i] = {
+                    x: 1 - p.x,
+                    y: p.y,
+                    z: p.z,
+                    visibility: p.visibility
+                };
             });
     }
 
@@ -584,7 +596,7 @@
         ctx.restore();
         if (!processing) {
             processing = true; const res = await landmarker.detectForVideo(video, now); if (res?.landmarks?.[0]) updateLandmarks(res.landmarks[0]);
-            // ========== segmentation으로 골반 외곽 확장 =============
+
             if (segmenter && currentLm.length > 0) {
 
                 const { categoryMask } = await segmenter.segmentForVideo(video, now);
@@ -600,14 +612,19 @@
                     // pelvisY
                     const waistY = (currentLm[11].y + currentLm[12].y + currentLm[23].y + currentLm[24].y) / 4;
                     const hipY_raw = findHipY(currentLm);
-                    const pelvisY = waistY + (hipY_raw - waistY) * 0.45;
+                    // const pelvisY = waistY + (hipY_raw - waistY) * 0.25;
+                    //
+                    // // 실루엣 외곽
+                    // const edges = findSilhouetteEdges(mask, width, height, pelvisY, true);
+                    // segmentation 기반 실제 골반 y 찾기
+                    const pelvisY = findPelvisLine(mask, width, height);
 
-                    // 실루엣 외곽
-                    const edges = findSilhouetteEdges(mask, width, height, pelvisY);
+                    // pelvisY에서 silhouette 재검출
+                    const edges = findSilhouetteEdges(mask, width, height, pelvisY, true);
 
                     if (edges.left !== null && edges.right !== null) {
 
-                        const scale = 1.15;  // 골반 폭 확장 (10~20% 추천)
+                        const scale = 3.4;
 
                         const mid = (edges.left + edges.right) / 2;  // 중심점
 
@@ -623,14 +640,12 @@
                         currentLm[24].x = leftX / width;
                         currentLm[23].x = rightX / width;
 
-                        // Y는 pelvisY에 맞추기
                         currentLm[23].y = pelvisY;
                         currentLm[24].y = pelvisY;
                     }
-
+                    smoothLm = smoothLandmarks(currentLm);
                 }
             }
-// =============================================================
 
             if (currentLm.length > 0) {
                 // draw landmarks and connectors in pixel coordinates so they match the flipped video
@@ -703,9 +718,10 @@
             const msPerSend = 1000 / SEND_FPS;
             if (ws && ws.readyState === WebSocket.OPEN && (now - lastSend) >= msPerSend) {
                 lastSend = now;
-                // const bodyType = classifyBodyType(currentLm);
-                const lmForType = smoothLm.length ? smoothLm : currentLm;
-                const bodyType = classifyBodyType(lmForType);
+                // const lmForType = smoothLm.length ? smoothLm : currentLm;
+                // const bodyType = classifyBodyType(lmForType);
+                const bodyType = classifyBodyType(currentLm);
+
 
                 // local aggregation for final decision
                 if (bodyType && bodyCounts.hasOwnProperty(bodyType)) bodyCounts[bodyType]++;
@@ -759,7 +775,41 @@
     });
     if (resultCloseBtn) resultCloseBtn.addEventListener('click', () => { if (resultOverlay) resultOverlay.style.display = 'none'; });
 
-    function findSilhouetteEdges(mask, width, height, yNorm, flipped = true) {
+
+    function findPelvisLine(mask, width, height) {
+        let bestY = 0;
+        let bestW = 0;
+
+        for (let y = Math.floor(height * 0.45); y < Math.floor(height * 0.75); y++) {
+            // 골반은 전체 높이 45%~75% 사이에 존재함
+            let left = null, right = null;
+
+            for (let x = 0; x < width; x++) {
+                if (mask[y * width + x] >= 20) {
+                    left = x;
+                    break;
+                }
+            }
+            for (let x = width - 1; x >= 0; x--) {
+                if (mask[y * width + x] >= 20) {
+                    right = x;
+                    break;
+                }
+            }
+
+            if (left !== null && right !== null) {
+                const w = right - left;
+                if (w > bestW) {
+                    bestW = w;
+                    bestY = y;
+                }
+            }
+        }
+
+        return bestY / height; // 0~1 반환
+    }
+
+    function findSilhouetteEdges(mask, width, height, yNorm) {
         // yNorm(0~1)을 segmentation mask 해상도에 맞춤
         let y = Math.floor(yNorm * height);
         if (y < 0) y = 0;
@@ -767,25 +817,21 @@
 
         let left = null, right = null;
 
-        const TH = 80;
+        const TH = 20;
 
-        if (!flipped) {
-            for (let x = 0; x < width; x++) {
-                const v = mask[y * width + x];
-                if (v >= TH) { left = x; break; }
+        for (let x = 0; x < width; x++) {
+            const v = mask[y * width + (width - 1 - x)];
+            if (v >= TH) {
+                left = x;
+                break;
             }
-            for (let x = width - 1; x >= 0; x--) {
-                const v = mask[y * width + x];
-                if (v >= TH) { right = x; break; }
-            }
-        } else {
-            for (let x = 0; x < width; x++) {
-                const v = mask[y * width + (width - 1 - x)];
-                if (v >= TH) { left = x; break; }
-            }
-            for (let x = width - 1; x >= 0; x--) {
-                const v = mask[y * width + (width - 1 - x)];
-                if (v >= TH) { right = x; break; }
+        }
+
+        for (let x = width - 1; x >= 0; x--) {
+            const v = mask[y * width + (width - 1 - x)];
+            if (v >= TH) {
+                right = x;
+                break;
             }
         }
 
