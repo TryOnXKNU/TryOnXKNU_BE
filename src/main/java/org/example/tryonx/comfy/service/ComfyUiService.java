@@ -132,7 +132,8 @@ public class ComfyUiService {
         }
 
         String prompt = resolvePrompt(categoryId);
-        String model  = resolveModel(categoryId, shape);
+        String model = resolveModel(categoryId, shape, bodySize);
+
 
         // 🔹 bodySize 에 따라 워크플로우 & weight_body 결정
         String workflowFile;
@@ -141,23 +142,23 @@ public class ComfyUiService {
         switch (bodySize) {
             case UNDERWEIGHT -> {
                 workflowFile = "lora_one_person_one_clothes.json";
-                weightBody = "underweight_body";
+                weightBody = "bmi_to_17";
             }
             case SLIM -> {
                 workflowFile = "lora_one_person_one_clothes.json";
-                weightBody = "slim_body";
+                weightBody = "bmi_17_to_19";
             }
             case NORMAL -> {
                 workflowFile = "lora_one_person_one_clothes.json";
-                weightBody = "normal_body";
+                weightBody = "bmi_19_to_23";
             }
             case OVERWEIGHT -> {
                 workflowFile = "lora_one_person_one_clothes.json";
-                weightBody = "overweight_body";
+                weightBody = "bmi_23_to_25";
             }
             case OBESE -> {
                 workflowFile = "lora_one_person_one_clothes.json";
-                weightBody = "obese_body";
+                weightBody = "bmi_25_to";
             }
             default -> throw new IllegalStateException("Unexpected value: " + bodySize);
         }
@@ -244,11 +245,14 @@ public class ComfyUiService {
             prompt2Info = infoB;
         }
 
+
         String model = resolveDualModel(
                 prompt1Info.categoryId,
                 prompt2Info.categoryId,
-                member.getBodyShape()
+                member.getBodyShape(),
+                bodySize
         );
+
 
         // 🔹 bodySize 에 따라 워크플로우 & weight_body 결정
         String workflowFile;
@@ -256,27 +260,28 @@ public class ComfyUiService {
 
         switch (bodySize) {
             case UNDERWEIGHT -> {
-                workflowFile = "lora_one_person_two_clothes.json";
-                weightBody = "underweight_body";
+                workflowFile = "lora_one_person_one_clothes.json";
+                weightBody = "bmi_to_17";
             }
             case SLIM -> {
-                workflowFile = "lora_one_person_two_clothes.json";
-                weightBody = "slim_body";
+                workflowFile = "lora_one_person_one_clothes.json";
+                weightBody = "bmi_17_to_19";
             }
             case NORMAL -> {
-                workflowFile = "lora_one_person_two_clothes.json";
-                weightBody = "normal_body";
+                workflowFile = "lora_one_person_one_clothes.json";
+                weightBody = "bmi_19_to_23";
             }
             case OVERWEIGHT -> {
-                workflowFile = "lora_one_person_two_clothes.json";
-                weightBody = "overweight_body";
+                workflowFile = "lora_one_person_one_clothes.json";
+                weightBody = "bmi_23_to_25";
             }
             case OBESE -> {
-                workflowFile = "lora_one_person_two_clothes.json";
-                weightBody = "obese_body";
+                workflowFile = "lora_one_person_one_clothes.json";
+                weightBody = "bmi_25_to";
             }
             default -> throw new IllegalStateException("Unexpected value: " + bodySize);
         }
+
 
 
         String workflowJson = loadWorkflowFromResource(workflowFile)
@@ -415,7 +420,31 @@ public class ComfyUiService {
         };
     }
 
-    private String resolveModel(int categoryId, BodyShape shape) {
+    //    private String resolveModel(int categoryId, BodyShape shape) {
+//
+//        String base = switch (categoryId) {
+//            case 1 -> "STOPA.png";
+//            case 2 -> "LSTOPA.png";
+//            case 3 -> "LWTOPA.png";
+//            case 4 -> "SPANTSA.png";
+//            case 5 -> "LSPANTSB.png";
+//            case 6 -> "LWPANTSC.png";
+//            case 7 -> "SOUTERWEARB.png";
+//            case 8 -> "LOUTERWEARB.png";
+//            case 9 -> "SSDRESS.png";
+//            case 10 -> "SLDRESS.png";
+//            case 11 -> "LSDRESS.png";
+//            case 12 -> "LLDRESS.png";
+//            case 13 -> "SSKIRTB.png";
+//            case 14 -> "LSKIRTB.png";
+//            default -> throw new IllegalArgumentException("Unknown categoryId: " + categoryId);
+//        };
+//
+//        return shape == BodyShape.STRAIGHT ? "1" + base :
+//                shape == BodyShape.NATURAL  ? "2" + base :
+//                        "3" + base;
+//    }
+    private String resolveModel(int categoryId, BodyShape shape, BodySize size) {
 
         String base = switch (categoryId) {
             case 1 -> "STOPA.png";
@@ -435,12 +464,64 @@ public class ComfyUiService {
             default -> throw new IllegalArgumentException("Unknown categoryId: " + categoryId);
         };
 
-        return shape == BodyShape.STRAIGHT ? "1" + base :
-                shape == BodyShape.NATURAL  ? "2" + base :
-                        "3" + base;
+        // BodyShape prefix (기존)
+        String shapePrefix =
+                (shape == BodyShape.STRAIGHT) ? "1" :
+                        (shape == BodyShape.NATURAL)  ? "2" : "3";
+
+        // BodySize prefix (새로 추가)
+        String sizePrefix = switch (size) {
+            case UNDERWEIGHT -> "T";
+            case SLIM        -> "";
+            case NORMAL      -> "A";
+            case OVERWEIGHT  -> "F";
+            case OBESE       -> "O";
+        };
+
+        return shapePrefix + sizePrefix +  base;
     }
 
-    private String resolveDualModel(int c1, int c2, BodyShape shape) {
+
+//    private String resolveDualModel(int c1, int c2, BodyShape shape) {
+//
+//        int first = Math.min(c1, c2);
+//        int second = Math.max(c1, c2);
+//
+//        String model = switch (first + "-" + second) {
+//            case "1-4" -> "STOPC.png";
+//            case "1-5" -> "STOPA.png";
+//            case "1-6" -> "STOPB.png";
+//            case "1-13" -> "SSKIRTA.png";
+//            case "1-14" -> "LSKIRTA.png";
+//            case "2-4" -> "LSTOPC.png";
+//            case "2-5" -> "LSTOPA.png";
+//            case "2-6" -> "LSTOPB.png";
+//            case "2-13" -> "SSKIRTB.png";
+//            case "2-14" -> "LSKIRTB.png";
+//            case "3-4" -> "LWTOPC.png";
+//            case "3-5" -> "LWTOPA.png";
+//            case "3-6" -> "LWTOPB.png";
+//            case "3-13" -> "SSKIRTC.png";
+//            case "3-14" -> "LSKIRTC.png";
+//            case "4-7" -> "SOUTERWEARA.png";
+//            case "5-7" -> "SOUTERWEARB.png";
+//            case "6-7" -> "SOUTERWEARC.png";
+//            case "4-8" -> "LOUTERWEARA.png";
+//            case "5-8" -> "LOUTERWEARB.png";
+//            case "6-8" -> "LOUTERWEARC.png";
+//            case "7-13" -> "SOUTERWEARE.png";
+//            case "8-13" -> "LOUTERWEARE.png";
+//            case "7-14" -> "SOUTERWEARD.png";
+//            case "8-14" -> "LOUTERWEARD.png";
+//            default -> throw new RuntimeException("모델 매핑 불가능 조합: " + c1 + ", " + c2);
+//        };
+//
+//        return shape == BodyShape.STRAIGHT ? "1" + model :
+//                shape == BodyShape.NATURAL  ? "2" + model :
+//                        "3" + model;
+//    }
+
+    private String resolveDualModel(int c1, int c2, BodyShape shape, BodySize size) {
 
         int first = Math.min(c1, c2);
         int second = Math.max(c1, c2);
@@ -474,12 +555,22 @@ public class ComfyUiService {
             default -> throw new RuntimeException("모델 매핑 불가능 조합: " + c1 + ", " + c2);
         };
 
-        return shape == BodyShape.STRAIGHT ? "1" + model :
-                shape == BodyShape.NATURAL  ? "2" + model :
-                        "3" + model;
+        // 기존 BodyShape prefix
+        String shapePrefix =
+                (shape == BodyShape.STRAIGHT) ? "1" :
+                        (shape == BodyShape.NATURAL)  ? "2" : "3";
+
+        // 새 BodySize prefix
+        String sizePrefix = switch (size) {
+            case UNDERWEIGHT -> "T";
+            case SLIM        -> "";
+            case NORMAL      -> "A";
+            case OVERWEIGHT  -> "F";
+            case OBESE       -> "O";
+        };
+
+        return shapePrefix + sizePrefix + model;
     }
-
-
 
 
     private Integer parseMemberClothesId(String raw) {
