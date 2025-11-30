@@ -260,23 +260,23 @@ public class ComfyUiService {
 
         switch (bodySize) {
             case UNDERWEIGHT -> {
-                workflowFile = "lora_one_person_one_clothes.json";
+                workflowFile = "lora_one_person_two_clothes.json";
                 weightBody = "bmi_to_17";
             }
             case SLIM -> {
-                workflowFile = "lora_one_person_one_clothes.json";
+                workflowFile = "lora_one_person_two_clothes.json";
                 weightBody = "bmi_17_to_19";
             }
             case NORMAL -> {
-                workflowFile = "lora_one_person_one_clothes.json";
+                workflowFile = "lora_one_person_two_clothes.json";
                 weightBody = "bmi_19_to_23";
             }
             case OVERWEIGHT -> {
-                workflowFile = "lora_one_person_one_clothes.json";
+                workflowFile = "lora_one_person_two_clothes.json";
                 weightBody = "bmi_23_to_25";
             }
             case OBESE -> {
-                workflowFile = "lora_one_person_one_clothes.json";
+                workflowFile = "lora_one_person_two_clothes.json";
                 weightBody = "bmi_25_to";
             }
             default -> throw new IllegalStateException("Unexpected value: " + bodySize);
