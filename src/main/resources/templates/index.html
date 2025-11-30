@@ -229,7 +229,6 @@
             gap: 8px
         }
     }
-
 </style>
 
 <div class="wrap">
@@ -243,8 +242,8 @@
 
     <!-- Top Notices (prominent) -->
     <div class="noticeTop" aria-hidden="false">
-        <div class="item">체형 인식할 수 있게 <strong>타이트한 옷</strong>을 입고 진행해주세요.</div>
-        <div class="item privacy">사진은 저장되지 않으며, 개인정보로 활용되지 않습니다.</div>
+        <div class="item" style="font-size:12px;">체형 인식할 수 있게 <strong>타이트한 옷</strong>을 입고 진행해주세요.</div>
+        <div class="item privacy" style="font-size:12px;">사진은 저장되지 않으며, 개인정보로 활용되지 않습니다.</div>
     </div>
 
     <div class="card">
@@ -480,13 +479,14 @@
         return "STRAIGHT";
     }
 
-    function updateLandmarks(newLm) {if (currentLm.length === 0)
-        currentLm = newLm.map(p => ({ x: 1 - p.x, y: p.y, z: p.z, visibility: p.visibility }));
-    else
-        newLm.forEach((p, i) => {
-            if (!(isDragging && selectedIndex === i))
-                currentLm[i] = { x: 1 - p.x, y: p.y, z: p.z, visibility: p.visibility };
-        });
+    function updateLandmarks(newLm) {
+        if (currentLm.length === 0)
+            currentLm = newLm.map(p => ({ x: 1 - p.x, y: p.y, z: p.z, visibility: p.visibility }));
+        else
+            newLm.forEach((p, i) => {
+                if (!(isDragging && selectedIndex === i))
+                    currentLm[i] = { x: 1 - p.x, y: p.y, z: p.z, visibility: p.visibility };
+            });
     }
 
     // canvas coordinate mapping (no mirror) -> map normalized landmarks to canvas pixels
