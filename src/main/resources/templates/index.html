@@ -270,15 +270,20 @@
     </div>
 </div>
 
-<script type="module" th:inline="javascript">
+<!--<script type="module" th:inline="javascript">-->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+
+<script type="module">
     const memberId = /*[[${memberId}]]*/ null;
     const memberIdDisp = document.getElementById('memberIdDisp');
     if (memberIdDisp) memberIdDisp.textContent = String(memberId ?? '-');
 
     import { PoseLandmarker, FilesetResolver, DrawingUtils }
         from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+    import { ImageSegmenter }
+        from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
 
-    // fallback POSE connections (MediaPipe default) in case PoseLandmarker.POSE_CONNECTIONS is unavailable
+// fallback POSE connections (MediaPipe default) in case PoseLandmarker.POSE_CONNECTIONS is unavailable
     const POSE_CONNECTIONS_FALLBACK = [
         [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8], [9, 10], [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [15, 17], [16, 18], [17, 19], [18, 20], [11, 23], [12, 24], [23, 24], [23, 25], [24, 26], [25, 27], [26, 28], [27, 29], [28, 30], [29, 31], [30, 32], [31, 32]
     ];
@@ -335,9 +340,34 @@
         return Math.abs(left.x - right.x);
     }
 
-
+    function midpoint(a, b) {
+        return {
+            x: (a.x + b.x) / 2,
+            y: (a.y + b.y) / 2,
+            z: (a.z + b.z) / 2,
+            visibility: Math.min(a.visibility ?? 1, b.visibility ?? 1)
+        };
+    }
 
     function log(msg) { console.log(msg); }
+
+    let segmenter = null;
+
+    async function initSegmentationModel() {
+        const vision = await FilesetResolver.forVisionTasks(
+            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+        );
+
+        segmenter = await ImageSegmenter.createFromOptions(vision, {
+            baseOptions: {
+                modelAssetPath:
+                    "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter_landscape/float16/1/selfie_segmenter_landscape.task"
+            },
+            runningMode: "VIDEO",
+            outputCategoryMask: true
+        });
+        await segmenter.setOptions({ runningMode: "VIDEO" });
+    }
 
     async function initModel() {
         statusEl.textContent = 'loading model...';
@@ -434,17 +464,49 @@
     //
     //     return "STRAIGHT";
     // }
+
+    function findHipY(lm) {
+        const topY = (lm[11].y + lm[12].y) / 2;  // 어깨 중심
+        const botY = Math.min(lm[25].y, lm[26].y); // 허벅지 상단
+
+        let bestY = topY;
+        let bestW = 0;
+
+        for (let i = topY; i <= botY; i += 0.005) {
+            const w = widthAtY(lm, i);
+            if (w > bestW) {
+                bestW = w;
+                bestY = i;
+            }
+        }
+
+        return bestY;
+    }
+
     function classifyBodyType(lm) {
         if (!lm || lm.length < 33) return "UNKNOWN";
         if (!isFrontPose(lm)) return "UNKNOWN";
 
         // 기본 너비 계산
         const shoulder = Math.abs(lm[11].x - lm[12].x);
-        const hip = Math.abs(lm[23].x - lm[24].x);
+        // const hip = Math.abs(lm[23].x - lm[24].x);
 
-        // 허리 Y 지점 = 어깨/골반의 중간
+        // 허리 지점
         const waistY = (lm[11].y + lm[12].y + lm[23].y + lm[24].y) / 4;
         const waist = widthAtY(lm, waistY);
+
+        // 엉덩이 지점(최대 폭)
+        const hipY_raw = findHipY(lm);
+
+        // 바지 허리선 = 허리~엉덩이 중간 45%
+        const pelvisY = waistY + (hipY_raw - waistY) * 0.85;
+
+        // 최종 골반 폭
+        const hip = widthAtY(lm, pelvisY);
+
+        // 허리 Y 지점 = 어깨/골반의 중간
+        // const waistY = (lm[11].y + lm[12].y + lm[23].y + lm[24].y) / 4;
+        // const waist = widthAtY(lm, waistY);
 
         // 가슴 Y 지점 (어깨보다 약간 아래)
         const chestY = (lm[11].y + lm[12].y) / 2 + 0.05;
@@ -522,6 +584,54 @@
         ctx.restore();
         if (!processing) {
             processing = true; const res = await landmarker.detectForVideo(video, now); if (res?.landmarks?.[0]) updateLandmarks(res.landmarks[0]);
+            // ========== segmentation으로 골반 외곽 확장 =============
+            if (segmenter && currentLm.length > 0) {
+
+                const { categoryMask } = await segmenter.segmentForVideo(video, now);
+
+                if (categoryMask) {
+
+                    // Uint8Array로 변환
+                    const mask = new Uint8Array(categoryMask.buffer);
+
+                    const width = categoryMask.width;
+                    const height = categoryMask.height;
+
+                    // pelvisY
+                    const waistY = (currentLm[11].y + currentLm[12].y + currentLm[23].y + currentLm[24].y) / 4;
+                    const hipY_raw = findHipY(currentLm);
+                    const pelvisY = waistY + (hipY_raw - waistY) * 0.45;
+
+                    // 실루엣 외곽
+                    const edges = findSilhouetteEdges(mask, width, height, pelvisY);
+
+                    if (edges.left !== null && edges.right !== null) {
+
+                        const scale = 1.15;  // 골반 폭 확장 (10~20% 추천)
+
+                        const mid = (edges.left + edges.right) / 2;  // 중심점
+
+                        // scale 적용해서 양 옆으로 확장
+                        let leftX  = mid - (mid - edges.left) * scale;
+                        let rightX = mid + (edges.right - mid) * scale;
+
+                        // 범위를 mask 내부로 클램핑(안 하면 좌표 튀는 경우 있음)
+                        leftX = Math.max(0, Math.min(width - 1, leftX));
+                        rightX = Math.max(0, Math.min(width - 1, rightX));
+
+                        // 0~1 정규화하여 landmark 반영
+                        currentLm[24].x = leftX / width;
+                        currentLm[23].x = rightX / width;
+
+                        // Y는 pelvisY에 맞추기
+                        currentLm[23].y = pelvisY;
+                        currentLm[24].y = pelvisY;
+                    }
+
+                }
+            }
+// =============================================================
+
             if (currentLm.length > 0) {
                 // draw landmarks and connectors in pixel coordinates so they match the flipped video
                 try {
@@ -559,6 +669,35 @@
                         for (const p of currentLm) { try { const pt = toCanvasCoords(p); ctx.beginPath(); ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke(); } catch (e) { } }
                     }
                 } catch (e) { console.warn('draw landmarks failed', e); }
+                // ===== Custom virtual landmarks (12-24, 11-23) =====
+                if (currentLm.length >= 33) {
+                    const leftMid  = midpoint(currentLm[12], currentLm[24]); // 왼쪽 몸통 중앙
+                    const rightMid = midpoint(currentLm[11], currentLm[23]); // 오른쪽 몸통 중앙
+
+                    // 캔버스 좌표로 변환
+                    const leftPt = toCanvasCoords(leftMid);
+                    const rightPt = toCanvasCoords(rightMid);
+
+                    // 두 점 그리기
+                    ctx.beginPath();
+                    ctx.arc(leftPt.x, leftPt.y, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(rightPt.x, rightPt.y, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                    ctx.fill();
+
+                    // 두 중간점을 연결하는 선 그리기 (선택)
+                    ctx.beginPath();
+                    ctx.moveTo(leftPt.x, leftPt.y);
+                    ctx.lineTo(rightPt.x, rightPt.y);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+                }
+
             }
 
             const msPerSend = 1000 / SEND_FPS;
@@ -620,6 +759,39 @@
     });
     if (resultCloseBtn) resultCloseBtn.addEventListener('click', () => { if (resultOverlay) resultOverlay.style.display = 'none'; });
 
+    function findSilhouetteEdges(mask, width, height, yNorm, flipped = true) {
+        // yNorm(0~1)을 segmentation mask 해상도에 맞춤
+        let y = Math.floor(yNorm * height);
+        if (y < 0) y = 0;
+        if (y >= height) y = height - 1;
+
+        let left = null, right = null;
+
+        const TH = 80;
+
+        if (!flipped) {
+            for (let x = 0; x < width; x++) {
+                const v = mask[y * width + x];
+                if (v >= TH) { left = x; break; }
+            }
+            for (let x = width - 1; x >= 0; x--) {
+                const v = mask[y * width + x];
+                if (v >= TH) { right = x; break; }
+            }
+        } else {
+            for (let x = 0; x < width; x++) {
+                const v = mask[y * width + (width - 1 - x)];
+                if (v >= TH) { left = x; break; }
+            }
+            for (let x = width - 1; x >= 0; x--) {
+                const v = mask[y * width + (width - 1 - x)];
+                if (v >= TH) { right = x; break; }
+            }
+        }
+
+        return { left, right };
+    }
+
     // auto start on load where possible
-    window.onload = async () => { try { await initModel(); openWS(); await startCamera(); } catch (e) { console.warn('auto start failed', e); } };
+    window.onload = async () => { try { await initModel(); await startCamera(); openWS(); await initSegmentationModel(); } catch (e) { console.warn('auto start failed', e); } };
 </script>
