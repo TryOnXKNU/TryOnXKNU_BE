@@ -14,8 +14,11 @@ import org.example.tryonx.image.domain.MemberClothesImage;
 import org.example.tryonx.member.domain.Member;
 import org.example.tryonx.member.repository.MemberRepository;
 import org.example.tryonx.member.service.MemberService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,6 +38,12 @@ import org.slf4j.LoggerFactory;
 public class FittingController {
     private static final Logger logger = LoggerFactory.getLogger(FittingController.class);
     private static final double LOG_CONFIDENCE_THRESHOLD = 0.2;
+
+    // 의상 검증(Python AI) 연결 설정
+    @Value("${validate.service.url:http://localhost:8000/validate}")
+    private String validateServiceUrl;
+    // WebClient 생성 (Python 서버 통신용)
+    private final WebClient webClient = WebClient.create();
     private final MemberService memberService;
     private final FittingService fittingService;
     private final ComfyUiService comfyUiService;
@@ -145,7 +156,6 @@ public class FittingController {
         }
     }
 
-
     @PostMapping(value = "/custom/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "CUSTOM 의상 등록")
     public ResponseEntity<?> addMyClothes(
@@ -156,39 +166,101 @@ public class FittingController {
     ) {
         String email = userDetails.getUsername();
         try {
-            // 서버 측 유효성 검사: 이미지를 분석하고 의류가 아닌 경우 거부
-            byte[] bytes = myClothesImage.getBytes();
-            Map<String, Object> analysis = org.example.tryonx.fitting.service.ImageValidationUtil.analyze(bytes);
-            if (analysis.containsKey("error")) {
-                logger.info("Image validation error for user={}, file={} size={} -> {}", email, myClothesImage.getOriginalFilename(), myClothesImage.getSize(), analysis);
-                return ResponseEntity.badRequest().body(analysis);
+            // [수정됨] 1. Python AI 서버로 이미지 전송하여 검증
+            MultipartBodyBuilder builder = new MultipartBodyBuilder();
+            ByteArrayResource resource = new ByteArrayResource(myClothesImage.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return myClothesImage.getOriginalFilename(); // 파일명 필수
+                }
+            };
+            builder.part("image", resource).header("Content-Type", myClothesImage.getContentType());
+
+            // Python 서버 호출 (Blocking)
+            Map analysis = webClient.post()
+                    .uri(validateServiceUrl)
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(BodyInserters.fromMultipartData(builder.build()))
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+
+            if (analysis == null || analysis.containsKey("error")) {
+                logger.warn("AI Validation failed or error response: {}", analysis);
+                return ResponseEntity.badRequest().body(analysis != null ? analysis : Map.of("error", "AI Server Error"));
             }
-            boolean isClothing = Boolean.TRUE.equals(analysis.get("isClothing"));
+
+            // 2. 결과 파싱
+            boolean isClothing = false;
             double confidence = 0.0;
-            try {
-                Object cf = analysis.get("confidence");
-                if (cf instanceof Number) confidence = ((Number) cf).doubleValue();
-                else if (cf instanceof String) confidence = Double.parseDouble((String) cf);
-            } catch (Exception ignored) {}
 
-            // 의류가 아니거나 신뢰도가 임계값 미만인 경우 WARN 로그를, 그렇지 않은 경우 INFO 로그를 남깁니다.
-            if (!isClothing || confidence < LOG_CONFIDENCE_THRESHOLD) {
-                logger.warn("Image validation for user={}, file={} size={} -> isClothing={} confidence={} analysis={}", email, myClothesImage.getOriginalFilename(), myClothesImage.getSize(), isClothing, confidence, analysis);
-            } else {
-                logger.info("Image validation for user={}, file={} size={} -> isClothing={} confidence={} analysis={}", email, myClothesImage.getOriginalFilename(), myClothesImage.getSize(), isClothing, confidence, analysis);
-            }
+            Object ic = analysis.get("isClothing");
+            if (ic instanceof Boolean) isClothing = (Boolean) ic;
 
+            Object cf = analysis.get("confidence");
+            if (cf instanceof Number) confidence = ((Number) cf).doubleValue();
+
+            // 3. 로그 출력 (터미널 확인용)
             if (!isClothing) {
-                return ResponseEntity.status(400).body(analysis);
+                logger.warn("❌ 검증 실패 (Not Clothing) - User: {}, Confidence: {}", email, confidence);
+                return ResponseEntity.status(400).body(analysis); // 실패 시 응답 반환
+            } else {
+                logger.info("✅ 검증 성공 (Is Clothing) - User: {}, Confidence: {}", email, confidence);
             }
 
+            // 4. 검증 통과 시 DB 저장 로직 수행
             MemberClothesImage memberClothesImage = fittingService.addMemberClothesImage(email, name, categoryId, myClothesImage);
             return ResponseEntity.ok(memberClothesImage);
+
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error during custom clothes add", e);
             return ResponseEntity.status(500).body("서버 오류: " + e.getMessage());
         }
     }
+
+//    @PostMapping(value = "/custom/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    @Operation(summary = "CUSTOM 의상 등록")
+//    public ResponseEntity<?> addMyClothes(
+//            @AuthenticationPrincipal UserDetails userDetails,
+//            @RequestParam String name,
+//            @RequestParam Integer categoryId,
+//            @RequestParam("myClothesImage1") MultipartFile myClothesImage
+//    ) {
+//        String email = userDetails.getUsername();
+//        try {
+//            // 서버 측 유효성 검사: 이미지를 분석하고 의류가 아닌 경우 거부
+//            byte[] bytes = myClothesImage.getBytes();
+//            Map<String, Object> analysis = org.example.tryonx.fitting.service.ImageValidationUtil.analyze(bytes);
+//            if (analysis.containsKey("error")) {
+//                logger.info("Image validation error for user={}, file={} size={} -> {}", email, myClothesImage.getOriginalFilename(), myClothesImage.getSize(), analysis);
+//                return ResponseEntity.badRequest().body(analysis);
+//            }
+//            boolean isClothing = Boolean.TRUE.equals(analysis.get("isClothing"));
+//            double confidence = 0.0;
+//            try {
+//                Object cf = analysis.get("confidence");
+//                if (cf instanceof Number) confidence = ((Number) cf).doubleValue();
+//                else if (cf instanceof String) confidence = Double.parseDouble((String) cf);
+//            } catch (Exception ignored) {}
+//
+//            // 의류가 아니거나 신뢰도가 임계값 미만인 경우 WARN 로그를, 그렇지 않은 경우 INFO 로그를 남깁니다.
+//            if (!isClothing || confidence < LOG_CONFIDENCE_THRESHOLD) {
+//                logger.warn("Image validation for user={}, file={} size={} -> isClothing={} confidence={} analysis={}", email, myClothesImage.getOriginalFilename(), myClothesImage.getSize(), isClothing, confidence, analysis);
+//            } else {
+//                logger.info("Image validation for user={}, file={} size={} -> isClothing={} confidence={} analysis={}", email, myClothesImage.getOriginalFilename(), myClothesImage.getSize(), isClothing, confidence, analysis);
+//            }
+//
+//            if (!isClothing) {
+//                return ResponseEntity.status(400).body(analysis);
+//            }
+//
+//            MemberClothesImage memberClothesImage = fittingService.addMemberClothesImage(email, name, categoryId, myClothesImage);
+//            return ResponseEntity.ok(memberClothesImage);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.status(500).body("서버 오류: " + e.getMessage());
+//        }
+//    }
 
     @DeleteMapping("/custom/delete")
     @Operation(summary = "CUSTOM 의상 삭제")
