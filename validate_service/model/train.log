@@ -1,0 +1,21 @@
+Device: cpu
+Epoch 1 loss=0.69772 val_auc=1.0000 time=13.5s
+Saved best model to model/best_model.pth
+Epoch 2 loss=0.42555 val_auc=1.0000 time=13.2s
+Epoch 3 loss=0.31770 val_auc=1.0000 time=13.1s
+Epoch 4 loss=0.20409 val_auc=1.0000 time=13.3s
+Epoch 5 loss=0.18987 val_auc=1.0000 time=13.0s
+Epoch 6 loss=0.17483 val_auc=1.0000 time=12.9s
+Epoch 7 loss=0.13238 val_auc=1.0000 time=13.0s
+Epoch 8 loss=0.15572 val_auc=1.0000 time=13.0s
+Epoch 9 loss=0.14096 val_auc=1.0000 time=13.5s
+Epoch 10 loss=0.13135 val_auc=1.0000 time=13.5s
+Exporting ONNX...
+[torch.onnx] Obtain model graph for `ResNet([...]` with `torch.export.export(..., strict=False)`...
+[torch.onnx] Obtain model graph for `ResNet([...]` with `torch.export.export(..., strict=False)`... ✅
+[torch.onnx] Run decomposition...
+[torch.onnx] Run decomposition... ✅
+[torch.onnx] Translate the graph into ONNX...
+[torch.onnx] Translate the graph into ONNX... ✅
+Applied 40 of general pattern rewrite rules.
+ONNX exported to model/model.onnx

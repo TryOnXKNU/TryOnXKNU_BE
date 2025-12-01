@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+boto3
+Pillow
+numpy
+scikit-learn
+albumentations
+torch
+torchvision
+timm
+onnx
+onnxruntime
