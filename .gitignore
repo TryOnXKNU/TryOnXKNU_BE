@@ -1,6 +1,7 @@
 application.properties
 AuthKey_6JQR8MS44G.p8
 dump.rdb
+validate_service/.venv
 
 HELP.md
 .gradle
